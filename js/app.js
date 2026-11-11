@@ -154,6 +154,10 @@
       const el = $(f);
       if (el) el.addEventListener('change', inputHandler(f));
     });
+    ['mitteGps', 'tGps'].forEach((id, i) => {
+      const el = $(id);
+      if (el) el.addEventListener('input', () => gpsEingabe(i === 0 ? 'mitte' : 'tpunkt'));
+    });
 
     document.querySelectorAll('[data-geocode]').forEach(btn => {
       btn.addEventListener('click', () => geocode(btn.dataset.geocode));
@@ -310,13 +314,40 @@
 
   function zielFelder(ziel) {
     return ziel === 'tpunkt'
-      ? { ort: 'tOrt', e: 'tE', n: 'tN', lv03: 'tLv03', link: 'linkKarteT' }
-      : { ort: 'mitteOrt', e: 'mitteE', n: 'mitteN', lv03: 'mitteLv03', link: 'linkKarteMitte' };
+      ? { ort: 'tOrt', e: 'tE', n: 'tN', gps: 'tGps', link: 'linkKarteT' }
+      : { ort: 'mitteOrt', e: 'mitteE', n: 'mitteN', gps: 'mitteGps', link: 'linkKarteMitte' };
   }
 
   function koordinatenVonFeldern(ziel) {
     const f = zielFelder(ziel);
     return parseLv95Pair($(f.e).value, $(f.n).value);
+  }
+
+  function gpsPaarAusText(text) {
+    if (typeof text !== 'string') return null;
+    const teile = text.indexOf(',') >= 0 ? text.split(',') : text.trim().split(/\s+/);
+    if (teile.length !== 2) return null;
+    const lat = parseFloat(teile[0].trim());
+    const lon = parseFloat(teile[1].trim());
+    if (!isFinite(lat) || !isFinite(lon)) return null;
+    if (lat < 45.5 || lat > 48.2 || lon < 5.5 || lon > 11.5) return null;
+    return { lat: lat, lon: lon };
+  }
+
+  function gpsEingabe(ziel) {
+    const f = zielFelder(ziel);
+    const e = aktuellerEinsatz();
+    if (!e) return;
+    e.daten[f.gps] = $(f.gps).value;
+    const wgs = gpsPaarAusText($(f.gps).value);
+    if (!wgs) return;
+    const kv = wgs84ToLv95(wgs.lat, wgs.lon);
+    e.daten[f.e] = Math.round(kv.e).toLocaleString('de-CH');
+    e.daten[f.n] = Math.round(kv.n).toLocaleString('de-CH');
+    $(f.e).value = e.daten[f.e];
+    $(f.n).value = e.daten[f.n];
+    koordinateManuell(ziel);
+    speichern();
   }
 
   function koordinateManuell(ziel) {
@@ -354,18 +385,22 @@
       const kv = koordinatenVonFeldern(ziel);
       const e = aktuellerEinsatz();
       if (kv) {
-        const lv03 = formatLv03(kv.e, kv.n);
-        $(f.lv03).value = 'y ' + lv03.y + ' / x ' + lv03.x;
+        const wgs = lv95ToWgs84(kv.e, kv.n);
+        const gpsFeld = $(f.gps);
+        if (document.activeElement !== gpsFeld) {
+          gpsFeld.value = wgs.lat.toFixed(6) + ', ' + wgs.lon.toFixed(6);
+        }
         $(f.link).href = 'https://map.geo.admin.ch/#/map?lang=de&bgLayer=ch.swisstopo.pixelkarte-farbe&zoom=10&E=' +
           Math.round(kv.e) + '&N=' + Math.round(kv.n);
         $(f.link).style.display = '';
       } else {
-        $(f.lv03).value = '';
+        const gpsFeld = $(f.gps);
+        if (document.activeElement !== gpsFeld) gpsFeld.value = '';
         $(f.link).removeAttribute('href');
         $(f.link).style.display = 'none';
       }
       if (e) {
-        e.daten[f.lv03] = $(f.lv03).value;
+        e.daten[f.gps] = $(f.gps).value;
       }
     });
     $('btnNahe').disabled = !koordinatenVonFeldern('mitte');

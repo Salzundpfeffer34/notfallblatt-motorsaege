@@ -10,7 +10,8 @@ Einfach `index.html` im Browser öffnen (Doppelklick genügt). Für Handy: Datei
 
 - **Alle Felder des Suva-Originalformulars**: Arbeitsauftrag (Was/wo/wozu, Wer, Wie/womit, Besonderes, Hiebsmenge, Gefahren/Massnahmen, Wann, Ausweicharbeiten), Notfallmeldung, Notfall-Nummern, Arzt/Spital, Schlagskizze.
 - **Adresse → Koordinaten**: Ortsbezeichnung eingeben (Flurname, Adresse), Koordinaten (LV95) werden automatisch berechnet (Geocoding via Photon/OpenStreetMap, auf CH/LI begrenzt).
-- **Koordinaten → Adresse**: LV95- oder LV03-Koordinaten eingeben, der Ort wird automatisch gesucht (Reverse-Geocoding). LV03 (alte Militärkoordinaten) werden automatisch erkannt und mitangezeigt.
+- **Koordinaten → Adresse**: LV95-Koordinaten eingeben, der Ort wird automatisch gesucht (Reverse-Geocoding).
+- **GPS-Dezimal (wie Google)**: Das Feld «GPS (WGS84, Dezimal)» zeigt automatisch Breite/Länge im Dezimalgrad-Format an (z. B. `46.5225, 6.6325`) – direkt aus Google Maps kopierbar. Umgekehrt kann man dort Google-Koordinaten einfügen; sie werden automatisch in LV95 umgerechnet.
 - **GPS**: «Meine Position» übernimmt die aktuelle Standort-Position als Koordinaten.
 - **Karte**: Punkte (Mitte Holzschlag / T-Punkt) durch Klicken oder Ziehen der Marker setzen; Direktlink zu map.geo.admin.ch.
 - **Wetter-Check**: 3-Tage-Prognose für den Einsatzort (Open-Meteo) – unterstützt die von der Suva geforderte tägliche Überprüfung (Witterung, Sicht, Zufahrt).

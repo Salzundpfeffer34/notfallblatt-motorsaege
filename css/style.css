@@ -1,0 +1,271 @@
+:root {
+  --rot: #d52b1e;
+  --rot-dunkel: #a91e14;
+  --grau: #f4f4f2;
+  --grau-dunkel: #6b6b6b;
+  --linie: #d8d8d4;
+  --text: #1c1c1c;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--text);
+  background: #e9e9e6;
+  font-size: 15px;
+}
+
+.app-header {
+  background: #fff;
+  border-bottom: 4px solid var(--rot);
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon { font-size: 30px; }
+.brand h1 { font-size: 19px; margin: 0; }
+.brand p { margin: 0; font-size: 12px; color: var(--grau-dunkel); }
+.header-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.einsatz-picker { display: flex; align-items: center; gap: 6px; }
+.einsatz-picker label { font-size: 12px; color: var(--grau-dunkel); }
+.einsatz-picker select { max-width: 220px; padding: 7px; border: 1px solid var(--linie); border-radius: 6px; }
+
+.btn {
+  border: 1px solid var(--linie);
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+  display: inline-block;
+}
+.btn:hover { background: var(--grau); }
+.btn-primary { background: var(--rot); border-color: var(--rot-dunkel); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: var(--rot-dunkel); }
+.btn-danger { color: var(--rot-dunkel); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.sub { color: var(--grau-dunkel); font-weight: 400; font-size: 12px; }
+
+.sheet {
+  max-width: 1100px;
+  margin: 18px auto 60px;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--linie);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.card h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  border-bottom: 2px solid var(--rot);
+  padding-bottom: 6px;
+}
+.card h3 { margin: 14px 0 8px; font-size: 14px; }
+.hint { font-size: 13px; color: var(--grau-dunkel); margin: 6px 0 12px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 16px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field.span-2 { grid-column: span 2; }
+.field.span-3 { grid-column: span 3; }
+.field label { font-size: 12.5px; font-weight: 600; }
+.field input, .field textarea, .field select {
+  border: 1px solid var(--linie);
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  background: #fff;
+}
+.field input:focus, .field textarea:focus { outline: 2px solid var(--rot); outline-offset: 0; border-color: var(--rot); }
+.field input[readonly] { background: var(--grau); color: var(--grau-dunkel); }
+.input-row { display: flex; gap: 6px; }
+.input-row input { flex: 1; }
+.field-actions { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: 6px; }
+.check-row { display: flex; gap: 18px; flex-wrap: wrap; padding: 8px 2px; }
+.check-row label { font-weight: 400; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.chip {
+  border: 1px solid var(--linie);
+  background: var(--grau);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+}
+.chip:hover { border-color: var(--rot); }
+.chip.aktiv { background: var(--rot); border-color: var(--rot-dunkel); color: #fff; }
+
+.suggest { list-style: none; margin: 4px 0 0; padding: 0; }
+.suggest li {
+  padding: 8px 10px;
+  border: 1px solid var(--linie);
+  border-top: none;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+.suggest li:first-child { border-top: 1px solid var(--linie); border-radius: 6px 6px 0 0; }
+.suggest li:last-child { border-radius: 0 0 6px 6px; }
+.suggest li:hover { background: var(--grau); }
+.suggest li .koord { color: var(--grau-dunkel); font-size: 12px; }
+
+.ort-block { border: 1px dashed var(--linie); border-radius: 8px; padding: 4px 14px 14px; margin-bottom: 14px; }
+
+.map-wrap { margin-top: 8px; }
+.map-toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 13px;
+  padding: 8px 0;
+}
+.map-toolbar label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+#karte {
+  height: 380px;
+  border: 1px solid var(--linie);
+  border-radius: 8px;
+  z-index: 1;
+}
+.map-status { font-size: 12px; color: var(--grau-dunkel); margin: 6px 0 0; }
+
+.wetter { margin-top: 16px; }
+.wetter-box { margin-top: 10px; overflow-x: auto; }
+.wetter-box table { border-collapse: collapse; font-size: 13px; width: 100%; max-width: 560px; }
+.wetter-box th, .wetter-box td { border: 1px solid var(--linie); padding: 6px 10px; text-align: left; }
+.wetter-box th { background: var(--grau); }
+
+.notfallnummern {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.notfall-nummer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--linie);
+  border-left: 5px solid var(--rot);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 13px;
+  background: #fff;
+}
+.notfall-nummer strong { font-size: 20px; color: var(--rot-dunkel); }
+.notfall-nummer:hover { background: var(--grau); }
+
+.skizze-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+#skizze {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--linie);
+  border-radius: 8px;
+  background: #fffdf7;
+  touch-action: none;
+  cursor: crosshair;
+}
+.legend { font-size: 12px; color: var(--grau-dunkel); line-height: 1.7; margin-top: 10px; }
+
+.pflicht-hinweis {
+  font-size: 13px;
+  color: var(--grau-dunkel);
+  text-align: center;
+  margin: 4px 0 20px;
+}
+.pflicht-hinweis a { color: var(--rot-dunkel); }
+
+.app-footer { text-align: center; font-size: 12px; color: var(--grau-dunkel); padding: 0 16px 30px; }
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 2000;
+  box-shadow: 0 4px 14px rgba(0,0,0,.3);
+}
+
+.druck { display: none; }
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff; font-size: 11pt; }
+  .app-header, .app-footer, .no-print { display: none !important; }
+  .sheet { display: none !important; }
+  .druck { display: block; }
+  .druck-blatt { page-break-after: always; }
+  .druck-blatt h2, .druck-karten-titel { font-size: 12pt; border-bottom: 1.5pt solid #000; margin: 10pt 0 5pt; }
+  .druck-kopf h1 { font-size: 15pt; margin: 0; }
+  .druck-kopf p { font-size: 9.5pt; color: #444; margin: 2pt 0 0; }
+  .druck-tabelle { width: 100%; border-collapse: collapse; }
+  .druck-tabelle th, .druck-tabelle td { border: 0.6pt solid #888; padding: 4pt 6pt; text-align: left; vertical-align: top; font-size: 10pt; }
+  .druck-tabelle th { width: 32%; background: #f0f0ee; font-size: 9.5pt; }
+  .notfall-druck th { width: 18%; }
+  .druck-skizze-wrap { page-break-inside: avoid; }
+  .druck-skizze { border: 0.6pt solid #888; }
+  .druck-skizze canvas { width: 100%; height: auto; }
+  .druck-fuss { font-size: 8.5pt; color: #555; margin-top: 8pt; }
+  .druck-karten-seite { page-break-before: always; }
+  .druck-karten-titel { font-size: 11pt; }
+  .karte-druck {
+    width: 154mm;
+    height: 96mm;
+    border: 0.6pt dashed #999;
+    margin: 6mm auto;
+    padding: 5mm 6mm;
+    font-size: 8.5pt;
+    overflow: hidden;
+  }
+  .karte-druck h3 { margin: 0 0 2mm; font-size: 11pt; border-bottom: 1pt solid var(--rot); padding-bottom: 1mm; }
+  .karte-druck table { width: 100%; border-collapse: collapse; }
+  .karte-druck td { padding: 0.8mm 0; vertical-align: top; }
+  .karte-druck td:first-child { font-weight: 700; white-space: nowrap; padding-right: 3mm; width: 34mm; }
+  .karte-druck .kd-notfall { margin-top: 2mm; font-size: 8pt; color: #333; column-count: 2; }
+  .karte-druck .kd-notfall strong { color: var(--rot-dunkel); }
+}
+
+@media (max-width: 760px) {
+  .grid { grid-template-columns: 1fr; }
+  .field.span-2, .field.span-3 { grid-column: span 1; }
+  .notfallnummern { grid-template-columns: repeat(2, 1fr); }
+  .header-inner { flex-direction: column; align-items: stretch; }
+  .header-actions { justify-content: flex-start; }
+  #karte { height: 300px; }
+}

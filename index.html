@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notfallblatt Motorsägearbeiten – Arbeitsauftrag &amp; Notfallorganisation</title>
+<meta name="description" content="Digitales Notfallblatt für Motorsäge- und Forstarbeiten nach Suva-Formular 88216.d – mit automatischer Koordinaten-Ermittlung, Wetter-Check und druckbarer Notfallkarte.">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="" defer></script>
+<script src="js/coords.js" defer></script>
+<script src="js/texte-de.js" defer></script>
+<script src="js/texte-fr.js" defer></script>
+<script src="js/texte-it.js" defer></script>
+<script src="js/texte-es.js" defer></script>
+<script src="js/texte-pt.js" defer></script>
+<script src="js/i18n.js" defer></script>
+<script src="js/app.js" defer></script>
+</head>
+<body>
+
+<header class="app-header no-print">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">🪓</span>
+      <div>
+        <h1 data-i18n="titel">Notfallblatt Motorsägearbeiten</h1>
+        <p data-i18n="untertitel">Arbeitsauftrag &amp; Notfallorganisation im Forst · nach Suva-Formular 88216.d</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="einsatz-picker">
+        <label for="spracheSelect">🌐</label>
+        <select id="spracheSelect">
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="it">Italiano</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+        </select>
+      </div>
+      <div class="einsatz-picker">
+        <label for="einsatzSelect" data-i18n="einsatzort">Einsatzort</label>
+        <select id="einsatzSelect"></select>
+      </div>
+      <button type="button" id="btnNeu" class="btn" data-i18n="btnNeu">＋ Neu</button>
+      <button type="button" id="btnDuplizieren" class="btn" data-i18n="btnDuplizieren">⧉ Duplizieren</button>
+      <button type="button" id="btnUmbenennen" class="btn" data-i18n="btnUmbenennen">✎ Umbenennen</button>
+      <button type="button" id="btnLoeschen" class="btn btn-danger" data-i18n="btnLoeschen">🗑 Löschen</button>
+      <button type="button" id="btnExport" class="btn" data-i18n="btnExport">⭳ Export</button>
+      <button type="button" id="btnImport" class="btn" data-i18n="btnImport">⭱ Import</button>
+      <input type="file" id="importFile" accept=".json" hidden>
+      <button type="button" id="btnDrucken" class="btn btn-primary" data-i18n="btnDrucken">🖨 Drucken / PDF</button>
+    </div>
+  </div>
+</header>
+
+<main class="sheet">
+
+  <section class="card" id="sec-ort">
+    <h2 data-i18n="sec1Titel">1 · Einsatzort &amp; Koordinaten</h2>
+    <p class="hint" data-i18n="sec1Hinweis">Adresse oder Flurname eingeben → Koordinaten werden automatisch berechnet. Oder umgekehrt: Koordinaten (LV95/LV03) eingeben → Ort wird gesucht. Rega und Rettungsdienste fragen immer nach den Schweizer Koordinaten (LV95).</p>
+
+    <div class="ort-block" data-ort="mitte">
+      <h3><span data-i18n="mitteTitel">Mitte Holzschlag</span> <span class="sub" data-i18n="mitteSub">(Treffpunkt Luftrettung / Rega)</span></h3>
+      <div class="grid">
+        <div class="field span-2">
+          <label for="mitteOrt" data-i18n="ortsbezeichnung">Ortsbezeichnung</label>
+          <div class="input-row">
+            <input type="text" id="mitteOrt" data-i18n-ph="mitteOrtPh" placeholder="z. B. Flurname, Adresse, Waldstück …">
+            <button type="button" class="btn" data-geocode="mitte" data-i18n="btnGeocode">🔍 Koordinaten berechnen</button>
+          </div>
+          <ul class="suggest" id="suggestMitte"></ul>
+        </div>
+        <div class="field">
+          <label for="mitteE" data-i18n="koordE">Koordinate E (LV95)</label>
+          <input type="text" id="mitteE" inputmode="numeric" placeholder="2'600'000">
+        </div>
+        <div class="field">
+          <label for="mitteN" data-i18n="koordN">Koordinate N (LV95)</label>
+          <input type="text" id="mitteN" inputmode="numeric" placeholder="1'200'000">
+        </div>
+        <div class="field">
+          <label for="mitteLv03" data-i18n="lv03">LV03 (alte Militärkoordinaten)</label>
+          <input type="text" id="mitteLv03" readonly placeholder="–">
+        </div>
+        <div class="field field-actions">
+          <button type="button" class="btn" data-gps="mitte" data-i18n="btnGps">📍 Meine Position</button>
+          <button type="button" class="btn" data-karte="mitte" data-i18n="btnKarte">🗺 Auf Karte wählen</button>
+          <a class="btn" id="linkKarteMitte" href="#" target="_blank" rel="noopener">↗ map.geo.admin.ch</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="ort-block" data-ort="tpunkt">
+      <h3><span data-i18n="tTitel">T-Punkt</span> <span class="sub" data-i18n="tSub">(Treffpunkt Bodenrettung / Ambulanz)</span></h3>
+      <div class="grid">
+        <div class="field span-2">
+          <label for="tOrt" data-i18n="ortsbezeichnung">Ortsbezeichnung</label>
+          <div class="input-row">
+            <input type="text" id="tOrt" data-i18n-ph="tOrtPh" placeholder="z. B. Parkplatz, Strassenkreuzung, Forsthof …">
+            <button type="button" class="btn" data-geocode="tpunkt" data-i18n="btnGeocode">🔍 Koordinaten berechnen</button>
+          </div>
+          <ul class="suggest" id="suggestTpunkt"></ul>
+        </div>
+        <div class="field">
+          <label for="tE" data-i18n="koordE">Koordinate E (LV95)</label>
+          <input type="text" id="tE" inputmode="numeric" placeholder="2'600'000">
+        </div>
+        <div class="field">
+          <label for="tN" data-i18n="koordN">Koordinate N (LV95)</label>
+          <input type="text" id="tN" inputmode="numeric" placeholder="1'200'000">
+        </div>
+        <div class="field">
+          <label for="tLv03" data-i18n="lv03">LV03 (alte Militärkoordinaten)</label>
+          <input type="text" id="tLv03" readonly placeholder="–">
+        </div>
+        <div class="field field-actions">
+          <button type="button" class="btn" data-gps="tpunkt" data-i18n="btnGps">📍 Meine Position</button>
+          <button type="button" class="btn" data-karte="tpunkt" data-i18n="btnKarte">🗺 Auf Karte wählen</button>
+          <a class="btn" id="linkKarteT" href="#" target="_blank" rel="noopener">↗ map.geo.admin.ch</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-wrap no-print">
+      <div class="map-toolbar">
+        <span data-i18n="kartenKlick">Kartenklick setzt:</span>
+        <label><input type="radio" name="kartenZiel" value="mitte" checked> <span data-i18n="mitteTitel">Mitte Holzschlag</span></label>
+        <label><input type="radio" name="kartenZiel" value="tpunkt"> <span data-i18n="tTitel">T-Punkt</span></label>
+      </div>
+      <div id="karte"></div>
+      <p class="map-status" id="mapStatus" data-i18n="karteLaden">Karte wird geladen …</p>
+    </div>
+
+    <div class="wetter no-print">
+      <h3><span data-i18n="wetterTitel">Wetter-Check</span> <span class="sub" data-i18n="wetterSub">(Suva: Notfallorganisation täglich überprüfen – Witterung, Sicht, Zufahrt)</span></h3>
+      <button type="button" id="btnWetter" class="btn" data-i18n="btnWetter">☁️ Wetter für den Einsatzort abrufen</button>
+      <div id="wetterBox" class="wetter-box" hidden></div>
+    </div>
+  </section>
+
+  <section class="card" id="sec-auftrag">
+    <h2 data-i18n="sec2Titel">2 · Arbeitsauftrag</h2>
+    <div class="grid">
+      <div class="field span-2">
+        <label for="wasWoWozu"><span data-i18n="wasWoWozu">Was, wo, wozu?</span> <span class="sub" data-i18n="wasWoWozuSub">(Holzschlag, Ort, Zweck)</span></label>
+        <textarea id="wasWoWozu" rows="2" data-i18n-ph="wasWoWozuPh" placeholder="z. B. Durchforstung Fichtenbestand, Brennholz für Eigentümer"></textarea>
+      </div>
+      <div class="field">
+        <label for="gruppenchef" data-i18n="gruppenchef">Gruppenchef</label>
+        <input type="text" id="gruppenchef">
+      </div>
+      <div class="field">
+        <label for="gruppenchefTel" data-i18n="gruppenchefTel">Tel. Gruppenchef</label>
+        <input type="text" id="gruppenchefTel" inputmode="tel" placeholder="+41 79 …">
+      </div>
+      <div class="field">
+        <label for="mitarbeiter" data-i18n="mitarbeiter">Mitarbeiter</label>
+        <input type="text" id="mitarbeiter">
+      </div>
+      <div class="field">
+        <label for="betreuerLernende" data-i18n="betreuerLernende">Betreuer Lernende</label>
+        <input type="text" id="betreuerLernende">
+      </div>
+      <div class="field span-2">
+        <label for="wieWomit"><span data-i18n="wieWomit">Wie, womit?</span> <span class="sub" data-i18n="wieWomitSub">(Arbeitsverfahren, Mittel)</span></label>
+        <textarea id="wieWomit" rows="2" data-i18n-ph="wieWomitPh" placeholder="z. B. manuelle Holzernte, Motorsäge Stihl MS 461, Seilwinde, Rückepferd …"></textarea>
+      </div>
+      <div class="field span-2">
+        <label for="besonderes" data-i18n="besonderes">Besonderes?</label>
+        <textarea id="besonderes" rows="2" data-i18n-ph="besonderesPh" placeholder="z. B. Hangneigung > 30°, Wertholz, öffentlicher Wald …"></textarea>
+      </div>
+      <div class="field">
+        <label for="hiebsmenge"><span data-i18n="hiebsmenge">Wie viel?</span> <span class="sub" data-i18n="hiebsmengeSub">(Hiebsmenge)</span></label>
+        <input type="text" id="hiebsmenge" data-i18n-ph="hiebsmengePh" placeholder="z. B. 70 m³">
+      </div>
+      <div class="field">
+        <label for="auftraggeber" data-i18n="auftraggeber">Auftraggeber / Waldeigentümer</label>
+        <input type="text" id="auftraggeber">
+      </div>
+      <div class="field span-2">
+        <label><span data-i18n="gefahren">Gefahren / Massnahmen</span> <span class="sub" data-i18n="gefahrenSub">(häufige Gefahren anklicken, Text wird übernommen)</span></label>
+        <div class="chips" id="gefahrenChips"></div>
+        <textarea id="gefahren" rows="3" data-i18n-ph="gefahrenPh" placeholder="Gefahren und zu treffende Sicherheitsmassnahmen …"></textarea>
+      </div>
+      <div class="field">
+        <label for="beginnDatum" data-i18n="beginn">Beginn</label>
+        <input type="date" id="beginnDatum">
+      </div>
+      <div class="field">
+        <label for="beginnZeit" data-i18n="beginnZeit">Arbeitsbeginn (Uhrzeit)</label>
+        <input type="time" id="beginnZeit">
+      </div>
+      <div class="field">
+        <label for="endeDatum" data-i18n="ende">Ende</label>
+        <input type="date" id="endeDatum">
+      </div>
+      <div class="field">
+        <label for="endeZeit" data-i18n="endeZeit">Arbeitsschluss (Uhrzeit)</label>
+        <input type="time" id="endeZeit">
+      </div>
+      <div class="field span-2">
+        <label for="ausweicharbeiten"><span data-i18n="ausweich">Ausweicharbeiten</span> <span class="sub" data-i18n="ausweichSub">(bei Witterung/Unbrauchbarkeit)</span></label>
+        <input type="text" id="ausweicharbeiten" data-i18n-ph="ausweichPh" placeholder="z. B. Aufarbeiten Lagerplatz, Instandhaltung">
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="sec-meldung">
+    <h2 data-i18n="sec3Titel">3 · Notfallmeldung</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="meldeName" data-i18n="meldeName">Wer meldet? Name</label>
+        <input type="text" id="meldeName">
+      </div>
+      <div class="field">
+        <label for="meldeStandort" data-i18n="meldeStandort">Standort</label>
+        <input type="text" id="meldeStandort" data-i18n-ph="meldeStandortPh" placeholder="z. B. oberer Rand Schlag, bei Rückegasse 3">
+      </div>
+      <div class="field">
+        <label for="meldeTel" data-i18n="meldeTel">Wie bin ich erreichbar (Tel.-Nr.)</label>
+        <input type="text" id="meldeTel" inputmode="tel" placeholder="+41 79 …">
+      </div>
+      <div class="field span-3">
+        <label data-i18n="meldungAn">Meldung an</label>
+        <div class="check-row">
+          <label><input type="checkbox" id="meldeGruppenchef"> <span data-i18n="chkGruppenchef">Gruppenchef</span></label>
+          <label><input type="checkbox" id="meldeAuftraggeber"> <span data-i18n="chkAuftraggeber">Auftraggeber</span></label>
+          <label><input type="checkbox" id="meldeFamilie"> <span data-i18n="chkFamilie">Familie/Angehörige</span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="sec-notfall">
+    <h2 data-i18n="sec4Titel">4 · Notfall-Nummern &amp; Rettung</h2>
+    <div class="notfallnummern">
+      <a class="notfall-nummer" href="tel:1414"><strong>1414</strong> <span data-i18n="nrRega">Luftrettung / Rega</span></a>
+      <a class="notfall-nummer" href="tel:144"><strong>144</strong> <span data-i18n="nrAmbulanz">Ambulanz</span></a>
+      <a class="notfall-nummer" href="tel:112"><strong>112</strong> <span data-i18n="nr112">Allgemeiner Notruf</span></a>
+      <a class="notfall-nummer" href="tel:118"><strong>118</strong> <span data-i18n="nr118">Feuerwehrnotruf</span></a>
+      <a class="notfall-nummer" href="tel:140"><strong>140</strong> <span data-i18n="nr140">Pannenhilfe</span></a>
+      <a class="notfall-nummer" href="tel:145"><strong>145</strong> <span data-i18n="nr145">Vergiftungen</span></a>
+      <a class="notfall-nummer" href="tel:117"><strong>117</strong> <span data-i18n="nr117">Polizeinotruf</span></a>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label for="arztName" data-i18n="arzt">Nächster Arzt</label>
+        <input type="text" id="arztName">
+      </div>
+      <div class="field">
+        <label for="arztTel" data-i18n="tel">Tel.</label>
+        <input type="text" id="arztTel" inputmode="tel">
+      </div>
+      <div class="field">
+        <label for="arztOrt" data-i18n="ort">Ort</label>
+        <input type="text" id="arztOrt">
+      </div>
+      <div class="field">
+        <label for="spitalName" data-i18n="spital">Nächstes Spital</label>
+        <input type="text" id="spitalName">
+      </div>
+      <div class="field">
+        <label for="spitalTel" data-i18n="tel">Tel.</label>
+        <input type="text" id="spitalTel" inputmode="tel">
+      </div>
+      <div class="field">
+        <label for="spitalOrt" data-i18n="ort">Ort</label>
+        <input type="text" id="spitalOrt">
+      </div>
+    </div>
+    <div class="no-print">
+      <button type="button" id="btnNahe" class="btn" disabled><span data-i18n="btnNahe">🏥 Arzt &amp; Spital in der Nähe suchen</span> <span class="sub" data-i18n="btnNaheSub">(erst Koordinaten erfassen)</span></button>
+      <ul class="suggest" id="naheListe"></ul>
+    </div>
+    <div class="field span-3">
+      <label for="hinweise"><span data-i18n="hinweise">Weitere Hinweise</span> <span class="sub" data-i18n="hinweiseSub">(Zufahrt, Schlüssel, Gatter, Hunde, Stromleitungen …)</span></label>
+      <textarea id="hinweise" rows="2"></textarea>
+    </div>
+  </section>
+
+  <section class="card" id="sec-skizze">
+    <h2 data-i18n="sec5Titel">5 · Organisations- und Schlagskizze</h2>
+    <p class="hint" data-i18n="sec5Hinweis">Einzeichnen: Nordrichtung, Transportgrenze, Signalisation/Absperrung, Fällrichtung, Lagerplätze, Zufahrt, T-Punkt, örtliche Besonderheiten (Wegrechte, Kabel, Leitungen, Naturschutz, Bauten).</p>
+    <div class="skizze-tools no-print">
+      <button type="button" id="skizzeUndo" class="btn" data-i18n="skizzeUndo">↩ Undo</button>
+      <button type="button" id="skizzeNord" class="btn" data-i18n="skizzeNord">↑ Nordpfeil setzen</button>
+      <button type="button" id="skizzeClear" class="btn btn-danger" data-i18n="skizzeClear">✕ Alles löschen</button>
+      <span class="sub" data-i18n="skizzeSub">Mit Finger oder Maus zeichnen</span>
+    </div>
+    <canvas id="skizze" width="1200" height="700"></canvas>
+    <p class="legend"><strong data-i18n="legendeLabel">Legende:</strong> <span data-i18n="legende">↑ Nordpfeil · ▲ Arbeitsbeginn, Pfeil zeigt in Arbeitsrichtung · → Fällrichtung · ◦ Stammholzlager (Zahl = Fassungsvermögen m³, Abkürzung = Holzart) · ▤ Schichtholzlager · ⊕ Koordination Luftrettung (Mitte Holzschlag) · ⊗ Koordination T-Punkt · ▭ Mannschaftswagen · ── autobefahrbare Strasse mit Abfuhrrichtung · ┄ Rückegasse · ┈ Maschinenweg · ⋯ Seillinie · – Fussweg</span></p>
+  </section>
+
+  <p class="pflicht-hinweis"><span data-i18n="pflichtHinweis">Die Notfallorganisation muss schriftlich vorliegen, allen bekannt sein und täglich überprüft werden (Witterung, Sicht, Zufahrt).</span> <a href="https://www.suva.ch/88216.d" target="_blank" rel="noopener">Suva-Originalformular 88216.d</a> · <a href="https://www.suva.ch/88217-1.d" target="_blank" rel="noopener">Notfallkarte 88217</a></p>
+</main>
+
+<div id="druckBereich" class="druck">
+  <section class="druck-blatt">
+    <header class="druck-kopf">
+      <h1 data-i18n="druckTitel">Arbeitsauftrag und Notfallorganisation im Forst</h1>
+      <p><span data-i18n="druckMotorsaegearbeiten">Motorsägearbeiten</span> · <span data-i18n="druckAuftrag">Auftrag:</span> <span data-print="titel"></span> · <span data-i18n="druckAusgefuellt">Ausgefüllt:</span> <span data-print="datumHeute"></span></p>
+    </header>
+
+    <h2 data-i18n="pAuftragstitel">Arbeitsauftrag</h2>
+    <table class="druck-tabelle">
+      <tr><th data-i18n="pWasWoWozu">Was, wo, wozu? (Holzschlag, Ort, Zweck)</th><td data-print="wasWoWozu"></td></tr>
+      <tr><th data-i18n="pWer">Wer?</th><td data-print="wer"></td></tr>
+      <tr><th data-i18n="pWieWomit">Wie, womit? (Arbeitsverfahren, Mittel)</th><td data-print="wieWomit"></td></tr>
+      <tr><th data-i18n="pBesonderes">Besonderes?</th><td data-print="besonderes"></td></tr>
+      <tr><th data-i18n="pMenge">Wie viel? (Hiebsmenge) / Auftraggeber</th><td data-print="menge"></td></tr>
+      <tr><th data-i18n="pGefahren">Gefahren / Massnahmen</th><td data-print="gefahren"></td></tr>
+      <tr><th data-i18n="pWann">Wann? / Ausweicharbeiten</th><td data-print="wann"></td></tr>
+    </table>
+
+    <h2 data-i18n="pNotfallmeldung">Notfallmeldung</h2>
+    <table class="druck-tabelle">
+      <tr><th data-i18n="pWerMeldet">Wer meldet?</th><td data-print="meldung"></td></tr>
+      <tr><th data-i18n="pLuft">Luftrettung – Mitte Holzschlag</th><td data-print="luft"></td></tr>
+      <tr><th data-i18n="pBoden">Bodenrettung – T-Punkt</th><td data-print="boden"></td></tr>
+    </table>
+
+    <div class="druck-skizze-wrap">
+      <h2 data-i18n="pSkizzenTitel">Organisations- und Schlagskizze</h2>
+      <div class="druck-skizze"><canvas id="skizzeDruck" width="1200" height="700"></canvas></div>
+    </div>
+
+    <h2 data-i18n="pNotfallnummern">Notfall-Nummern</h2>
+    <table class="druck-tabelle notfall-druck">
+      <tr>
+        <td><strong>1414</strong> <span data-i18n="nrRega">Luftrettung/Rega</span></td>
+        <td><strong>144</strong> <span data-i18n="nrAmbulanz">Ambulanz</span></td>
+        <td><strong>112</strong> <span data-i18n="nr112">Allgemeiner Notruf</span></td>
+        <td><strong>117</strong> <span data-i18n="nr117">Polizeinotruf</span></td>
+      </tr>
+      <tr>
+        <td><strong>118</strong> <span data-i18n="nr118">Feuerwehrnotruf</span></td>
+        <td><strong>140</strong> <span data-i18n="nr140">Pannenhilfe</span></td>
+        <td><strong>145</strong> <span data-i18n="nr145">Vergiftungen</span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <th data-i18n="pArzt">Nächster Arzt</th><td data-print="arzt"></td>
+        <th data-i18n="pSpital">Nächstes Spital</th><td data-print="spital"></td>
+      </tr>
+      <tr><th data-i18n="pHinweise">Hinweise</th><td colspan="3" data-print="hinweise"></td></tr>
+    </table>
+
+    <p class="druck-fuss" data-i18n="pFuss">Die Notfallorganisation muss schriftlich vorliegen, allen bekannt sein und täglich überprüft werden (Witterung, Sicht, Zufahrt). Vorlage nach Suva 88216.d – dieses Blatt ersetzt nicht das Originalformular der Suva.</p>
+  </section>
+
+  <section class="druck-karten-seite">
+    <h2 class="druck-karten-titel" data-i18n="kartenSeitenTitel">Notfallkarte (nach Suva 88217) – 2× ausschneiden, in der Brusttasche / im Fahrzeug mitführen</h2>
+    <div class="karte-druck" data-karte="1"></div>
+    <div class="karte-druck" data-karte="2"></div>
+  </section>
+</div>
+
+<footer class="app-footer no-print">
+  <p data-i18n="footer">Daten bleiben ausschliesslich auf diesem Gerät (localStorage). Keine Übertragung an einen Server. Geocoding: Photon/Nominatim © OpenStreetMap-Mitwirkende · Wetter: Open-Meteo · Karten: Leaflet + OpenStreetMap.</p>
+</footer>
+
+</body>
+</html>

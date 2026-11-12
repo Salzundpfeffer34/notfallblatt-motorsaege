@@ -76,6 +76,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
 <button type="button" class="chip" data-q="37°42‘10‘‘N 111°23‘16‘‘W">Grad/Min/Sek · USA</button>
+<button type="button" class="chip" data-q="N37 09.729 W111 42.701">Grad + Dezimalmin</button>
 <button type="button" class="chip" data-q="2683303, 1247925">LV95</button>
 <button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
 <button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
@@ -107,6 +108,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <ul>
 <li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
 <li><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
+<li><strong>Grad + Dezimalminuten (GPS):</strong> <code>N37 09.729 W111 42.701</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)</li>
 <li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx&ndash;2'9xx xxx, Nord 1'0xx xxx&ndash;1'4xx xxx)</li>
 <li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
 <li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
@@ -394,6 +396,50 @@ function parseDmsString(s) {
   return orderLatLon(a, b);
 }
 
+function parseDmmString(s) {
+  var forms = [
+    /([NSEW])\s*(\d{1,3})\s+(\d{1,2}(?:[.,]\d+))\s*['′‘’´m]?/gi,
+    /(\d{1,3})\s+(\d{1,2}(?:[.,]\d+))\s*['′‘’´m]?\s*([NSEW])/gi
+  ];
+  var hemIdx = [1, 3];
+  var degIdx = [2, 1];
+  var minIdx = [3, 2];
+  for (var f = 0; f < forms.length; f++) {
+    var re = forms[f];
+    var ms = [];
+    var m;
+    while ((m = re.exec(s)) !== null) {
+      ms.push(m);
+    }
+    if (ms.length !== 2) { continue; }
+    if (ms.length * 2 !== extractNumbers(s).length) { continue; }
+    var vals = [], hems = [];
+    var ok = true;
+    for (var i = 0; i < ms.length; i++) {
+      var g = ms[i];
+      var deg = parseFloat(g[degIdx[f]]);
+      var mn = parseFloat(g[minIdx[f]].replace(',', '.'));
+      var h = (g[hemIdx[f]] || '').toUpperCase();
+      if (h === '' || mn >= 60.0) { ok = false; break; }
+      var val = deg + mn / 60.0;
+      if (h === 'S' || h === 'W') { val = -Math.abs(val); }
+      vals.push(val);
+      hems.push(h);
+    }
+    if (!ok) { continue; }
+    var a = vals[0], b = vals[1], ha = hems[0], hb = hems[1];
+    var ll;
+    if ((ha === 'E' || ha === 'W') && (hb === 'N' || hb === 'S')) {
+      ll = { lat: b, lon: a };
+    } else {
+      ll = orderLatLon(a, b);
+    }
+    if (Math.abs(ll.lat) > 90.0 || Math.abs(ll.lon) > 180.0) { continue; }
+    return ll;
+  }
+  return null;
+}
+
 function classifyPair(a, b) {
   var inLv95 = a >= 2300000.0 && a <= 3000000.0 && b >= 1000000.0 && b <= 1400000.0;
   var inLv03 = a >= 300000.0 && a <= 1000000.0 && b >= 0.0 && b <= 400000.0;
@@ -488,8 +534,9 @@ function parseInput(raw, mode, swap) {
 
   if (mode === 'dms') {
     var lld = parseDmsString(raw);
+    if (lld === null) { lld = parseDmmString(raw); }
     if (lld === null) {
-      throw new Error('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W');
+      throw new Error('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W oder N37 09.729 W111 42.701');
     }
     if (swap) { var td = lld.lat; lld.lat = lld.lon; lld.lon = td; }
     lld.lon = normalizeLon(lld.lon);
@@ -568,6 +615,15 @@ function parseInput(raw, mode, swap) {
       noteU = 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «32T 465403 5247150».';
     }
     return { lat: llu.lat, lon: llu.lon, note: noteU };
+  }
+
+  if (mode === 'auto') {
+    var llmm = parseDmmString(raw);
+    if (llmm !== null) {
+      llmm.lon = normalizeLon(llmm.lon);
+      llmm.note = 'Grad + Dezimalminuten erkannt (z. B. N37 09.729 W111 42.701).';
+      return llmm;
+    }
   }
 
   var count = nums.length;

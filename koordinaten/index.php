@@ -345,6 +345,63 @@ function parseDmsString(string $s): ?array
     return orderLatLon($a, $b);
 }
 
+function parseDmmString(string $s): ?array
+{
+    $forms = array(
+        '/([NSEW])\s*(\d{1,3})\s+(\d{1,2}(?:[.,]\d+))\s*[\'′‘’´m]?/i',
+        '/(\d{1,3})\s+(\d{1,2}(?:[.,]\d+))\s*[\'′‘’´m]?\s*([NSEW])/i'
+    );
+    $hemIdx = array(1, 3);
+    $degIdx = array(2, 1);
+    $minIdx = array(3, 2);
+    foreach ($forms as $f => $re) {
+        if (!preg_match_all($re, $s, $ms, PREG_SET_ORDER)) {
+            continue;
+        }
+        if (count($ms) !== 2) {
+            continue;
+        }
+        if (count($ms) * 2 !== count(extractNumbers($s))) {
+            continue;
+        }
+        $vals = array();
+        $hems = array();
+        $ok = true;
+        foreach ($ms as $g) {
+            $deg = (float) $g[$degIdx[$f]];
+            $min = (float) str_replace(',', '.', $g[$minIdx[$f]]);
+            $h = strtoupper($g[$hemIdx[$f]] ?? '');
+            if ($h === '' || $min >= 60.0) {
+                $ok = false;
+                break;
+            }
+            $val = $deg + $min / 60.0;
+            if ($h === 'S' || $h === 'W') {
+                $val = -abs($val);
+            }
+            $vals[] = $val;
+            $hems[] = $h;
+        }
+        if (!$ok) {
+            continue;
+        }
+        $a = $vals[0];
+        $b = $vals[1];
+        $ha = $hems[0];
+        $hb = $hems[1];
+        if (($ha === 'E' || $ha === 'W') && ($hb === 'N' || $hb === 'S')) {
+            $ll = array('lat' => $b, 'lon' => $a);
+        } else {
+            $ll = orderLatLon($a, $b);
+        }
+        if (abs($ll['lat']) > 90.0 || abs($ll['lon']) > 180.0) {
+            continue;
+        }
+        return $ll;
+    }
+    return null;
+}
+
 function classifyPair(float $a, float $b): ?array
 {
     $inLv95 = ($a >= 2300000.0 && $a <= 3000000.0 && $b >= 1000000.0 && $b <= 1400000.0);
@@ -448,7 +505,10 @@ function parseInput(string $raw, string $mode, bool $swap): array
     if ($mode === 'dms') {
         $ll = parseDmsString($raw);
         if ($ll === null) {
-            throw new RuntimeException('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W');
+            $ll = parseDmmString($raw);
+        }
+        if ($ll === null) {
+            throw new RuntimeException('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W oder N37 09.729 W111 42.701');
         }
         if ($swap) {
             $t = $ll['lat'];
@@ -536,6 +596,15 @@ function parseInput(string $raw, string $mode, bool $swap): array
             $note = 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «32T 465403 5247150».';
         }
         return array('lat' => $ll['lat'], 'lon' => $ll['lon'], 'note' => $note);
+    }
+
+    if ($mode === 'auto') {
+        $ll = parseDmmString($raw);
+        if ($ll !== null) {
+            $ll['lon'] = normalizeLon($ll['lon']);
+            $ll['note'] = 'Grad + Dezimalminuten erkannt (z. B. N37 09.729 W111 42.701).';
+            return $ll;
+        }
     }
 
     $count = count($nums);
@@ -715,6 +784,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
 <button type="button" class="chip" data-q="37°42‘10‘‘N 111°23‘16‘‘W">Grad/Min/Sek · USA</button>
+<button type="button" class="chip" data-q="N37 09.729 W111 42.701">Grad + Dezimalmin</button>
 <button type="button" class="chip" data-q="2683303, 1247925">LV95</button>
 <button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
 <button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
@@ -761,6 +831,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <ul>
 <li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
 <li><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
+<li><strong>Grad + Dezimalminuten (GPS):</strong> <code>N37 09.729 W111 42.701</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)</li>
 <li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx–2'9xx xxx, Nord 1'0xx xxx–1'4xx xxx)</li>
 <li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
 <li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>

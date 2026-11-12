@@ -780,6 +780,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <input type="checkbox" id="swap" name="swap" value="1"<?php echo $swap ? ' checked' : ''; ?>>
 <label for="swap" style="margin:0;font-weight:400">Erste Zahl ist die Länge (lon, y) – nicht die Breite</label>
 </div>
+<div class="check">
+<input type="checkbox" id="autoclear" checked>
+<label for="autoclear" style="margin:0;font-weight:400">Feld beim Klicken automatisch leeren</label>
+</div>
 <div class="chips">
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
@@ -849,6 +853,7 @@ Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die 
 (function () {
   var el = document.getElementById('q');
   var sel = document.querySelector('select[name=f]');
+  var autoclearEl = document.getElementById('autoclear');
   if (!el || !sel) { return; }
   var OKCHARS = '0123456789 ,;./*+-\t\'' + '\u2019\u2018\u201D\u00B4\u00B0"';
   var CFG = {
@@ -880,6 +885,17 @@ Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die 
     var v = clean(el.value);
     if (v !== el.value) { el.value = v; }
   });
+  el.addEventListener('focus', function () {
+    if (autoclearEl && autoclearEl.checked && el.value !== '') { el.value = ''; }
+  });
+  if (autoclearEl) {
+    try {
+      if (localStorage.getItem('konverter-autoclear') === '0') { autoclearEl.checked = false; }
+    } catch (e) {}
+    autoclearEl.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-autoclear', autoclearEl.checked ? '1' : '0'); } catch (e) {}
+    });
+  }
   sel.addEventListener('change', function () {
     var v = clean(el.value);
     if (v !== el.value) { el.value = v; }

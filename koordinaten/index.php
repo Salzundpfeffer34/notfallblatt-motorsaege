@@ -573,7 +573,6 @@ function formatNum(float $v, int $dec): string
 function buildResults(float $lat, float $lon): array
 {
     $lv95 = latlonToLv95($lat, $lon);
-    $lv03 = latlonToLv03($lat, $lon);
     $utm = latlonToUtm($lat, $lon);
     $merc = latlonToMercator($lat, $lon);
     $mgrs = latlonToMgrs($lat, $lon);
@@ -582,8 +581,8 @@ function buildResults(float $lat, float $lon): array
         array('WGS84 · Dezimalgrad (Breite, Länge)', formatNum($lat, 6) . ', ' . formatNum($lon, 6)),
         array('WGS84 · Grad, Minuten, Sekunden', formatDms($lat, $lon)),
         array('WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum($lon, 6) . ', ' . formatNum($lat, 6)),
+        array('NAD83 (Nordamerika) · geografisch (B, L)', formatNum($lat, 6) . ', ' . formatNum($lon, 6)),
         array('Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum($lv95['east'], 1) . ', ' . formatNum($lv95['north'], 1)),
-        array('Schweiz · LV03 / CH1903 (x, y)', formatNum($lv03['east'], 1) . ', ' . formatNum($lv03['north'], 1)),
         array('UTM (Zone, Ost, Nord)', sprintf('%d%s %s %s', $utm['zone'], latBand($lat), formatNum($utm['east'], 2), formatNum($utm['north'], 2))),
         array('MGRS / USNG (1 m)', $mgrs),
         array('Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum($merc['x'], 2) . ', ' . formatNum($merc['y'], 2)),
@@ -635,8 +634,8 @@ function renderPage(): void
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Koordinaten-Konverter · WGS84, DMS, LV95, LV03, UTM, MGRS, Mercator</title>
-<meta name="description" content="Koordinaten online umrechnen: WGS84 (Dezimalgrad), Grad/Minuten/Sekunden, Schweizer LV95/CH1903+, LV03/CH1903, UTM, MGRS und Web Mercator (EPSG:3857 / Google Maps).">
+<title>Koordinaten-Konverter · WGS84, DMS, LV95, NAD83, UTM, MGRS, Mercator</title>
+<meta name="description" content="Koordinaten online umrechnen: WGS84 (Dezimalgrad), Grad/Minuten/Sekunden, Schweizer LV95/CH1903+, NAD83, UTM, MGRS und Web Mercator (EPSG:3857 / Google Maps).">
 <style>
 :root { --bg:#f4f6f9; --card:#ffffff; --ink:#1c2733; --muted:#64748b; --line:#e2e8f0; --accent:#0f62fe; --accent2:#0b4dc7; }
 * { box-sizing: border-box; }
@@ -693,7 +692,6 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <option value="wgs84"<?php echo $f === 'wgs84' ? ' selected' : ''; ?>>WGS84 · Dezimalgrad</option>
 <option value="dms"<?php echo $f === 'dms' ? ' selected' : ''; ?>>Grad / Minuten / Sekunden</option>
 <option value="lv95"<?php echo $f === 'lv95' ? ' selected' : ''; ?>>Schweiz · LV95 (CH1903+)</option>
-<option value="lv03"<?php echo $f === 'lv03' ? ' selected' : ''; ?>>Schweiz · LV03 (CH1903)</option>
 <option value="utm"<?php echo $f === 'utm' ? ' selected' : ''; ?>>UTM</option>
 <option value="mgrs"<?php echo $f === 'mgrs' ? ' selected' : ''; ?>>MGRS</option>
 <option value="mercator"<?php echo $f === 'mercator' ? ' selected' : ''; ?>>Web Mercator (EPSG:3857)</option>
@@ -708,7 +706,6 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
 <button type="button" class="chip" data-q="2683303, 1247925">LV95</button>
-<button type="button" class="chip" data-q="683303, 247925">LV03</button>
 <button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
 <button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
 <button type="button" class="chip" data-q="-8238310, 4970072">Mercator · New York</button>
@@ -755,7 +752,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
 <li><strong>Grad/Minuten/Sekunden:</strong> <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>)</li>
 <li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx–2'9xx xxx, Nord 1'0xx xxx–1'4xx xxx)</li>
-<li><strong>LV03 / CH1903:</strong> <code>683303, 247925</code></li>
+<li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
 <li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
 <li><strong>MGRS:</strong> <code>32TMT6540247150</code> oder <code>32T MT 65402 47150</code></li>
 <li><strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen</li>
@@ -763,7 +760,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 </div>
 
 <footer>
-Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95/LV03 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet.
+Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet.
 </footer>
 </div>
 

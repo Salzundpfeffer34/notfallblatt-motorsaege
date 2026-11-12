@@ -25,6 +25,7 @@ window.NOTFALL_TEXTE.pt = {
   btnGeocode: "🔍 Calcular coordenadas",
   btnGps: "📍 A minha posição",
   btnKarte: "🗺 Escolher no mapa",
+  btnKonverter: "↗ Converter coordenadas",
   kartenKlick: "Um clique no mapa define:",
   karteLaden: "A carregar o mapa …",
   wetterTitel: "Controlo do tempo",

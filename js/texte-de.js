@@ -25,6 +25,7 @@ window.NOTFALL_TEXTE.de = {
   btnGeocode: "🔍 Koordinaten berechnen",
   btnGps: "📍 Meine Position",
   btnKarte: "🗺 Auf Karte wählen",
+  btnKonverter: "↗ Koordinaten umrechnen",
   kartenKlick: "Kartenklick setzt:",
   karteLaden: "Karte wird geladen …",
   wetterTitel: "Wetter-Check",

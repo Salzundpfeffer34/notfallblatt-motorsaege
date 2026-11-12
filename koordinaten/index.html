@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Koordinaten-Konverter · WGS84, DMS, LV95, LV03, UTM, MGRS, Mercator</title>
+<meta name="description" content="Koordinaten online umrechnen: WGS84 (Dezimalgrad), Grad/Minuten/Sekunden, Schweizer LV95/CH1903+, LV03/CH1903, UTM, MGRS und Web Mercator (EPSG:3857 / Google Maps).">
+<style>
+:root { --bg:#f4f6f9; --card:#ffffff; --ink:#1c2733; --muted:#64748b; --line:#e2e8f0; --accent:#0f62fe; --accent2:#0b4dc7; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; }
+header h1 { font-size: 1.6rem; margin: 8px 0 4px; }
+header p { color: var(--muted); margin: 0 0 20px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(16,24,40,.06); margin-bottom: 20px; }
+label { display:block; font-weight:600; margin-bottom:6px; }
+.row { display:flex; gap:10px; flex-wrap:wrap; }
+.row > * { flex:1 1 220px; }
+input[type=text], select { width:100%; padding:12px 14px; font-size:1.05rem; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+input[type=text]:focus, select:focus { outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+button.go { flex:0 0 auto; padding:12px 22px; font-size:1.05rem; font-weight:600; color:#fff; background:var(--accent); border:0; border-radius:8px; cursor:pointer; }
+button.go:hover { background:var(--accent2); }
+.check { display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--muted); font-size:.92rem; }
+.check input { width:auto; }
+.chips { margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; }
+.chip { font-size:.82rem; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#f8fafc; cursor:pointer; color:var(--ink); }
+.chip:hover { border-color:var(--accent); color:var(--accent); }
+.error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:14px 16px; margin-bottom:20px; }
+.note { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:.93rem; }
+.results { padding:0; overflow:hidden; }
+.results h2 { font-size:1.05rem; margin:0; padding:16px 20px 4px; }
+.resrow { display:flex; align-items:center; gap:12px; padding:12px 20px; border-top:1px solid var(--line); }
+.resrow .lbl { flex:0 0 46%; color:var(--muted); font-size:.9rem; }
+.resrow .val { flex:1 1 auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.95rem; word-break:break-all; }
+.copy { flex:0 0 auto; font-size:.78rem; padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#f8fafc; cursor:pointer; color:var(--muted); }
+.copy:hover { border-color:var(--accent); color:var(--accent); }
+.links { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+.links a { font-size:.9rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:8px 12px; border-radius:8px; background:#fff; }
+.links a:hover { border-color:var(--accent); }
+.map { width:100%; height:300px; border:0; border-radius:10px; margin-top:14px; }
+.help { font-size:.9rem; color:var(--muted); }
+.help h2 { font-size:1rem; color:var(--ink); }
+.help code { background:#eef2f7; padding:1px 5px; border-radius:4px; font-size:.85rem; }
+footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
+.hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Koordinaten-Konverter</h1>
+<p>Koordinaten in <em>irgendeinem</em> Format einsetzen &ndash; alle anderen Formate werden automatisch berechnet.</p>
+</header>
+
+<form id="conv-form">
+<div class="card">
+<label for="q">Koordinaten</label>
+<div class="row">
+<input type="text" id="q" placeholder="z. B. 47.376895, 8.541694" autocomplete="off">
+<select id="f" aria-label="Format">
+<option value="auto" selected>Automatisch erkennen</option>
+<option value="wgs84">WGS84 · Dezimalgrad</option>
+<option value="dms">Grad / Minuten / Sekunden</option>
+<option value="lv95">Schweiz · LV95 (CH1903+)</option>
+<option value="lv03">Schweiz · LV03 (CH1903)</option>
+<option value="utm">UTM</option>
+<option value="mgrs">MGRS</option>
+<option value="mercator">Web Mercator (EPSG:3857)</option>
+</select>
+<button class="go" type="submit">Umrechnen</button>
+</div>
+<div class="check">
+<input type="checkbox" id="swap" value="1">
+<label for="swap" style="margin:0;font-weight:400">Erste Zahl ist die Länge (lon, y) &ndash; nicht die Breite</label>
+</div>
+<div class="chips">
+<button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
+<button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
+<button type="button" class="chip" data-q="2683303, 1247925">LV95</button>
+<button type="button" class="chip" data-q="683303, 247925">LV03</button>
+<button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
+<button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
+<button type="button" class="chip" data-q="-8238310, 4970072">Mercator · New York</button>
+</div>
+</div>
+</form>
+
+<div id="error" class="error hidden"></div>
+<div id="note" class="note hidden"></div>
+
+<div id="results" class="card results hidden">
+<h2 id="results-title"></h2>
+<div id="resrows"></div>
+<div class="resrow">
+<div class="lbl">Karten-Links</div>
+<div class="links" id="maplinks"></div>
+</div>
+</div>
+
+<div class="card">
+<iframe id="osmmap" class="map hidden" loading="lazy" title="Kartenausschnitt"></iframe>
+</div>
+
+<div class="card help">
+<h2>Erkannte Eingabeformate</h2>
+<p>Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2'683'303</code>) ebenfalls.</p>
+<p><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
+<ul>
+<li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
+<li><strong>Grad/Minuten/Sekunden:</strong> <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>)</li>
+<li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx&ndash;2'9xx xxx, Nord 1'0xx xxx&ndash;1'4xx xxx)</li>
+<li><strong>LV03 / CH1903:</strong> <code>683303, 247925</code></li>
+<li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
+<li><strong>MGRS:</strong> <code>32TMT6540247150</code> oder <code>32T MT 65402 47150</code></li>
+<li><strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> &ndash; bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen</li>
+</ul>
+</div>
+
+<footer>
+Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95/LV03 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet. Die Berechnung läuft komplett im Browser.
+</footer>
+</div>
+
+<script>
+function utmZoneFromLon(lon) {
+  return Math.max(1, Math.min(60, Math.floor((lon + 180.0) / 6.0) + 1));
+}
+
+function latBand(lat) {
+  var bands = 'CDEFGHJKLMNPQRSTUVWX';
+  var i = Math.floor((lat + 80.0) / 8.0);
+  return bands[Math.max(0, Math.min(19, i))];
+}
+
+function latlonToUtm(lat, lon) {
+  var a = 6378137.0;
+  var f = 1.0 / 298.257223563;
+  var e2 = f * (2.0 - f);
+  var ep2 = e2 / (1.0 - e2);
+  var k0 = 0.9996;
+  var zone = utmZoneFromLon(lon);
+  var lon0 = (zone * 6.0 - 183.0) * Math.PI / 180.0;
+  var phi = lat * Math.PI / 180.0;
+  var lam = lon * Math.PI / 180.0;
+  var sp = Math.sin(phi), cp = Math.cos(phi), tp = Math.tan(phi);
+  var N = a / Math.sqrt(1.0 - e2 * sp * sp);
+  var T = tp * tp;
+  var C = ep2 * cp * cp;
+  var A = cp * (lam - lon0);
+  var e4 = e2 * e2;
+  var e6 = e4 * e2;
+  var M = a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * phi
+    - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * Math.sin(2.0 * phi)
+    + (15.0 * e4 / 256.0 + 45.0 * e6 / 1024.0) * Math.sin(4.0 * phi)
+    - (35.0 * e6 / 3072.0) * Math.sin(6.0 * phi));
+  var east = 500000.0 + k0 * N * (A
+    + (1.0 - T + C) * Math.pow(A, 3) / 6.0
+    + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * Math.pow(A, 5) / 120.0);
+  var north = k0 * (M + N * tp * (A * A / 2.0
+    + (5.0 - T + 9.0 * C + 4.0 * C * C) * Math.pow(A, 4) / 24.0
+    + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * Math.pow(A, 6) / 720.0));
+  if (lat < 0.0) { north += 10000000.0; }
+  return { zone: zone, east: east, north: north };
+}
+
+function utmToLatLon(zone, east, north, south) {
+  var a = 6378137.0;
+  var f = 1.0 / 298.257223563;
+  var e2 = f * (2.0 - f);
+  var ep2 = e2 / (1.0 - e2);
+  var k0 = 0.9996;
+  var x = east - 500000.0;
+  var y = south ? north - 10000000.0 : north;
+  var e4 = e2 * e2;
+  var e6 = e4 * e2;
+  var M = y / k0;
+  var mu = M / (a * (1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0));
+  var e1 = (1.0 - Math.sqrt(1.0 - e2)) / (1.0 + Math.sqrt(1.0 - e2));
+  var phi1 = mu
+    + (3.0 * e1 / 2.0 - 27.0 * Math.pow(e1, 3) / 32.0) * Math.sin(2.0 * mu)
+    + (21.0 * Math.pow(e1, 2) / 16.0 - 55.0 * Math.pow(e1, 4) / 32.0) * Math.sin(4.0 * mu)
+    + (151.0 * Math.pow(e1, 3) / 96.0) * Math.sin(6.0 * mu)
+    + (1097.0 * Math.pow(e1, 4) / 512.0) * Math.sin(8.0 * mu);
+  var s1 = Math.sin(phi1), c1 = Math.cos(phi1), t1 = Math.tan(phi1);
+  var C1 = ep2 * c1 * c1;
+  var T1 = t1 * t1;
+  var N1 = a / Math.sqrt(1.0 - e2 * s1 * s1);
+  var R1 = a * (1.0 - e2) / Math.pow(1.0 - e2 * s1 * s1, 1.5);
+  var D = x / (N1 * k0);
+  var lat = phi1 - (N1 * t1 / R1) * (D * D / 2.0
+    - (5.0 + 3.0 * T1 + 10.0 * C1 - 4.0 * C1 * C1 - 9.0 * ep2) * Math.pow(D, 4) / 24.0
+    + (61.0 + 90.0 * T1 + 298.0 * C1 + 45.0 * T1 * T1 - 252.0 * ep2 - 3.0 * C1 * C1) * Math.pow(D, 6) / 720.0);
+  var lon = (D
+    - (1.0 + 2.0 * T1 + C1) * Math.pow(D, 3) / 6.0
+    + (5.0 - 2.0 * C1 + 28.0 * T1 - 3.0 * C1 * C1 + 8.0 * ep2 + 24.0 * T1 * T1) * Math.pow(D, 5) / 120.0) / c1;
+  var lon0 = zone * 6.0 - 183.0;
+  return { lat: lat * 180.0 / Math.PI, lon: lon0 + lon * 180.0 / Math.PI };
+}
+
+function latlonToLv03(lat, lon) {
+  var phi = (lat * 3600.0 - 169028.66) / 10000.0;
+  var lam = (lon * 3600.0 - 26782.5) / 10000.0;
+  var east = 600072.37
+    + 211455.93 * lam
+    - 10938.51 * lam * phi
+    - 0.36 * lam * phi * phi
+    - 44.54 * Math.pow(lam, 3);
+  var north = 200147.07
+    + 308807.95 * phi
+    + 3745.25 * lam * lam
+    + 76.63 * phi * phi
+    - 194.56 * lam * lam * phi
+    + 119.79 * Math.pow(phi, 3);
+  return { east: east, north: north };
+}
+
+function lv03ToLatLon(east, north) {
+  var lat = 46.95;
+  var lon = 7.44;
+  var h = 0.00001;
+  for (var i = 0; i < 20; i++) {
+    var p0 = latlonToLv03(lat, lon);
+    var dE = p0.east - east;
+    var dN = p0.north - north;
+    if (Math.abs(dE) < 0.0000001 && Math.abs(dN) < 0.0000001) { break; }
+    var px = latlonToLv03(lat + h, lon);
+    var py = latlonToLv03(lat, lon + h);
+    var j11 = (px.east - p0.east) / h;
+    var j21 = (px.north - p0.north) / h;
+    var j12 = (py.east - p0.east) / h;
+    var j22 = (py.north - p0.north) / h;
+    var det = j11 * j22 - j12 * j21;
+    if (Math.abs(det) < 1e-12) { break; }
+    lat = lat - (j22 * dE - j12 * dN) / det;
+    lon = lon - (j11 * dN - j21 * dE) / det;
+  }
+  return { lat: lat, lon: lon };
+}
+
+function latlonToLv95(lat, lon) {
+  var p = latlonToLv03(lat, lon);
+  return { east: p.east + 2000000.0, north: p.north + 1000000.0 };
+}
+
+function lv95ToLatLon(east, north) {
+  return lv03ToLatLon(east - 2000000.0, north - 1000000.0);
+}
+
+function latlonToMercator(lat, lon) {
+  return {
+    x: 6378137.0 * (lon * Math.PI / 180.0),
+    y: 6378137.0 * Math.log(Math.tan(Math.PI / 4.0 + (lat * Math.PI / 180.0) / 2.0))
+  };
+}
+
+function mercatorToLatLon(x, y) {
+  return {
+    lat: (2.0 * Math.atan(Math.exp(y / 6378137.0)) - Math.PI / 2.0) * 180.0 / Math.PI,
+    lon: (x / 6378137.0) * 180.0 / Math.PI
+  };
+}
+
+function latlonToMgrs(lat, lon) {
+  var u = latlonToUtm(lat, lon);
+  var zone = u.zone;
+  var e = Math.floor(u.east);
+  var n = Math.floor(u.north);
+  var colSets = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'];
+  var rows = 'ABCDEFGHJKLMNPQRSTUV';
+  var col = Math.floor(e / 100000) - 1;
+  if (col < 0 || col > 7) {
+    throw new Error('Koordinate liegt ausserhalb des MGRS-Bereichs dieser Zone.');
+  }
+  var row = Math.floor(n / 100000) % 20;
+  if (zone % 2 === 0) { row = (row + 5) % 20; }
+  var bi = Math.floor((lat + 80.0) / 8.0);
+  bi = Math.max(0, Math.min(19, bi));
+  function pad5(v) { var s = String(v % 100000); while (s.length < 5) { s = '0' + s; } return s; }
+  var out = String(zone);
+  if (out.length < 2) { out = '0' + out; }
+  return out + latBand(lat) + colSets[(zone - 1) % 3][col] + rows[row] + pad5(e) + pad5(n);
+}
+
+function mgrsToLatLon(mgrs) {
+  var m = /^\s*(\d{1,2})\s*([C-HJ-NP-X])\s*([A-HJ-NP-Z])\s*([A-HJ-NP-Z])\s*(\d+)\s*$/i.exec(mgrs);
+  if (!m) { return null; }
+  var zone = parseInt(m[1], 10);
+  var band = m[2].toUpperCase();
+  var colLetter = m[3].toUpperCase();
+  var rowLetter = m[4].toUpperCase();
+  var digits = m[5];
+  if (zone < 1 || zone > 60 || digits.length % 2 !== 0) { return null; }
+  var half = Math.floor(digits.length / 2);
+  var easting = parseFloat(digits.slice(0, half)) * Math.pow(10.0, 5 - half);
+  var northing = parseFloat(digits.slice(half)) * Math.pow(10.0, 5 - half);
+  var colSets = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'];
+  var rows = 'ABCDEFGHJKLMNPQRSTUV';
+  var ci = colSets[(zone - 1) % 3].indexOf(colLetter);
+  var ri = rows.indexOf(rowLetter);
+  if (ci < 0 || ri < 0) { return null; }
+  var east = (ci + 1) * 100000.0 + easting;
+  var row = ri;
+  if (zone % 2 === 0) { row = (ri + 15) % 20; }
+  var north = row * 100000.0 + northing;
+  var bandMin = { C: 1100000, D: 2000000, E: 2800000, F: 3700000, G: 4600000,
+    H: 5500000, J: 6400000, K: 7300000, L: 8200000, M: 9100000,
+    N: 0, P: 800000, Q: 1700000, R: 2600000, S: 3500000,
+    T: 4400000, U: 5300000, V: 6000000, W: 6600000, X: 7000000 };
+  var minN = bandMin.hasOwnProperty(band) ? bandMin[band] : 0;
+  while (north < minN) { north += 2000000.0; }
+  var south = 'CDEFGHJKLM'.indexOf(band) !== -1;
+  return utmToLatLon(zone, east, north, south);
+}
+
+function formatDmsPart(v, isLat) {
+  var h = isLat ? (v >= 0 ? 'N' : 'S') : (v >= 0 ? 'E' : 'W');
+  v = Math.abs(v);
+  var d = Math.floor(v);
+  var mF = (v - d) * 60.0;
+  var m = Math.floor(mF);
+  var s = (mF - m) * 60.0;
+  if (s >= 59.95) { s = 0.0; m++; if (m >= 60) { m = 0; d++; } }
+  var ss = s.toFixed(1);
+  while (ss.length < 4) { ss = '0' + ss; }
+  var mm = String(m);
+  while (mm.length < 2) { mm = '0' + mm; }
+  return d + '° ' + mm + '′ ' + ss + '″ ' + h;
+}
+
+function formatDms(lat, lon) {
+  return formatDmsPart(lat, true) + ', ' + formatDmsPart(lon, false);
+}
+
+function normalizeLon(lon) {
+  return lon - 360.0 * Math.floor((lon + 180.0) / 360.0);
+}
+
+function checkLatLon(lat, lon) {
+  if (Math.abs(lat) > 90.0) {
+    throw new Error('Breite ausserhalb des gültigen Bereichs (-90 bis +90).');
+  }
+  if (Math.abs(lon) > 180.0000001) {
+    throw new Error('Länge ausserhalb des gültigen Bereichs (-180 bis +180).');
+  }
+}
+
+function extractNumbers(s) {
+  var out = [];
+  var re = /-?\d+(?:[.,]\d+)?/g;
+  var m;
+  while ((m = re.exec(s)) !== null) {
+    out.push(parseFloat(m[0].replace(',', '.')));
+  }
+  return out;
+}
+
+function orderLatLon(a, b) {
+  if (Math.abs(a) > 90.0 && Math.abs(b) <= 90.0) {
+    return { lat: b, lon: a };
+  }
+  return { lat: a, lon: b };
+}
+
+function parseDmsString(s) {
+  if (s.indexOf('°') === -1) { return null; }
+  var re = /([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*['′m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|''|″))?\s*([NSEW])?/gi;
+  var ms = [];
+  var m;
+  while ((m = re.exec(s)) !== null) {
+    ms.push(m);
+  }
+  if (ms.length === 0) { return null; }
+  var vals = [], hems = [];
+  for (var i = 0; i < ms.length; i++) {
+    var g = ms[i];
+    var deg = parseFloat(g[2].replace(',', '.'));
+    var mn = g[3] ? parseFloat(g[3].replace(',', '.')) : 0.0;
+    var sec = g[4] ? parseFloat(g[4].replace(',', '.')) : 0.0;
+    var val = deg + mn / 60.0 + sec / 3600.0;
+    var h = ((g[1] || g[5] || '')).toUpperCase();
+    if (h === 'S' || h === 'W') { val = -Math.abs(val); }
+    vals.push(val);
+    hems.push(h);
+  }
+  if (vals.length < 2) { return null; }
+  var a = vals[0], b = vals[1], ha = hems[0], hb = hems[1];
+  if ((ha === 'E' || ha === 'W') && (hb === 'N' || hb === 'S')) {
+    return { lat: b, lon: a };
+  }
+  return orderLatLon(a, b);
+}
+
+function classifyPair(a, b) {
+  var inLv95 = a >= 2300000.0 && a <= 3000000.0 && b >= 1000000.0 && b <= 1400000.0;
+  var inLv03 = a >= 300000.0 && a <= 1000000.0 && b >= 0.0 && b <= 400000.0;
+  var inWgs = Math.abs(a) <= 90.0 && Math.abs(b) <= 180.0;
+  if (inWgs && !inLv03) { return { type: 'wgs84', a: a, b: b, note: '' }; }
+  if (inLv95) { return { type: 'lv95', a: a, b: b, note: '' }; }
+  if (inLv03) { return { type: 'lv03', a: a, b: b, note: '' }; }
+  if ((Math.abs(a) > 1000000.0 || Math.abs(b) > 10000000.0)
+    && Math.abs(a) <= 20037508.342789244 && Math.abs(b) <= 20037508.342789244) {
+    return { type: 'mercator', a: a, b: b, note: '' };
+  }
+  if (a >= 100000.0 && a < 1000000.0 && b >= 0.0 && b <= 10000000.0) {
+    return { type: 'utm', a: a, b: b, note: 'Keine UTM-Zone angegeben – es wurde Zone 32 angenommen. Gib die Zone am besten mit an, z. B. «32T 465403 5247150».' };
+  }
+  if (Math.abs(a) <= 20037508.342789244 && Math.abs(b) <= 20037508.342789244) {
+    return { type: 'mercator', a: a, b: b, note: '' };
+  }
+  return null;
+}
+
+function pairToLatLon(c) {
+  var a = c.a, b = c.b, ll;
+  if (c.type === 'wgs84') {
+    ll = orderLatLon(a, b);
+    return { lat: ll.lat, lon: normalizeLon(ll.lon), note: c.note };
+  }
+  if (c.type === 'lv95') {
+    ll = lv95ToLatLon(a, b);
+    return { lat: ll.lat, lon: ll.lon, note: c.note };
+  }
+  if (c.type === 'lv03') {
+    ll = lv03ToLatLon(a, b);
+    return { lat: ll.lat, lon: ll.lon, note: c.note };
+  }
+  if (c.type === 'mercator') {
+    ll = mercatorToLatLon(a, b);
+    return { lat: ll.lat, lon: normalizeLon(ll.lon), note: c.note };
+  }
+  if (c.type === 'utm') {
+    ll = utmToLatLon(32.0, a, b, b < 0.0);
+    return { lat: ll.lat, lon: ll.lon, note: c.note };
+  }
+  throw new Error('Unbekanntes Format.');
+}
+
+function parseInput(raw, mode, swap) {
+  raw = raw.trim();
+  if (raw === '') {
+    throw new Error('Bitte Koordinaten eingeben.');
+  }
+
+  var compact = raw.replace(/\s+/g, '');
+
+  if (mode === 'auto' && /^\d{1,2}[C-HJ-NP-X][A-HJ-NP-Z][A-HJ-NP-Z]\d+$/i.test(compact)) {
+    mode = 'mgrs';
+  }
+  if (mode === 'auto' && raw.indexOf('°') !== -1) {
+    mode = 'dms';
+  }
+
+  var letters = (raw.match(/[A-Za-z]/g) || []).map(function (c) { return c.toUpperCase(); });
+  var letterCount = letters.length;
+
+  if (mode === 'mgrs') {
+    if (letterCount > 3) {
+      throw new Error('Bei MGRS sind höchstens 3 Buchstaben erlaubt (z. B. 32TMT…).');
+    }
+  } else if (mode === 'dms') {
+    var bad = letters.filter(function (l) { return 'NSEW'.indexOf(l) === -1; });
+    if (letterCount > 2 || bad.length > 0) {
+      throw new Error('Bei Grad/Minuten/Sekunden sind höchstens zwei Buchstaben erlaubt: N, S, E oder W.');
+    }
+  } else if (mode === 'utm') {
+    if (letterCount > 2) {
+      throw new Error('Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. «32T» oder «E … N …»).');
+    }
+  } else if (mode === 'wgs84' || mode === 'lv95' || mode === 'lv03' || mode === 'mercator') {
+    if (letterCount > 0) {
+      throw new Error('Bitte nur Zahlen eingeben – Buchstaben sind hier nicht erlaubt.');
+    }
+  } else if (letterCount > 3) {
+    throw new Error('Bitte nur Zahlen eingeben – Buchstaben nur bei UTM/MGRS oder als Himmelsrichtung (N/S/E/W).');
+  }
+
+  if (mode === 'mgrs') {
+    var llm = mgrsToLatLon(compact);
+    if (llm === null) {
+      throw new Error('MGRS-Format nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
+    }
+    return { lat: llm.lat, lon: llm.lon, note: 'MGRS erkannt.' };
+  }
+
+  if (mode === 'dms') {
+    var lld = parseDmsString(raw);
+    if (lld === null) {
+      throw new Error('Grad/Minuten/Sekunden nicht erkannt. Beispiel: 47° 22\' 36.8" N, 8° 32\' 30.1" E');
+    }
+    if (swap) { var td = lld.lat; lld.lat = lld.lon; lld.lon = td; }
+    lld.lon = normalizeLon(lld.lon);
+    lld.note = 'WGS84 in Grad/Minuten/Sekunden erkannt.';
+    return lld;
+  }
+
+  var clean = raw.replace(/['’]/g, '');
+  var nums = extractNumbers(clean);
+
+  if (mode === 'wgs84') {
+    if (nums.length < 2) {
+      throw new Error('Bitte zwei Werte angeben (Breite, Länge).');
+    }
+    var llw = orderLatLon(nums[0], nums[1]);
+    if (swap) { var t = llw.lat; llw.lat = llw.lon; llw.lon = t; }
+    checkLatLon(llw.lat, llw.lon);
+    llw.lon = normalizeLon(llw.lon);
+    llw.note = '';
+    return llw;
+  }
+
+  if (mode === 'lv95') {
+    if (nums.length < 2) {
+      throw new Error('Bitte Ost und Nord angeben, z. B. 2\'683\'303, 1\'247\'925');
+    }
+    var ll95 = lv95ToLatLon(nums[0], nums[1]);
+    ll95.note = '';
+    return ll95;
+  }
+
+  if (mode === 'lv03') {
+    if (nums.length < 2) {
+      throw new Error('Bitte Ost (x) und Nord (y) angeben, z. B. 683303, 247925');
+    }
+    var ll03 = lv03ToLatLon(nums[0], nums[1]);
+    ll03.note = '';
+    return ll03;
+  }
+
+  if (mode === 'mercator') {
+    if (nums.length < 2) {
+      throw new Error('Bitte X und Y in Metern angeben (EPSG:3857).');
+    }
+    var llme = mercatorToLatLon(nums[0], nums[1]);
+    checkLatLon(llme.lat, llme.lon);
+    llme.lon = normalizeLon(llme.lon);
+    llme.note = '';
+    return llme;
+  }
+
+  if (mode === 'utm') {
+    var countU = nums.length;
+    if (countU < 2) {
+      throw new Error('Bitte Zone (optional), Ost und Nord angeben, z. B. 32T 465403 5247150');
+    }
+    var zoneU = 32.0;
+    var idx = 0;
+    var band = '';
+    if (countU >= 3 && nums[0] >= 1.0 && nums[0] <= 60.0 && nums[0] === Math.floor(nums[0])) {
+      zoneU = nums[0];
+      idx = 1;
+    }
+    var zmU = /^\s*(\d{1,2})\s*([C-HJ-NP-X])\b/i.exec(raw);
+    if (zmU) {
+      zoneU = parseFloat(zmU[1]);
+      band = zmU[2].toUpperCase();
+    }
+    var eastU = nums[idx];
+    var northU = nums[idx + 1];
+    var southU = (band !== '' && 'CDEFGHJKLM'.indexOf(band) !== -1) || northU < 0.0;
+    if (northU < 0.0 && northU > -10000000.0) { northU = Math.abs(northU); }
+    var llu = utmToLatLon(zoneU, eastU, northU, southU);
+    var noteU = '';
+    if (band === '' && countU === 2) {
+      noteU = 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «32T 465403 5247150».';
+    }
+    return { lat: llu.lat, lon: llu.lon, note: noteU };
+  }
+
+  var count = nums.length;
+  if (count >= 3 && nums[0] >= 1.0 && nums[0] <= 60.0 && nums[0] === Math.floor(nums[0])
+    && nums[1] >= 100000.0 && nums[1] < 1000000.0 && nums[2] >= 0.0 && nums[2] <= 10000000.0) {
+    var zone = nums[0];
+    var bandA = '';
+    var zm = /^\s*(\d{1,2})\s*([C-HJ-NP-X])\b/i.exec(raw);
+    if (zm) {
+      zone = parseFloat(zm[1]);
+      bandA = zm[2].toUpperCase();
+    }
+    var east = nums[1];
+    var north = nums[2];
+    var south = (bandA !== '' && 'CDEFGHJKLM'.indexOf(bandA) !== -1) || north < 0.0;
+    if (north < 0.0 && north > -10000000.0) { north = Math.abs(north); }
+    var ll3 = utmToLatLon(zone, east, north, south);
+    return { lat: ll3.lat, lon: ll3.lon, note: 'UTM mit Zone ' + Math.round(zone) + ' erkannt.' };
+  }
+
+  if (count === 2) {
+    var c = classifyPair(nums[0], nums[1]);
+    if (c !== null) {
+      if (swap && c.type === 'wgs84') { var t2 = c.a; c.a = c.b; c.b = t2; }
+      var llp = pairToLatLon(c);
+      checkLatLon(llp.lat, llp.lon);
+      return llp;
+    }
+  }
+
+  throw new Error('Format nicht erkannt. Beispiele: «47.376895, 8.541694» · «47° 22\' 36.8" N, 8° 32\' 30.1" E» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
+}
+
+function formatNum(v, dec) {
+  var out = v.toFixed(dec);
+  if (parseFloat(out) === 0 && out.charAt(0) === '-') { out = out.substring(1); }
+  return out;
+}
+
+function buildResults(lat, lon) {
+  var lv95 = latlonToLv95(lat, lon);
+  var lv03 = latlonToLv03(lat, lon);
+  var utm = latlonToUtm(lat, lon);
+  var merc = latlonToMercator(lat, lon);
+  var mgrs = latlonToMgrs(lat, lon);
+  return [
+    ['WGS84 · Dezimalgrad (Breite, Länge)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
+    ['WGS84 · Grad, Minuten, Sekunden', formatDms(lat, lon)],
+    ['WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum(lon, 6) + ', ' + formatNum(lat, 6)],
+    ['Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)],
+    ['Schweiz · LV03 / CH1903 (x, y)', formatNum(lv03.east, 1) + ', ' + formatNum(lv03.north, 1)],
+    ['UTM (Zone, Ost, Nord)', utm.zone + latBand(lat) + ' ' + formatNum(utm.east, 2) + ' ' + formatNum(utm.north, 2)],
+    ['MGRS / USNG (1 m)', mgrs],
+    ['Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum(merc.x, 2) + ', ' + formatNum(merc.y, 2)]
+  ];
+}
+</script>
+
+<script>
+(function () {
+  var el = document.getElementById('q');
+  var sel = document.getElementById('f');
+  var swapEl = document.getElementById('swap');
+  var form = document.getElementById('conv-form');
+  var errorBox = document.getElementById('error');
+  var noteBox = document.getElementById('note');
+  var resultsBox = document.getElementById('results');
+  var resrows = document.getElementById('resrows');
+  var maplinks = document.getElementById('maplinks');
+  var mapFrame = document.getElementById('osmmap');
+  var resultsTitle = document.getElementById('results-title');
+  if (!el || !sel) { return; }
+
+  var OKCHARS = '0123456789 ,;./*+-\t\'' + '’°"';
+  var CFG = {
+    wgs84:    { letters: '', max: 0 },
+    lv95:     { letters: '', max: 0 },
+    lv03:     { letters: '', max: 0 },
+    mercator: { letters: '', max: 0 },
+    dms:      { letters: 'NSEW', max: 2 },
+    utm:      { letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', max: 2 },
+    mgrs:     { letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', max: 3 },
+    auto:     { letters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', max: 3 }
+  };
+
+  function cleanInput(v) {
+    var cfg = CFG[sel.value] || CFG.auto;
+    v = v.toUpperCase();
+    var out = '';
+    var n = 0;
+    for (var i = 0; i < v.length; i++) {
+      var c = v.charAt(i);
+      if (c >= 'A' && c <= 'Z') {
+        if (cfg.letters.indexOf(c) !== -1 && n < cfg.max) { out += c; n++; }
+      } else if (OKCHARS.indexOf(c) !== -1) {
+        out += c;
+      }
+    }
+    return out;
+  }
+
+  el.addEventListener('input', function () {
+    var v = cleanInput(el.value);
+    if (v !== el.value) { el.value = v; }
+  });
+  sel.addEventListener('change', function () {
+    var v = cleanInput(el.value);
+    if (v !== el.value) { el.value = v; }
+  });
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function showResult(lat, lon, note) {
+    errorBox.classList.add('hidden');
+    var latS = formatNum(lat, 6);
+    var lonS = formatNum(lon, 6);
+    resultsTitle.textContent = 'Umrechnung für ' + latS + ', ' + lonS + ' (WGS84)';
+    var rows = buildResults(lat, lon);
+    var html = '';
+    for (var i = 0; i < rows.length; i++) {
+      html += '<div class="resrow"><div class="lbl">' + esc(rows[i][0]) + '</div>' +
+        '<div class="val">' + esc(rows[i][1]) + '</div>' +
+        '<button type="button" class="copy" data-v="' + esc(rows[i][1]) + '">Kopieren</button></div>';
+    }
+    resrows.innerHTML = html;
+    var lv95 = latlonToLv95(lat, lon);
+    maplinks.innerHTML =
+      '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + latS + ',' + lonS + '" target="_blank" rel="noopener">Google Maps</a>' +
+      '<a href="https://map.geo.admin.ch/?E=' + formatNum(lv95.east, 0) + '&amp;N=' + formatNum(lv95.north, 0) + '" target="_blank" rel="noopener">Swisstopo (geo.admin.ch)</a>' +
+      '<a href="https://www.openstreetmap.org/?mlat=' + latS + '&amp;mlon=' + lonS + '#map=16/' + latS + '/' + lonS + '" target="_blank" rel="noopener">OpenStreetMap</a>';
+    var bbox = formatNum(lon - 0.004, 5) + ',' + formatNum(lat - 0.002, 5) + ',' + formatNum(lon + 0.004, 5) + ',' + formatNum(lat + 0.002, 5);
+    mapFrame.src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + latS + ',' + lonS;
+    mapFrame.classList.remove('hidden');
+    resultsBox.classList.remove('hidden');
+    if (note) {
+      noteBox.textContent = note;
+      noteBox.classList.remove('hidden');
+    } else {
+      noteBox.classList.add('hidden');
+    }
+    var copies = resrows.querySelectorAll('.copy');
+    for (var j = 0; j < copies.length; j++) {
+      copies[j].addEventListener('click', function () {
+        var btn = this;
+        var v = btn.getAttribute('data-v');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(v).then(function () {
+            var t = btn.textContent;
+            btn.textContent = 'Kopiert ✓';
+            setTimeout(function () { btn.textContent = t; }, 1200);
+          });
+        }
+      });
+    }
+  }
+
+  function showError(msg) {
+    resultsBox.classList.add('hidden');
+    noteBox.classList.add('hidden');
+    mapFrame.classList.add('hidden');
+    errorBox.textContent = 'Eingabe nicht erkannt: ' + msg;
+    errorBox.classList.remove('hidden');
+  }
+
+  function run() {
+    var q = el.value;
+    var mode = sel.value;
+    var swap = swapEl.checked;
+    if (q.trim() === '') {
+      resultsBox.classList.add('hidden');
+      noteBox.classList.add('hidden');
+      mapFrame.classList.add('hidden');
+      errorBox.classList.add('hidden');
+      return;
+    }
+    try {
+      var ll = parseInput(q, mode, swap);
+      showResult(ll.lat, ll.lon, ll.note);
+      var params = new URLSearchParams();
+      params.set('q', q);
+      params.set('f', mode);
+      if (swap) { params.set('swap', '1'); }
+      try { history.replaceState(null, '', '?' + params.toString()); } catch (e) {}
+    } catch (e) {
+      showError(e.message);
+    }
+  }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    run();
+  });
+
+  document.querySelectorAll('.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      el.value = b.getAttribute('data-q');
+      sel.value = 'auto';
+      run();
+    });
+  });
+
+  var usp = new URLSearchParams(location.search);
+  if (usp.get('q')) {
+    el.value = usp.get('q');
+    if (usp.get('f') && CFG.hasOwnProperty(usp.get('f'))) { sel.value = usp.get('f'); }
+    if (usp.get('swap')) { swapEl.checked = true; }
+    run();
+  }
+})();
+</script>
+</body>
+</html>

@@ -25,6 +25,7 @@ window.NOTFALL_TEXTE.fr = {
   btnGeocode: "🔍 Calculer les coordonnées",
   btnGps: "📍 Ma position",
   btnKarte: "🗺 Choisir sur la carte",
+  btnKonverter: "↗ Convertir les coordonnées",
   kartenKlick: "Un clic sur la carte définit :",
   karteLaden: "Chargement de la carte …",
   wetterTitel: "Contrôle météo",

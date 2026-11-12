@@ -305,8 +305,17 @@ function parseDmsString(string $s): ?array
     if (strpos($s, '°') === false) {
         return null;
     }
-    $re = '/([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*[\'′m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|\'\'|″))?\s*([NSEW])?/i';
+    $re = '/([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*[\'′‘’´m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|\'\'|″|‘‘|’’|”|´´))?\s*([NSEW])?/i';
     if (!preg_match_all($re, $s, $ms, PREG_SET_ORDER)) {
+        return null;
+    }
+    $consumed = 0;
+    foreach ($ms as $g) {
+        $consumed += 1;
+        if (isset($g[3]) && $g[3] !== '') { $consumed++; }
+        if (isset($g[4]) && $g[4] !== '') { $consumed++; }
+    }
+    if ($consumed !== count(extractNumbers($s))) {
         return null;
     }
     $vals = array();
@@ -431,7 +440,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
     if ($mode === 'mgrs') {
         $ll = mgrsToLatLon($compact);
         if ($ll === null) {
-            throw new RuntimeException('MGRS-Format nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
+            throw new RuntimeException('Format unbekannt: MGRS nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
         }
         return array('lat' => $ll['lat'], 'lon' => $ll['lon'], 'note' => 'MGRS erkannt.');
     }
@@ -439,7 +448,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
     if ($mode === 'dms') {
         $ll = parseDmsString($raw);
         if ($ll === null) {
-            throw new RuntimeException('Grad/Minuten/Sekunden nicht erkannt. Beispiel: 47° 22\' 36.8" N, 8° 32\' 30.1" E');
+            throw new RuntimeException('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W');
         }
         if ($swap) {
             $t = $ll['lat'];
@@ -562,7 +571,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
         }
     }
 
-    throw new RuntimeException('Format nicht erkannt. Beispiele: «47.376895, 8.541694» · «47° 22\' 36.8" N, 8° 32\' 30.1" E» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
+    throw new RuntimeException('Format unbekannt. Beispiele: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
 }
 
 function formatNum(float $v, int $dec): string
@@ -705,6 +714,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="chips">
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
+<button type="button" class="chip" data-q="37°42‘10‘‘N 111°23‘16‘‘W">Grad/Min/Sek · USA</button>
 <button type="button" class="chip" data-q="2683303, 1247925">LV95</button>
 <button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
 <button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
@@ -750,7 +760,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <p><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
 <ul>
 <li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
-<li><strong>Grad/Minuten/Sekunden:</strong> <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>)</li>
+<li><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
 <li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx–2'9xx xxx, Nord 1'0xx xxx–1'4xx xxx)</li>
 <li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
 <li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
@@ -769,7 +779,7 @@ Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die 
   var el = document.getElementById('q');
   var sel = document.querySelector('select[name=f]');
   if (!el || !sel) { return; }
-  var OKCHARS = '0123456789 ,;./*+-\t\'' + '\u2019\u00B0"';
+  var OKCHARS = '0123456789 ,;./*+-\t\'' + '\u2019\u2018\u201D\u00B4\u00B0"';
   var CFG = {
     wgs84:    { letters: '', max: 0 },
     lv95:     { letters: '', max: 0 },

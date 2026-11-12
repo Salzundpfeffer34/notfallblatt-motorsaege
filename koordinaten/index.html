@@ -75,6 +75,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="chips">
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
+<button type="button" class="chip" data-q="37°42‘10‘‘N 111°23‘16‘‘W">Grad/Min/Sek · USA</button>
 <button type="button" class="chip" data-q="2683303, 1247925">LV95</button>
 <button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
 <button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
@@ -105,7 +106,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <p><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
 <ul>
 <li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
-<li><strong>Grad/Minuten/Sekunden:</strong> <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>)</li>
+<li><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
 <li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx&ndash;2'9xx xxx, Nord 1'0xx xxx&ndash;1'4xx xxx)</li>
 <li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
 <li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
@@ -361,13 +362,18 @@ function orderLatLon(a, b) {
 
 function parseDmsString(s) {
   if (s.indexOf('°') === -1) { return null; }
-  var re = /([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*['′m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|''|″))?\s*([NSEW])?/gi;
+  var re = /([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*['′‘’´m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|''|″|‘‘|’’|”|´´))?\s*([NSEW])?/gi;
   var ms = [];
   var m;
   while ((m = re.exec(s)) !== null) {
     ms.push(m);
   }
   if (ms.length === 0) { return null; }
+  var consumed = 0;
+  for (var ci = 0; ci < ms.length; ci++) {
+    consumed += 1 + (ms[ci][3] ? 1 : 0) + (ms[ci][4] ? 1 : 0);
+  }
+  if (consumed !== extractNumbers(s).length) { return null; }
   var vals = [], hems = [];
   for (var i = 0; i < ms.length; i++) {
     var g = ms[i];
@@ -475,7 +481,7 @@ function parseInput(raw, mode, swap) {
   if (mode === 'mgrs') {
     var llm = mgrsToLatLon(compact);
     if (llm === null) {
-      throw new Error('MGRS-Format nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
+      throw new Error('Format unbekannt: MGRS nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
     }
     return { lat: llm.lat, lon: llm.lon, note: 'MGRS erkannt.' };
   }
@@ -483,7 +489,7 @@ function parseInput(raw, mode, swap) {
   if (mode === 'dms') {
     var lld = parseDmsString(raw);
     if (lld === null) {
-      throw new Error('Grad/Minuten/Sekunden nicht erkannt. Beispiel: 47° 22\' 36.8" N, 8° 32\' 30.1" E');
+      throw new Error('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W');
     }
     if (swap) { var td = lld.lat; lld.lat = lld.lon; lld.lon = td; }
     lld.lon = normalizeLon(lld.lon);
@@ -592,7 +598,7 @@ function parseInput(raw, mode, swap) {
     }
   }
 
-  throw new Error('Format nicht erkannt. Beispiele: «47.376895, 8.541694» · «47° 22\' 36.8" N, 8° 32\' 30.1" E» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
+  throw new Error('Format unbekannt. Beispiele: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
 }
 
 function formatNum(v, dec) {
@@ -634,7 +640,7 @@ function buildResults(lat, lon) {
   var resultsTitle = document.getElementById('results-title');
   if (!el || !sel) { return; }
 
-  var OKCHARS = '0123456789 ,;./*+-\t\'' + '’°"';
+  var OKCHARS = '0123456789 ,;./*+-\t\'' + '’‘”´°"';
   var CFG = {
     wgs84:    { letters: '', max: 0 },
     lv95:     { letters: '', max: 0 },

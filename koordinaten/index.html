@@ -1562,16 +1562,25 @@ function buildResults(lat, lon, forceLv95) {
     if (gpxGeoEl && gpxGeoEl.checked) {
       gpxBusy = true;
       var oldTxt = btn.textContent;
-      btn.textContent = t('gpxGeoWait');
-      geoPlaceName(function (place) {
+      var geoKey = batchPoints.length ? batchPoints[0].lat.toFixed(4) + ',' + batchPoints[0].lon.toFixed(4) : '';
+      if (geoKey !== '' && geoKey === lastGeoKey && lastGeoPlace) {
         gpxBusy = false;
-        btn.textContent = oldTxt;
-        finishGpx(btn, place || defName, defName);
-      });
+        finishGpx(btn, lastGeoPlace, defName);
+      } else {
+        btn.textContent = t('gpxGeoWait');
+        geoPlaceName(function (place) {
+          gpxBusy = false;
+          btn.textContent = oldTxt;
+          if (place) { lastGeoKey = geoKey; lastGeoPlace = place; }
+          finishGpx(btn, place || defName, defName);
+        });
+      }
     } else {
       finishGpx(btn, defName, defName);
     }
   });
+  var lastGeoKey = '';
+  var lastGeoPlace = '';
   function geoPlaceName(cb) {
     try {
       var p = batchPoints[0];

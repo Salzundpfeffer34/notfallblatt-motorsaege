@@ -862,7 +862,7 @@
     const esc = s => {
       const div = document.createElement('div');
       div.textContent = s || '';
-      return div.innerHTML;
+      return div.innerHTML.replace(/'/g, '&#39;');
     };
     return '<h3>' + T('karteTitel') + '</h3>' +
       '<table>' +

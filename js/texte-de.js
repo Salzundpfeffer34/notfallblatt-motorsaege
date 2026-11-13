@@ -100,6 +100,7 @@ window.NOTFALL_TEXTE.de = {
   legende: "↑ Nordpfeil · ▲ Arbeitsbeginn, Pfeil zeigt in Arbeitsrichtung · → Fällrichtung · ▦ Stammholzlager (Zahl = Fassungsvermögen m³, Abkürzung = Holzart) · ▤ Schichtholzlager · ⊕ Koordination Luftrettung (Mitte Holzschlag) · ⊗ Koordination T-Punkt · ▭ Mannschaftswagen · ── autobefahrbare Strasse mit Abfuhrrichtung · ┄ Rückegasse · ┈ Maschinenweg · ⋯ Seillinie · – Fussweg",
   pflichtHinweis: "Die Notfallorganisation muss schriftlich vorliegen, allen bekannt sein und täglich überprüft werden (Witterung, Sicht, Zufahrt).",
   footer: "Daten bleiben ausschliesslich auf diesem Gerät (localStorage). Keine Übertragung an einen Server. Geocoding: Photon/Nominatim © OpenStreetMap-Mitwirkende · Wetter: Open-Meteo · Karten: Leaflet + OpenStreetMap.",
+  datenschutzLink: "Datenschutz",
   druckTitel: "Arbeitsauftrag und Notfallorganisation im Forst",
   druckMotorsaegearbeiten: "Motorsägearbeiten",
   druckAuftrag: "Auftrag:",

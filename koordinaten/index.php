@@ -759,8 +759,9 @@ button.go:hover { background:var(--accent2); }
 .copy { flex:0 0 auto; font-size:.78rem; padding:5px 10px; border:1px solid var(--line); border-radius:6px; background:#f7f7f5; cursor:pointer; color:var(--muted); }
 .copy:hover { border-color:var(--accent); color:var(--accent); }
 .links { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
-.links a { font-size:.9rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:8px 12px; border-radius:8px; background:#fff; }
-.links a:hover { border-color:var(--accent); }
+.links a, .links button { font-size:.9rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); padding:8px 12px; border-radius:8px; background:#fff; font-family:inherit; }
+.links button { cursor:pointer; }
+.links a:hover, .links button:hover { border-color:var(--accent); }
 .map { width:100%; height:300px; border:0; border-radius:10px; margin-top:14px; }
 .help { font-size:.9rem; color:var(--muted); }
 .help h2 { font-size:1rem; color:var(--ink); }
@@ -836,6 +837,13 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <a href="https://www.google.com/maps/search/?api=1&amp;query=<?php echo $latUrl; ?>,<?php echo $lonUrl; ?>" target="_blank" rel="noopener">Google Maps</a>
 <a href="https://map.geo.admin.ch/?E=<?php echo $geoE; ?>&amp;N=<?php echo $geoN; ?>" target="_blank" rel="noopener">Swisstopo (geo.admin.ch)</a>
 <a href="https://www.openstreetmap.org/?mlat=<?php echo $latUrl; ?>&amp;mlon=<?php echo $lonUrl; ?>#map=16/<?php echo $latUrl; ?>/<?php echo $lonUrl; ?>" target="_blank" rel="noopener">OpenStreetMap</a>
+</div>
+</div>
+<div class="resrow">
+<div class="lbl">Teilen</div>
+<div class="links">
+<button type="button" id="copyAll">Alle kopieren</button>
+<button type="button" id="copyLink">Link kopieren</button>
 </div>
 </div>
 </div>
@@ -953,6 +961,42 @@ document.querySelectorAll('.chip').forEach(function (b) {
     el.closest('form').submit();
   });
 });
+function copyFeedback(btn) {
+  var t = btn.textContent;
+  btn.textContent = 'Kopiert \u2713';
+  setTimeout(function () { btn.textContent = t; }, 1200);
+}
+var copyAllBtn = document.getElementById('copyAll');
+if (copyAllBtn) {
+  copyAllBtn.addEventListener('click', function () {
+    var lines = [];
+    document.querySelectorAll('.results .resrow').forEach(function (r) {
+      if (r.querySelector('.links')) { return; }
+      var lbl = r.querySelector('.lbl');
+      var val = r.querySelector('.val');
+      if (lbl && val) { lines.push(lbl.textContent + ': ' + val.textContent); }
+    });
+    if (navigator.clipboard && lines.length) {
+      navigator.clipboard.writeText(lines.join('\n')).then(function () { copyFeedback(copyAllBtn); });
+    }
+  });
+}
+var copyLinkBtn = document.getElementById('copyLink');
+if (copyLinkBtn) {
+  copyLinkBtn.addEventListener('click', function () {
+    var qEl = document.getElementById('q');
+    var fSel = document.querySelector('select[name=f]');
+    var params = new URLSearchParams();
+    params.set('q', qEl.value);
+    params.set('f', fSel.value);
+    var swapEl = document.getElementById('swap');
+    if (swapEl && swapEl.checked) { params.set('swap', '1'); }
+    var url = location.origin + location.pathname + '?' + params.toString();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () { copyFeedback(copyLinkBtn); });
+    }
+  });
+}
 document.querySelectorAll('.copy').forEach(function (b) {
   b.addEventListener('click', function () {
     var v = b.getAttribute('data-v');

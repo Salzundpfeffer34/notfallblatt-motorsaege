@@ -143,7 +143,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig.</p>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-2026-11-13_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt.</p>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat">
@@ -158,6 +158,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button class="go" type="button" id="batchGo">Stapel umrechnen</button>
 <button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">Alle kopieren</button>
 <button type="button" class="copy" id="batchGpx" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">GPX herunterladen</button>
+</div>
+<div class="check" style="margin-top:10px">
+<input type="checkbox" id="gpxAsk" checked>
+<label for="gpxAsk" style="margin:0;font-weight:400">Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)</label>
 </div>
 <div id="batchOut" style="margin-top:12px"></div>
 </div>
@@ -859,6 +863,14 @@ function buildResults(lat, lon, forceLv95) {
     });
   }
 
+  var gpxAskEl = document.getElementById('gpxAsk');
+  try { if (gpxAskEl && localStorage.getItem('konverter-gpxname') === '0') { gpxAskEl.checked = false; } } catch (e) {}
+  if (gpxAskEl) {
+    gpxAskEl.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-gpxname', gpxAskEl.checked ? '1' : '0'); } catch (e) {}
+    });
+  }
+
   var liveTimer = null;
   el.addEventListener('input', function () {
     if (!liveEl || !liveEl.checked) { return; }
@@ -1053,17 +1065,25 @@ function buildResults(lat, lon, forceLv95) {
       setTimeout(function () { btn.textContent = old; }, 1600);
       return;
     }
+    var d = new Date();
+    var day = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    var defName = 'route-' + day + '_' + batchPoints.length + 'punkte';
+    var name = defName;
+    if (!gpxAskEl || gpxAskEl.checked) {
+      var input = window.prompt('Name der GPX-Datei (ohne .gpx):', defName);
+      if (input === null) { return; }
+      name = input.replace(/\.gpx$/i, '').replace(/[\\/:*?"<>|]/g, '-').trim();
+      if (name === '') { name = defName; }
+    }
     var pts = '';
     for (var i = 0; i < batchPoints.length; i++) {
       pts += '<trkpt lat="' + formatNum(batchPoints[i].lat, 6) + '" lon="' + formatNum(batchPoints[i].lon, 6) + '"></trkpt>';
     }
-    var d = new Date();
-    var name = 'Stapel-Route ' + d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
     var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Koordinaten-Konverter" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>' + esc(name) + '</name><trkseg>' + pts + '</trkseg></trk>\n</gpx>\n';
     var blob = new Blob([gpx], { type: 'application/gpx+xml' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'stapel-route.gpx';
+    a.download = name + '.gpx';
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);

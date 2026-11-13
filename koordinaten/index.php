@@ -467,6 +467,10 @@ function pairToLatLon(array $c): array
 
 function parseInput(string $raw, string $mode, bool $swap): array
 {
+    $raw = preg_replace('/[\x09\x0A\x0D\x0B\x0C]/', ' ', $raw);
+    $raw = preg_replace('/[\x00-\x08\x0E-\x1F]/', '', $raw);
+    $uni = preg_replace('/[\x{007F}-\x{009F}\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{206F}\x{FEFF}\x{E0000}-\x{E007F}]/u', '', $raw);
+    if (is_string($uni)) { $raw = $uni; }
     $raw = trim($raw);
     if ($raw === '') {
         throw new RuntimeException('Bitte Koordinaten eingeben.');

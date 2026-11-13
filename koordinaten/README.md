@@ -43,3 +43,13 @@ php -S localhost:8000
 - Genauigkeit: UTM/Mercator/MGRS auf Zentimeter genau; LV95/LV03 über die offiziellen
   Näherungsformeln von swisstopo (Abweichung typischerweise < 0,2 m). Höhen werden nicht umgerechnet.
 - Die Umrechnungsformeln wurden gegen Referenzimplementierungen (pyproj/EPSG, mgrs) verifiziert.
+
+## Lizenz Grafik
+
+Die Kompassrose (SVG, als Data-URI in `index.html` und `index.php` eingebettet) wurde
+für dieses Projekt eigenständig gezeichnet und steht unter **CC0 1.0**
+(Public Domain Dedication): <https://creativecommons.org/publicdomain/zero/1.0/deed.de>
+
+Sie darf ohne Bedingungen kopiert, verändert und auch kommerziell genutzt werden;
+eine Namensnennung ist nicht erforderlich. Es wurde kein Fremdmaterial verwendet
+(keine Bilder von Wikimedia/Commons o. Ä.) – es bestehen keine Lizenzansprüche Dritter.

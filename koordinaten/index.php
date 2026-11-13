@@ -745,7 +745,9 @@ button.go { flex:0 0 auto; padding:12px 22px; font-size:1.05rem; font-weight:600
 button.go:hover { background:var(--accent2); }
 .check { display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--muted); font-size:.92rem; }
 .check input { width:auto; }
-.chips { margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; }
+.beispiele { margin-top:14px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:#fafaf8; }
+.beispiele-titel { margin:0; font-size:.8rem; font-weight:600; color:var(--muted); }
+.chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; }
 .chip { font-size:.82rem; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#f7f7f5; cursor:pointer; color:var(--ink); }
 .chip:hover { border-color:var(--accent); color:var(--accent); }
 .error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:14px 16px; margin-bottom:20px; }
@@ -804,6 +806,8 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <input type="checkbox" id="karte" checked>
 <label for="karte" style="margin:0;font-weight:400">Karte anzeigen (OpenStreetMap wird erst beim Umrechnen geladen)</label>
 </div>
+<div class="beispiele">
+<p class="beispiele-titel">Beispiele – zum Ausprobieren anklicken:</p>
 <div class="chips">
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
@@ -813,6 +817,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="32T 465403 5247150">UTM</button>
 <button type="button" class="chip" data-q="32TMT6540247150">MGRS</button>
 <button type="button" class="chip" data-q="-8238310, 4970072">Mercator · New York</button>
+</div>
 </div>
 </div>
 </form>

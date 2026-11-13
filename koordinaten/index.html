@@ -1327,10 +1327,6 @@ function buildResults(lat, lon, forceLv95) {
   try {
     var savedLang = localStorage.getItem('konverter-sprache');
     if (savedLang && TEXTE[savedLang]) { lang = savedLang; }
-    else {
-      var nav = (navigator.language || 'de').slice(0, 2).toLowerCase();
-      if (TEXTE[nav]) { lang = nav; }
-    }
   } catch (e) {}
   spracheEl.value = lang;
   applyLang(lang);

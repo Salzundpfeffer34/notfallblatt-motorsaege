@@ -1018,7 +1018,7 @@ function buildResults(lat, lon, forceLv95) {
       count++;
       if (count > 1000) { break; }
       var val = null;
-      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(q + '\t' + val); } catch (e) { val = null; }
+      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(val); } catch (e) { val = null; }
       html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
         '<div class="val">' + (val === null ? '<span class="batcherr">Format unbekannt</span>' : esc(val)) + '</div>' +
         (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">Kopieren</button>') + '</div>';

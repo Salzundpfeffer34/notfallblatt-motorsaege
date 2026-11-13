@@ -1524,6 +1524,7 @@ function buildResults(lat, lon, forceLv95) {
   });
   document.getElementById('batchGpx').addEventListener('click', function () {
     var btn = this;
+    runBatch();
     if (batchPoints.length < 2) {
       var old = btn.textContent;
       btn.textContent = t('min2');

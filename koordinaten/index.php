@@ -864,7 +864,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 </div>
 
 <footer>
-Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet.
+Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet. · <a href="datenschutz.html">Datenschutz</a>
 </footer>
 </div>
 

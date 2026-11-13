@@ -1541,7 +1541,9 @@ function buildResults(lat, lon, forceLv95) {
       navigator.clipboard.writeText(batchLines.join('\n')).then(function () { copyFeedback(this); }.bind(this));
     }
   });
+  var gpxBusy = false;
   document.getElementById('batchGpx').addEventListener('click', function () {
+    if (gpxBusy) { return; }
     var btn = this;
     runBatch();
     if (batchPoints.length < 2) {
@@ -1558,9 +1560,11 @@ function buildResults(lat, lon, forceLv95) {
     else { day = ('0' + d.getDate()).slice(-2) + sep + ('0' + (d.getMonth() + 1)).slice(-2) + sep + d.getFullYear(); }
     var defName = 'route-' + day + '_' + batchPoints.length + 'punkte';
     if (gpxGeoEl && gpxGeoEl.checked) {
+      gpxBusy = true;
       var oldTxt = btn.textContent;
       btn.textContent = t('gpxGeoWait');
       geoPlaceName(function (place) {
+        gpxBusy = false;
         btn.textContent = oldTxt;
         finishGpx(btn, place || defName, defName);
       });

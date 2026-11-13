@@ -76,6 +76,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <input type="checkbox" id="autoclear" checked>
 <label for="autoclear" style="margin:0;font-weight:400">Feld beim Klicken automatisch leeren</label>
 </div>
+<div class="check">
+<input type="checkbox" id="karte" checked>
+<label for="karte" style="margin:0;font-weight:400">Karte anzeigen (OpenStreetMap wird erst beim Umrechnen geladen)</label>
+</div>
 <div class="chips">
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
@@ -702,6 +706,7 @@ function buildResults(lat, lon) {
   var sel = document.getElementById('f');
   var swapEl = document.getElementById('swap');
   var autoclearEl = document.getElementById('autoclear');
+  var mapToggle = document.getElementById('karte');
   var form = document.getElementById('conv-form');
   var errorBox = document.getElementById('error');
   var noteBox = document.getElementById('note');
@@ -755,6 +760,20 @@ function buildResults(lat, lon) {
       try { localStorage.setItem('konverter-autoclear', autoclearEl.checked ? '1' : '0'); } catch (e) {}
     });
   }
+  if (mapToggle) {
+    try {
+      if (localStorage.getItem('konverter-karte') === '0') { mapToggle.checked = false; }
+    } catch (e) {}
+    mapToggle.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-karte', mapToggle.checked ? '1' : '0'); } catch (e) {}
+      if (!mapToggle.checked) {
+        mapFrame.src = 'about:blank';
+        mapFrame.classList.add('hidden');
+      } else {
+        run();
+      }
+    });
+  }
   sel.addEventListener('change', function () {
     var v = cleanInput(el.value);
     if (v !== el.value) { el.value = v; }
@@ -782,9 +801,14 @@ function buildResults(lat, lon) {
       '<a href="https://www.google.com/maps/search/?api=1&amp;query=' + latS + ',' + lonS + '" target="_blank" rel="noopener">Google Maps</a>' +
       '<a href="https://map.geo.admin.ch/?E=' + formatNum(lv95.east, 0) + '&amp;N=' + formatNum(lv95.north, 0) + '" target="_blank" rel="noopener">Swisstopo (geo.admin.ch)</a>' +
       '<a href="https://www.openstreetmap.org/?mlat=' + latS + '&amp;mlon=' + lonS + '#map=16/' + latS + '/' + lonS + '" target="_blank" rel="noopener">OpenStreetMap</a>';
-    var bbox = formatNum(lon - 0.004, 5) + ',' + formatNum(lat - 0.002, 5) + ',' + formatNum(lon + 0.004, 5) + ',' + formatNum(lat + 0.002, 5);
-    mapFrame.src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + latS + ',' + lonS;
-    mapFrame.classList.remove('hidden');
+    if (mapToggle && mapToggle.checked) {
+      var bbox = formatNum(lon - 0.004, 5) + ',' + formatNum(lat - 0.002, 5) + ',' + formatNum(lon + 0.004, 5) + ',' + formatNum(lat + 0.002, 5);
+      mapFrame.src = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + latS + ',' + lonS;
+      mapFrame.classList.remove('hidden');
+    } else {
+      mapFrame.src = 'about:blank';
+      mapFrame.classList.add('hidden');
+    }
     resultsBox.classList.remove('hidden');
     if (note) {
       noteBox.textContent = note;

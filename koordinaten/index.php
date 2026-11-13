@@ -751,6 +751,7 @@ button.go:hover { background:var(--accent2); }
 .error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:14px 16px; margin-bottom:20px; }
 .note { background:#f7f7f5; border:1px solid var(--line); color:#444444; border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:.93rem; }
 .results { padding:0; overflow:hidden; }
+.hidden { display:none; }
 .results h2 { font-size:1.05rem; margin:0; padding:16px 20px 4px; }
 .resrow { display:flex; align-items:center; gap:12px; padding:12px 20px; border-top:1px solid var(--line); }
 .resrow .lbl { flex:0 0 46%; color:var(--muted); font-size:.9rem; }
@@ -798,6 +799,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <input type="checkbox" id="autoclear" checked>
 <label for="autoclear" style="margin:0;font-weight:400">Feld beim Klicken automatisch leeren</label>
 </div>
+<div class="check">
+<input type="checkbox" id="karte" checked>
+<label for="karte" style="margin:0;font-weight:400">Karte anzeigen (OpenStreetMap wird erst beim Umrechnen geladen)</label>
+</div>
 <div class="chips">
 <button type="button" class="chip" data-q="47.376895, 8.541694">WGS84 · Zürich</button>
 <button type="button" class="chip" data-q="47° 22' 36.8&quot; N, 8° 32' 30.1&quot; E">Grad/Min/Sek</button>
@@ -838,7 +843,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="note"><?php echo htmlspecialchars($note, ENT_QUOTES, 'UTF-8'); ?></div>
 <?php } ?>
 <div class="card">
-<iframe class="map" loading="lazy" title="Kartenausschnitt" src="https://www.openstreetmap.org/export/embed.html?bbox=<?php echo $bbox; ?>&amp;layer=mapnik&amp;marker=<?php echo $latUrl; ?>,<?php echo $lonUrl; ?>"></iframe>
+<iframe id="osmmap" class="map" loading="lazy" title="Kartenausschnitt" src="https://www.openstreetmap.org/export/embed.html?bbox=<?php echo $bbox; ?>&amp;layer=mapnik&amp;marker=<?php echo $latUrl; ?>,<?php echo $lonUrl; ?>"></iframe>
 </div>
 <?php } ?>
 
@@ -908,6 +913,31 @@ Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die 
     } catch (e) {}
     autoclearEl.addEventListener('change', function () {
       try { localStorage.setItem('konverter-autoclear', autoclearEl.checked ? '1' : '0'); } catch (e) {}
+    });
+  }
+  var mapToggle = document.getElementById('karte');
+  var mapFrame = document.getElementById('osmmap');
+  if (mapToggle && mapFrame) {
+    var mapSrcSaved = mapFrame.src;
+    var karteAn = true;
+    try {
+      if (localStorage.getItem('konverter-karte') === '0') { karteAn = false; }
+    } catch (e) {}
+    mapToggle.checked = karteAn;
+    if (!karteAn) {
+      mapFrame.src = 'about:blank';
+      mapFrame.classList.add('hidden');
+    }
+    mapToggle.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-karte', mapToggle.checked ? '1' : '0'); } catch (e) {}
+      if (!mapToggle.checked) {
+        mapSrcSaved = mapFrame.src;
+        mapFrame.src = 'about:blank';
+        mapFrame.classList.add('hidden');
+      } else {
+        if (mapSrcSaved && mapSrcSaved.indexOf('about:blank') !== 0) { mapFrame.src = mapSrcSaved; }
+        mapFrame.classList.remove('hidden');
+      }
     });
   }
   sel.addEventListener('change', function () {

@@ -12,6 +12,7 @@ body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans
 .schrift { display:flex; justify-content:flex-end; gap:6px; margin-bottom:2px; }
 .schrift button { font-size:.85rem; padding:4px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); cursor:pointer; font-family:inherit; }
 .schrift button:hover { border-color:var(--accent); color:var(--accent); }
+.schrift select { font-size:.85rem; padding:4px 8px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); font-family:inherit; cursor:pointer; width:auto; }
 .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; }
 header h1 { font-size: 1.6rem; margin: 8px 0 4px; }
 header p { color: var(--muted); margin: 0 0 20px; }
@@ -57,62 +58,68 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <body>
 <div class="wrap">
 <header>
-<div class="schrift" role="group" aria-label="Schriftgrösse">
-<button type="button" id="fontMinus" aria-label="Schrift verkleinern" title="Schrift verkleinern">A−</button>
-<button type="button" id="fontReset" aria-label="Normale Schriftgrösse" title="Normale Schriftgrösse">A</button>
-<button type="button" id="fontPlus" aria-label="Schrift vergrössern" title="Schrift vergrössern">A+</button>
+<div class="schrift" role="group" aria-label="Schriftgrösse" data-i18n-aria="ariaSchrift">
+<select id="sprache" aria-label="Sprache" data-i18n-aria="ariaSprache">
+<option value="de" selected>Deutsch</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+<option value="it">Italiano</option>
+</select>
+<button type="button" id="fontMinus" aria-label="Schrift verkleinern" title="Schrift verkleinern" data-i18n-aria="ariaFontMinus" data-i18n-title="ariaFontMinus">A−</button>
+<button type="button" id="fontReset" aria-label="Normale Schriftgrösse" title="Normale Schriftgrösse" data-i18n-aria="ariaFontReset" data-i18n-title="ariaFontReset">A</button>
+<button type="button" id="fontPlus" aria-label="Schrift vergrössern" title="Schrift vergrössern" data-i18n-aria="ariaFontPlus" data-i18n-title="ariaFontPlus">A+</button>
 </div>
-<h1>Koordinaten-Konverter</h1>
-<p>Koordinaten in <em>irgendeinem</em> Format einsetzen &ndash; alle anderen Formate werden automatisch berechnet.</p>
+<h1 data-i18n="h1">Koordinaten-Konverter</h1>
+<p data-i18n="subtitle">Koordinaten in <em>irgendeinem</em> Format einsetzen &ndash; alle anderen Formate werden automatisch berechnet.</p>
 </header>
 
 <form id="conv-form">
 <div class="card">
-<label for="q">Koordinaten</label>
+<label for="q" data-i18n="labelQ">Koordinaten</label>
 <div class="row">
-<input type="text" id="q" placeholder="z. B. 47.376895, 8.541694" autocomplete="off">
-<select id="f" aria-label="Format">
-<option value="auto" selected>Automatisch erkennen</option>
-<option value="wgs84">WGS84 · Dezimalgrad</option>
-<option value="dms">Grad / Minuten / Sekunden</option>
-<option value="lv95">Schweiz · LV95 (CH1903+)</option>
+<input type="text" id="q" placeholder="z. B. 47.376895, 8.541694" autocomplete="off" data-i18n-ph="qPlaceholder">
+<select id="f" aria-label="Format" data-i18n-aria="ariaFormat">
+<option value="auto" selected data-i18n="optAuto">Automatisch erkennen</option>
+<option value="wgs84" data-i18n="optWgs84">WGS84 · Dezimalgrad</option>
+<option value="dms" data-i18n="optDms">Grad / Minuten / Sekunden</option>
+<option value="lv95" data-i18n="optLv95">Schweiz · LV95 (CH1903+)</option>
 <option value="utm">UTM</option>
 <option value="mgrs">MGRS</option>
 <option value="mercator">Web Mercator (EPSG:3857)</option>
 </select>
-<button class="go" type="submit" id="goBtn">Umrechnen</button>
+<button class="go" type="submit" id="goBtn" data-i18n="goBtn">Umrechnen</button>
 </div>
 <div class="check">
 <input type="checkbox" id="swap" value="1">
-<label for="swap" style="margin:0;font-weight:400">Erste Zahl ist die Länge (lon, y) &ndash; nicht die Breite</label>
+<label for="swap" style="margin:0;font-weight:400" data-i18n="lblSwap">Erste Zahl ist die Länge (lon, y) &ndash; nicht die Breite</label>
 </div>
 <div class="check">
 <input type="checkbox" id="lv95force">
-<label for="lv95force" style="margin:0;font-weight:400">LV95 immer anzeigen (auch ausserhalb der Schweiz)</label>
+<label for="lv95force" style="margin:0;font-weight:400" data-i18n="lblLv95force">LV95 immer anzeigen (auch ausserhalb der Schweiz)</label>
 </div>
 <div class="check">
 <input type="checkbox" id="autoclear" checked>
-<label for="autoclear" style="margin:0;font-weight:400">Feld beim Klicken automatisch leeren</label>
+<label for="autoclear" style="margin:0;font-weight:400" data-i18n="lblAutoclear">Feld beim Klicken automatisch leeren</label>
 </div>
 <div class="check">
 <input type="checkbox" id="karte" checked>
-<label for="karte" style="margin:0;font-weight:400">Karte anzeigen (OpenStreetMap wird erst beim Umrechnen geladen)</label>
+<label for="karte" style="margin:0;font-weight:400" data-i18n="lblKarte">Karte anzeigen (OpenStreetMap wird erst beim Umrechnen geladen)</label>
 </div>
 <div class="check">
 <input type="checkbox" id="live" checked>
-<label for="live" style="margin:0;font-weight:400">Live umrechnen w&auml;hrend der Eingabe</label>
+<label for="live" style="margin:0;font-weight:400" data-i18n="lblLive">Live umrechnen w&auml;hrend der Eingabe</label>
 </div>
 <div class="beispiele">
-<p class="beispiele-titel">Beispiele – zum Ausprobieren anklicken:</p>
+<p class="beispiele-titel" data-i18n="beispieleTitel">Beispiele – zum Ausprobieren anklicken:</p>
 <div class="chips">
-<button type="button" class="chip" data-q="48.8566, 2.3522">WGS84 · Paris</button>
-<button type="button" class="chip" data-q="41° 54' 10.1&quot; N, 12° 29' 47&quot; E">DMS · Rom</button>
-<button type="button" class="chip" data-q="40°42‘46‘‘N 74°00‘22‘‘W">DMS · New York</button>
-<button type="button" class="chip" data-q="N34 03.133 W118 14.622">Dezimalmin · Los Angeles</button>
-<button type="button" class="chip" data-q="2683303, 1247925">LV95 · Zürich</button>
-<button type="button" class="chip" data-q="30U 699316 5710164">UTM · London</button>
-<button type="button" class="chip" data-q="54SUE8843349290">MGRS · Tokio</button>
-<button type="button" class="chip" data-q="-8238310, 4970072">Mercator · New York</button>
+<button type="button" class="chip" data-q="48.8566, 2.3522" data-i18n="chipParis">WGS84 · Paris</button>
+<button type="button" class="chip" data-q="41° 54' 10.1&quot; N, 12° 29' 47&quot; E" data-i18n="chipRom">DMS · Rom</button>
+<button type="button" class="chip" data-q="40°42‘46‘‘N 74°00‘22‘‘W" data-i18n="chipNy">DMS · New York</button>
+<button type="button" class="chip" data-q="N34 03.133 W118 14.622" data-i18n="chipLa">Dezimalmin · Los Angeles</button>
+<button type="button" class="chip" data-q="2683303, 1247925" data-i18n="chipZh">LV95 · Zürich</button>
+<button type="button" class="chip" data-q="30U 699316 5710164" data-i18n="chipLondon">UTM · London</button>
+<button type="button" class="chip" data-q="54SUE8843349290" data-i18n="chipTokio">MGRS · Tokio</button>
+<button type="button" class="chip" data-q="-8238310, 4970072" data-i18n="chipMercNy">Mercator · New York</button>
 </div>
 </div>
 </div>
@@ -125,69 +132,507 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <h2 id="results-title"></h2>
 <div id="resrows"></div>
 <div class="resrow">
-<div class="lbl">Karten-Links</div>
+<div class="lbl" data-i18n="lblMaplinks">Karten-Links</div>
 <div class="links" id="maplinks"></div>
 </div>
 <div class="resrow">
-<div class="lbl">Teilen</div>
+<div class="lbl" data-i18n="lblTeilen">Teilen</div>
 <div class="links">
-<button type="button" id="copyAll">Alle kopieren</button>
-<button type="button" id="copyLink">Link kopieren</button>
+<button type="button" id="copyAll" data-i18n="copyAll">Alle kopieren</button>
+<button type="button" id="copyLink" data-i18n="copyLink">Link kopieren</button>
 </div>
 </div>
 </div>
 
 <div class="card">
-<iframe id="osmmap" class="map hidden" loading="lazy" title="Kartenausschnitt"></iframe>
+<iframe id="osmmap" class="map hidden" loading="lazy" title="Kartenausschnitt" data-i18n-title="mapTitle"></iframe>
 </div>
 
 <div class="card">
-<h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-2026-11-13_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt.</p>
-<textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
+<h2 data-i18n="batchH2">Stapel-Umrechnung</h2>
+<p class="help" data-i18n="batchHelp">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt, das Datumsformat ist umschaltbar (Deutsch, English/US, Français, Italiano).</p>
+<textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false" data-i18n-ph="batchPlaceholder"></textarea>
 <div class="row" style="margin-top:10px">
-<select id="batchTarget" aria-label="Zielformat">
-<option value="wgs84" selected>WGS84 &middot; Dezimalgrad</option>
-<option value="dms">Grad / Minuten / Sekunden</option>
-<option value="lv95">Schweiz &middot; LV95 (CH1903+)</option>
+<select id="batchTarget" aria-label="Zielformat" data-i18n-aria="ariaTarget">
+<option value="wgs84" selected data-i18n="optWgs84">WGS84 &middot; Dezimalgrad</option>
+<option value="dms" data-i18n="optDms">Grad / Minuten / Sekunden</option>
+<option value="lv95" data-i18n="optLv95">Schweiz &middot; LV95 (CH1903+)</option>
 <option value="utm">UTM</option>
 <option value="mgrs">MGRS</option>
 <option value="mercator">Web Mercator (EPSG:3857)</option>
-<option value="geojson">GeoJSON (L&auml;nge, Breite)</option>
+<option value="geojson" data-i18n="optGeojson">GeoJSON (L&auml;nge, Breite)</option>
 </select>
-<button class="go" type="button" id="batchGo">Stapel umrechnen</button>
-<button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">Alle kopieren</button>
-<button type="button" class="copy" id="batchGpx" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">GPX herunterladen</button>
+<button class="go" type="button" id="batchGo" data-i18n="batchGo">Stapel umrechnen</button>
+<button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="copyAll">Alle kopieren</button>
+<button type="button" class="copy" id="batchGpx" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="batchGpx">GPX herunterladen</button>
 </div>
 <div class="check" style="margin-top:10px">
 <input type="checkbox" id="gpxAsk" checked>
-<label for="gpxAsk" style="margin:0;font-weight:400">Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)</label>
+<label for="gpxAsk" style="margin:0;font-weight:400" data-i18n="lblGpxAsk">Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)</label>
+<select id="gpxDatum" aria-label="Datumsformat im Standardnamen" style="margin-left:10px;padding:4px 6px" data-i18n-aria="ariaGpxDatum">
+<option value="de" selected>13.11.2026 (Deutsch)</option>
+<option value="en">11-13-2026 (English/US)</option>
+<option value="fr">13-11-2026 (Français)</option>
+<option value="it">13-11-2026 (Italiano)</option>
+</select>
 </div>
 <div id="batchOut" style="margin-top:12px"></div>
 </div>
 
 <div class="card help">
-<h2>Erkannte Eingabeformate</h2>
-<p>Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2'683'303</code>) ebenfalls.</p>
-<p><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
+<h2 data-i18n="helpH2">Erkannte Eingabeformate</h2>
+<p data-i18n="helpP1">Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2'683'303</code>) ebenfalls.</p>
+<p data-i18n="helpP2"><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
 <ul>
-<li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
-<li><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
-<li><strong>Grad + Dezimalminuten (GPS):</strong> <code>N37 09.729 W111 42.701</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)</li>
-<li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx&ndash;2'9xx xxx, Nord 1'0xx xxx&ndash;1'4xx xxx)</li>
-<li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
-<li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
-<li><strong>MGRS:</strong> <code>32TMT6540247150</code> oder <code>32T MT 65402 47150</code></li>
-<li><strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> &ndash; bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen</li>
+<li data-i18n="helpLi1"><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
+<li data-i18n="helpLi2"><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
+<li data-i18n="helpLi3"><strong>Grad + Dezimalminuten (GPS):</strong> <code>N37 09.729 W111 42.701</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)</li>
+<li data-i18n="helpLi4"><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx&ndash;2'9xx xxx, Nord 1'0xx xxx&ndash;1'4xx xxx)</li>
+<li data-i18n="helpLi5"><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
+<li data-i18n="helpLi6"><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
+<li data-i18n="helpLi7"><strong>MGRS:</strong> <code>32TMT6540247150</code> oder <code>32T MT 65402 47150</code></li>
+<li data-i18n="helpLi8"><strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> &ndash; bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen</li>
 </ul>
 </div>
 
-<footer>
+<footer data-i18n="footer">
 Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet. Die Berechnung läuft komplett im Browser. · <a href="datenschutz.html">Datenschutz</a>
 </footer>
 </div>
 
 <script>
+var TEXTE = {
+  de: {
+    docTitle: 'Koordinaten-Konverter · WGS84, DMS, LV95, NAD83, UTM, MGRS, Mercator',
+    h1: 'Koordinaten-Konverter',
+    subtitle: 'Koordinaten in <em>irgendeinem</em> Format einsetzen – alle anderen Formate werden automatisch berechnet.',
+    labelQ: 'Koordinaten',
+    qPlaceholder: 'z. B. 47.376895, 8.541694',
+    ariaSchrift: 'Schriftgrösse',
+    ariaSprache: 'Sprache',
+    ariaFontMinus: 'Schrift verkleinern',
+    ariaFontReset: 'Normale Schriftgrösse',
+    ariaFontPlus: 'Schrift vergrössern',
+    ariaFormat: 'Format',
+    ariaTarget: 'Zielformat',
+    ariaGpxDatum: 'Datumsformat im Standardnamen',
+    optAuto: 'Automatisch erkennen',
+    optWgs84: 'WGS84 · Dezimalgrad',
+    optDms: 'Grad / Minuten / Sekunden',
+    optLv95: 'Schweiz · LV95 (CH1903+)',
+    optGeojson: 'GeoJSON (Länge, Breite)',
+    goBtn: 'Umrechnen',
+    lblSwap: 'Erste Zahl ist die Länge (lon, y) – nicht die Breite',
+    lblLv95force: 'LV95 immer anzeigen (auch ausserhalb der Schweiz)',
+    lblAutoclear: 'Feld beim Klicken automatisch leeren',
+    lblKarte: 'Karte anzeigen (OpenStreetMap wird erst beim Umrechnen geladen)',
+    lblLive: 'Live umrechnen während der Eingabe',
+    beispieleTitel: 'Beispiele – zum Ausprobieren anklicken:',
+    chipParis: 'WGS84 · Paris',
+    chipRom: 'DMS · Rom',
+    chipNy: 'DMS · New York',
+    chipLa: 'Dezimalmin · Los Angeles',
+    chipZh: 'LV95 · Zürich',
+    chipLondon: 'UTM · London',
+    chipTokio: 'MGRS · Tokio',
+    chipMercNy: 'Mercator · New York',
+    lblMaplinks: 'Karten-Links',
+    lblTeilen: 'Teilen',
+    copyAll: 'Alle kopieren',
+    copyLink: 'Link kopieren',
+    mapTitle: 'Kartenausschnitt',
+    batchH2: 'Stapel-Umrechnung',
+    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einfügen (Format wird automatisch erkannt), Zielformat wählen, «Stapel umrechnen» klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). «GPX herunterladen» erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt, das Datumsformat ist umschaltbar (Deutsch, English/US, Français, Italiano).',
+    batchPlaceholder: 'z. B.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
+    batchGo: 'Stapel umrechnen',
+    batchGpx: 'GPX herunterladen',
+    lblGpxAsk: 'Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)',
+    helpH2: 'Erkannte Eingabeformate',
+    helpP1: 'Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2\'683\'303</code>) ebenfalls.',
+    helpP2: '<strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.',
+    helpLi1: '<strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)',
+    helpLi2: '<strong>Grad/Minuten/Sekunden:</strong> <code>37°42\'10"N 111°23\'16"W</code> oder <code>47° 22\' 36.8" N, 8° 32\' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615\' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)',
+    helpLi3: '<strong>Grad + Dezimalminuten (GPS):</strong> <code>N37 09.729 W111 42.701</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)',
+    helpLi4: '<strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2\'4xx xxx–2\'9xx xxx, Nord 1\'0xx xxx–1\'4xx xxx)',
+    helpLi5: '<strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)',
+    helpLi6: '<strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)',
+    helpLi7: '<strong>MGRS:</strong> <code>32TMT6540247150</code> oder <code>32T MT 65402 47150</code>',
+    helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen',
+    footer: 'Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet. Die Berechnung läuft komplett im Browser. · <a href="datenschutz.html">Datenschutz</a>',
+    copyBtn: 'Kopieren',
+    copied: 'Kopiert ✓',
+    fmtUnknown: 'Format unbekannt',
+    noLines: 'Keine Zeilen eingegeben.',
+    cap1000: 'Auf 1000 Zeilen begrenzt.',
+    min2: 'Min. 2 Punkte nötig',
+    promptName: 'Name der GPX-Datei (ohne .gpx):',
+    notRecognized: 'Eingabe nicht erkannt: ',
+    resultFor: 'Umrechnung für {a}, {b} (WGS84)',
+    rowWgs84: 'WGS84 · Dezimalgrad (Breite, Länge)',
+    rowDms: 'WGS84 · Grad, Minuten, Sekunden',
+    rowGeojson: 'WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet',
+    rowNad83: 'NAD83 (Nordamerika) · geografisch (B, L)',
+    rowLv95: 'Schweiz · LV95 / CH1903+ (Ost, Nord)',
+    rowUtm: 'UTM (Zone, Ost, Nord)',
+    rowMgrs: 'MGRS / USNG (1 m)',
+    rowMercator: 'Web Mercator · EPSG:3857 (Google Maps) (X, Y)',
+    noteUtmZone32: 'Keine UTM-Zone angegeben – es wurde Zone 32 angenommen. Gib die Zone am besten mit an, z. B. «32T 465403 5247150».',
+    noteMgrs: 'MGRS erkannt.',
+    noteDms: 'WGS84 in Grad/Minuten/Sekunden erkannt.',
+    noteZone32: 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «32T 465403 5247150».',
+    noteDmm: 'Grad + Dezimalminuten erkannt (z. B. N37 09.729 W111 42.701).',
+    noteUtmZoneN: 'UTM mit Zone {z} erkannt.',
+    errMgrs: 'Format unbekannt: MGRS nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.',
+    errDms: 'Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W oder N37 09.729 W111 42.701',
+    errGeneral: 'Format unbekannt. Beispiele: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)',
+    errMgrsRange: 'Koordinate liegt ausserhalb des MGRS-Bereichs dieser Zone.',
+    errLat: 'Breite ausserhalb des gültigen Bereichs (-90 bis +90).',
+    errLon: 'Länge ausserhalb des gültigen Bereichs (-180 bis +180).',
+    errUnknown: 'Unbekanntes Format.',
+    errEmpty: 'Bitte Koordinaten eingeben.',
+    errMgrsLetters: 'Bei MGRS sind höchstens 3 Buchstaben erlaubt (z. B. 32TMT…).',
+    errDmsLetters: 'Bei Grad/Minuten/Sekunden sind höchstens zwei Buchstaben erlaubt: N, S, E oder W.',
+    errUtmLetters: 'Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. «32T» oder «E … N …»).',
+    errLetters: 'Bitte nur Zahlen eingeben – Buchstaben sind hier nicht erlaubt.',
+    errLettersAuto: 'Bitte nur Zahlen eingeben – Buchstaben nur bei UTM/MGRS oder als Himmelsrichtung (N/S/E/W).',
+    errTwoValues: 'Bitte zwei Werte angeben (Breite, Länge).',
+    errLv95: 'Bitte Ost und Nord angeben, z. B. 2\'683\'303, 1\'247\'925',
+    errMercator: 'Bitte Ost (x) und Nord (y) angeben, z. B. 683303, 247925',
+    errMercXY: 'Bitte X und Y in Metern angeben (EPSG:3857).',
+    errUtm: 'Bitte Zone (optional), Ost und Nord angeben, z. B. 32T 465403 5247150'
+  },
+  en: {
+    docTitle: 'Coordinate Converter · WGS84, DMS, LV95, NAD83, UTM, MGRS, Mercator',
+    h1: 'Coordinate Converter',
+    subtitle: 'Enter coordinates in <em>any</em> format – all other formats are calculated automatically.',
+    labelQ: 'Coordinates',
+    qPlaceholder: 'e.g. 47.376895, 8.541694',
+    ariaSchrift: 'Font size',
+    ariaSprache: 'Language',
+    ariaFontMinus: 'Decrease font size',
+    ariaFontReset: 'Normal font size',
+    ariaFontPlus: 'Increase font size',
+    ariaFormat: 'Format',
+    ariaTarget: 'Target format',
+    ariaGpxDatum: 'Date format in the default name',
+    optAuto: 'Detect automatically',
+    optWgs84: 'WGS84 · decimal degrees',
+    optDms: 'Degrees / minutes / seconds',
+    optLv95: 'Switzerland · LV95 (CH1903+)',
+    optGeojson: 'GeoJSON (longitude, latitude)',
+    goBtn: 'Convert',
+    lblSwap: 'First number is longitude (lon, y) – not latitude',
+    lblLv95force: 'Always show LV95 (also outside Switzerland)',
+    lblAutoclear: 'Clear field automatically on click',
+    lblKarte: 'Show map (OpenStreetMap only loads when converting)',
+    lblLive: 'Live conversion while typing',
+    beispieleTitel: 'Examples – click to try them out:',
+    chipParis: 'WGS84 · Paris',
+    chipRom: 'DMS · Rome',
+    chipNy: 'DMS · New York',
+    chipLa: 'Dec. min · Los Angeles',
+    chipZh: 'LV95 · Zurich',
+    chipLondon: 'UTM · London',
+    chipTokio: 'MGRS · Tokyo',
+    chipMercNy: 'Mercator · New York',
+    lblMaplinks: 'Map links',
+    lblTeilen: 'Share',
+    copyAll: 'Copy all',
+    copyLink: 'Copy link',
+    mapTitle: 'Map view',
+    batchH2: 'Batch conversion',
+    batchHelp: 'Convert several coordinates at once: paste one per line (the format is detected automatically), choose the target format, click «Convert batch». Note: LV95 is only shown for coordinates within Switzerland (otherwise «–»). «Download GPX» creates a file for import into Garmin Connect or Garmin Explore – the order of the lines is the route, at least two valid lines are required. Default name: <code>route-DATE_NPOINTS.gpx</code> (e.g. <code>route-13.11.2026_7punkte.gpx</code>); with the checkbox you are asked for a custom name when downloading, and the date format is switchable (Deutsch, English/US, Français, Italiano).',
+    batchPlaceholder: 'e.g.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
+    batchGo: 'Convert batch',
+    batchGpx: 'Download GPX',
+    lblGpxAsk: 'Ask for the file name when downloading (otherwise default name)',
+    helpH2: 'Recognised input formats',
+    helpP1: 'Comma, semicolon, space or slash work as separators. Decimal point or decimal comma are allowed, as is Swiss thousands separation with an apostrophe (<code>2\'683\'303</code>).',
+    helpP2: '<strong>Input restriction:</strong> except for UTM/MGRS only numbers can be entered. UTM allows at most two letters (e.g. <code>32T</code> or <code>E … N …</code>), MGRS three (<code>32TMT…</code>), degrees/minutes/seconds only N, S, E or W. The input field filters out invalid characters immediately.',
+    helpLi1: '<strong>WGS84 decimal degrees:</strong> <code>47.376895, 8.541694</code> (latitude first; for <code>8.541694, 47.376895</code> tick «First number is longitude»)',
+    helpLi2: '<strong>Degrees/minutes/seconds:</strong> <code>37°42\'10"N 111°23\'16"W</code> or <code>47° 22\' 36.8" N, 8° 32\' 30.1" E</code> (also decimal minutes: <code>47° 22.615\' N</code>; typographic marks ‘ ’ and ‘‘ ’’ ” ´´ are also recognised)',
+    helpLi3: '<strong>Degrees + decimal minutes (GPS):</strong> <code>N37 09.729 W111 42.701</code> (without the degree sign; compass direction N/S/E/W before or after the numbers)',
+    helpLi4: '<strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (east 2\'4xx xxx–2\'9xx xxx, north 1\'0xx xxx–1\'4xx xxx)',
+    helpLi5: '<strong>NAD83 (North America):</strong> geographic coordinates; the values correspond to WGS84 (deviation typically &lt; 2 m, because NAD83 is fixed to the North American plate)',
+    helpLi6: '<strong>UTM:</strong> <code>32T 465403 5247150</code> or <code>465403, 5247150</code> (without a zone, zone 32 is assumed)',
+    helpLi7: '<strong>MGRS:</strong> <code>32TMT6540247150</code> or <code>32T MT 65402 47150</code>',
+    helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – for small values that could also be read as UTM, choose the format above explicitly',
+    footer: 'Accuracy: UTM/Mercator/MGRS are mathematically exact to the centimetre; LV95 uses the official approximation formulas of swisstopo (deviation typically &lt; 0.2 m). Elevations are not converted. The calculation runs entirely in the browser. · <a href="datenschutz.html">Privacy</a>',
+    copyBtn: 'Copy',
+    copied: 'Copied ✓',
+    fmtUnknown: 'Unknown format',
+    noLines: 'No lines entered.',
+    cap1000: 'Limited to 1000 lines.',
+    min2: 'Min. 2 points needed',
+    promptName: 'Name of the GPX file (without .gpx):',
+    notRecognized: 'Input not recognised: ',
+    resultFor: 'Conversion for {a}, {b} (WGS84)',
+    rowWgs84: 'WGS84 · decimal degrees (lat, lon)',
+    rowDms: 'WGS84 · degrees, minutes, seconds',
+    rowGeojson: 'WGS84 · decimal degrees (lon, lat) — GeoJSON/Leaflet',
+    rowNad83: 'NAD83 (North America) · geographic (lat, lon)',
+    rowLv95: 'Switzerland · LV95 / CH1903+ (east, north)',
+    rowUtm: 'UTM (zone, east, north)',
+    rowMgrs: 'MGRS / USNG (1 m)',
+    rowMercator: 'Web Mercator · EPSG:3857 (Google Maps) (X, Y)',
+    noteUtmZone32: 'No UTM zone given – zone 32 was assumed. It is best to include the zone, e.g. «32T 465403 5247150».',
+    noteMgrs: 'MGRS recognised.',
+    noteDms: 'WGS84 recognised as degrees/minutes/seconds.',
+    noteZone32: 'No zone given – zone 32 assumed. Example with zone: «32T 465403 5247150».',
+    noteDmm: 'Degrees + decimal minutes recognised (e.g. N37 09.729 W111 42.701).',
+    noteUtmZoneN: 'UTM recognised with zone {z}.',
+    errMgrs: 'Unknown format: MGRS not recognised. Example: 32TMT6540247150 or 32T MT 65402 47150.',
+    errDms: 'Unknown format: degrees/minutes/seconds not recognised. Example: 37° 42\' 10" N, 111° 23\' 16" W or N37 09.729 W111 42.701',
+    errGeneral: 'Unknown format. Examples: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)',
+    errMgrsRange: 'Coordinate is outside the MGRS range of this zone.',
+    errLat: 'Latitude outside the valid range (-90 to +90).',
+    errLon: 'Longitude outside the valid range (-180 to +180).',
+    errUnknown: 'Unknown format.',
+    errEmpty: 'Please enter coordinates.',
+    errMgrsLetters: 'MGRS allows at most 3 letters (e.g. 32TMT…).',
+    errDmsLetters: 'Degrees/minutes/seconds allow at most two letters: N, S, E or W.',
+    errUtmLetters: 'UTM allows at most two letters (e.g. «32T» or «E … N …»).',
+    errLetters: 'Please enter numbers only – letters are not allowed here.',
+    errLettersAuto: 'Please enter numbers only – letters only for UTM/MGRS or as compass direction (N/S/E/W).',
+    errTwoValues: 'Please enter two values (latitude, longitude).',
+    errLv95: 'Please enter east and north, e.g. 2\'683\'303, 1\'247\'925',
+    errMercator: 'Please enter east (x) and north (y), e.g. 683303, 247925',
+    errMercXY: 'Please enter X and Y in metres (EPSG:3857).',
+    errUtm: 'Please enter zone (optional), east and north, e.g. 32T 465403 5247150'
+  },
+  fr: {
+    docTitle: 'Convertisseur de coordonnées · WGS84, DMS, LV95, NAD83, UTM, MGRS, Mercator',
+    h1: 'Convertisseur de coordonnées',
+    subtitle: 'Saisissez des coordonnées dans <em>n’importe quel</em> format – tous les autres formats sont calculés automatiquement.',
+    labelQ: 'Coordonnées',
+    qPlaceholder: 'p. ex. 47.376895, 8.541694',
+    ariaSchrift: 'Taille de police',
+    ariaSprache: 'Langue',
+    ariaFontMinus: 'Réduire la police',
+    ariaFontReset: 'Taille de police normale',
+    ariaFontPlus: 'Agrandir la police',
+    ariaFormat: 'Format',
+    ariaTarget: 'Format cible',
+    ariaGpxDatum: 'Format de date dans le nom par défaut',
+    optAuto: 'Détection automatique',
+    optWgs84: 'WGS84 · degrés décimaux',
+    optDms: 'Degrés / minutes / secondes',
+    optLv95: 'Suisse · LV95 (CH1903+)',
+    optGeojson: 'GeoJSON (longitude, latitude)',
+    goBtn: 'Convertir',
+    lblSwap: 'Le premier nombre est la longitude (lon, y) – pas la latitude',
+    lblLv95force: 'Toujours afficher LV95 (même hors de Suisse)',
+    lblAutoclear: 'Effacer le champ automatiquement au clic',
+    lblKarte: 'Afficher la carte (OpenStreetMap n’est chargée qu’à la conversion)',
+    lblLive: 'Conversion en direct pendant la saisie',
+    beispieleTitel: 'Exemples – cliquez pour essayer :',
+    chipParis: 'WGS84 · Paris',
+    chipRom: 'DMS · Rome',
+    chipNy: 'DMS · New York',
+    chipLa: 'Min. déc. · Los Angeles',
+    chipZh: 'LV95 · Zurich',
+    chipLondon: 'UTM · Londres',
+    chipTokio: 'MGRS · Tokyo',
+    chipMercNy: 'Mercator · New York',
+    lblMaplinks: 'Liens cartographiques',
+    lblTeilen: 'Partager',
+    copyAll: 'Tout copier',
+    copyLink: 'Copier le lien',
+    mapTitle: 'Aperçu de la carte',
+    batchH2: 'Conversion par lot',
+    batchHelp: 'Convertissez plusieurs coordonnées à la fois : collez-en une par ligne (le format est détecté automatiquement), choisissez le format cible, cliquez sur «Convertir le lot». Remarque : LV95 n’est affiché que pour les coordonnées en Suisse (sinon «–»). «Télécharger GPX» crée un fichier à importer dans Garmin Connect ou Garmin Explore – l’ordre des lignes correspond à l’itinéraire ; au moins deux lignes valides sont nécessaires. Nom par défaut : <code>route-DATE_NPOINTS.gpx</code> (p. ex. <code>route-13.11.2026_7punkte.gpx</code>) ; avec la case à cocher, un nom personnalisé est demandé au téléchargement et le format de date est commutable (Deutsch, English/US, Français, Italiano).',
+    batchPlaceholder: 'p. ex.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
+    batchGo: 'Convertir le lot',
+    batchGpx: 'Télécharger GPX',
+    lblGpxAsk: 'Demander le nom du fichier au téléchargement (sinon nom par défaut)',
+    helpH2: 'Formats d’entrée reconnus',
+    helpP1: 'La virgule, le point-virgule, l’espace ou la barre oblique servent de séparateurs. Le point ou la virgule décimale sont admis, ainsi que la séparation des milliers à la suisse avec apostrophe (<code>2\'683\'303</code>).',
+    helpP2: '<strong>Limitation de saisie :</strong> sauf pour UTM/MGRS, seuls des chiffres peuvent être saisis. UTM accepte au maximum deux lettres (p. ex. <code>32T</code> ou <code>E … N …</code>), MGRS trois (<code>32TMT…</code>), degrés/minutes/secondes seulement N, S, E ou W. Le champ de saisie filtre immédiatement les caractères invalides.',
+    helpLi1: '<strong>WGS84 degrés décimaux :</strong> <code>47.376895, 8.541694</code> (latitude d’abord ; pour <code>8.541694, 47.376895</code> cocher «Le premier nombre est la longitude»)',
+    helpLi2: '<strong>Degrés/minutes/secondes :</strong> <code>37°42\'10"N 111°23\'16"W</code> ou <code>47° 22\' 36.8" N, 8° 32\' 30.1" E</code> (aussi minutes décimales : <code>47° 22.615\' N</code> ; les signes typographiques ‘ ’ et ‘‘ ’’ ” ´´ sont aussi reconnus)',
+    helpLi3: '<strong>Degrés + minutes décimales (GPS) :</strong> <code>N37 09.729 W111 42.701</code> (sans le signe degré ; direction N/S/E/W avant ou après les nombres)',
+    helpLi4: '<strong>LV95 / CH1903+ :</strong> <code>2683303, 1247925</code> (est 2\'4xx xxx–2\'9xx xxx, nord 1\'0xx xxx–1\'4xx xxx)',
+    helpLi5: '<strong>NAD83 (Amérique du Nord) :</strong> coordonnées géographiques ; les valeurs correspondent au WGS84 (écart typiquement &lt; 2 m, car le NAD83 est fixé à la plaque nord-américaine)',
+    helpLi6: '<strong>UTM :</strong> <code>32T 465403 5247150</code> ou <code>465403, 5247150</code> (sans zone, la zone 32 est supposée)',
+    helpLi7: '<strong>MGRS :</strong> <code>32TMT6540247150</code> ou <code>32T MT 65402 47150</code>',
+    helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps) :</strong> <code>-8238310, 4970072</code> – pour les petites valeurs lisibles aussi comme UTM, choisir explicitement le format ci-dessus',
+    footer: 'Précision : UTM/Mercator/MGRS exacts au centimètre par le calcul ; LV95 via les formules d’approximation officielles de swisstopo (écart typiquement &lt; 0,2 m). Les altitudes ne sont pas converties. Le calcul s’exécute entièrement dans le navigateur. · <a href="datenschutz.html">Confidentialité</a>',
+    copyBtn: 'Copier',
+    copied: 'Copié ✓',
+    fmtUnknown: 'Format inconnu',
+    noLines: 'Aucune ligne saisie.',
+    cap1000: 'Limité à 1000 lignes.',
+    min2: 'Min. 2 points requis',
+    promptName: 'Nom du fichier GPX (sans .gpx) :',
+    notRecognized: 'Entrée non reconnue : ',
+    resultFor: 'Conversion pour {a}, {b} (WGS84)',
+    rowWgs84: 'WGS84 · degrés décimaux (lat, lon)',
+    rowDms: 'WGS84 · degrés, minutes, secondes',
+    rowGeojson: 'WGS84 · degrés décimaux (longitude, latitude) — GeoJSON/Leaflet',
+    rowNad83: 'NAD83 (Amérique du Nord) · géographique (lat, lon)',
+    rowLv95: 'Suisse · LV95 / CH1903+ (est, nord)',
+    rowUtm: 'UTM (zone, est, nord)',
+    rowMgrs: 'MGRS / USNG (1 m)',
+    rowMercator: 'Web Mercator · EPSG:3857 (Google Maps) (X, Y)',
+    noteUtmZone32: 'Aucune zone UTM indiquée – la zone 32 a été supposée. Indiquez de préférence la zone, p. ex. «32T 465403 5247150».',
+    noteMgrs: 'MGRS reconnu.',
+    noteDms: 'WGS84 reconnu en degrés/minutes/secondes.',
+    noteZone32: 'Aucune zone indiquée – zone 32 supposée. Exemple avec zone : «32T 465403 5247150».',
+    noteDmm: 'Degrés + minutes décimales reconnus (p. ex. N37 09.729 W111 42.701).',
+    noteUtmZoneN: 'UTM reconnu avec la zone {z}.',
+    errMgrs: 'Format inconnu : MGRS non reconnu. Exemple : 32TMT6540247150 ou 32T MT 65402 47150.',
+    errDms: 'Format inconnu : degrés/minutes/secondes non reconnus. Exemple : 37° 42\' 10" N, 111° 23\' 16" W ou N37 09.729 W111 42.701',
+    errGeneral: 'Format inconnu. Exemples : «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)',
+    errMgrsRange: 'La coordonnée est hors de la plage MGRS de cette zone.',
+    errLat: 'Latitude hors de la plage valide (-90 à +90).',
+    errLon: 'Longitude hors de la plage valide (-180 à +180).',
+    errUnknown: 'Format inconnu.',
+    errEmpty: 'Veuillez saisir des coordonnées.',
+    errMgrsLetters: 'MGRS accepte au maximum 3 lettres (p. ex. 32TMT…).',
+    errDmsLetters: 'Degrés/minutes/secondes : au maximum deux lettres : N, S, E ou W.',
+    errUtmLetters: 'UTM accepte au maximum deux lettres (p. ex. «32T» ou «E … N …»).',
+    errLetters: 'Veuillez saisir uniquement des chiffres – les lettres ne sont pas admises ici.',
+    errLettersAuto: 'Veuillez saisir uniquement des chiffres – lettres seulement pour UTM/MGRS ou comme direction (N/S/E/W).',
+    errTwoValues: 'Veuillez indiquer deux valeurs (latitude, longitude).',
+    errLv95: 'Veuillez indiquer est et nord, p. ex. 2\'683\'303, 1\'247\'925',
+    errMercator: 'Veuillez indiquer est (x) et nord (y), p. ex. 683303, 247925',
+    errMercXY: 'Veuillez indiquer X et Y en mètres (EPSG:3857).',
+    errUtm: 'Veuillez indiquer la zone (facultative), l’est et le nord, p. ex. 32T 465403 5247150'
+  },
+  it: {
+    docTitle: 'Convertitore di coordinate · WGS84, DMS, LV95, NAD83, UTM, MGRS, Mercator',
+    h1: 'Convertitore di coordinate',
+    subtitle: 'Inserisci coordinate in <em>qualsiasi</em> formato – tutti gli altri formati vengono calcolati automaticamente.',
+    labelQ: 'Coordinate',
+    qPlaceholder: 'es. 47.376895, 8.541694',
+    ariaSchrift: 'Dimensione carattere',
+    ariaSprache: 'Lingua',
+    ariaFontMinus: 'Riduci carattere',
+    ariaFontReset: 'Dimensione normale',
+    ariaFontPlus: 'Ingrandisci carattere',
+    ariaFormat: 'Formato',
+    ariaTarget: 'Formato di destinazione',
+    ariaGpxDatum: 'Formato data nel nome predefinito',
+    optAuto: 'Rilevamento automatico',
+    optWgs84: 'WGS84 · gradi decimali',
+    optDms: 'Gradi / minuti / secondi',
+    optLv95: 'Svizzera · LV95 (CH1903+)',
+    optGeojson: 'GeoJSON (longitudine, latitudine)',
+    goBtn: 'Converti',
+    lblSwap: 'Il primo numero è la longitudine (lon, y) – non la latitudine',
+    lblLv95force: 'Mostra sempre LV95 (anche fuori dalla Svizzera)',
+    lblAutoclear: 'Cancella il campo automaticamente al clic',
+    lblKarte: 'Mostra mappa (OpenStreetMap viene caricata solo alla conversione)',
+    lblLive: 'Conversione in tempo reale durante la digitazione',
+    beispieleTitel: 'Esempi – clicca per provarli:',
+    chipParis: 'WGS84 · Parigi',
+    chipRom: 'DMS · Roma',
+    chipNy: 'DMS · New York',
+    chipLa: 'Min. dec. · Los Angeles',
+    chipZh: 'LV95 · Zurigo',
+    chipLondon: 'UTM · Londra',
+    chipTokio: 'MGRS · Tokyo',
+    chipMercNy: 'Mercatore · New York',
+    lblMaplinks: 'Link mappe',
+    lblTeilen: 'Condividi',
+    copyAll: 'Copia tutto',
+    copyLink: 'Copia link',
+    mapTitle: 'Vista mappa',
+    batchH2: 'Conversione in blocco',
+    batchHelp: 'Converti più coordinate contemporaneamente: incollane una per riga (il formato viene rilevato automaticamente), scegli il formato di destinazione, clicca su «Converti serie». Nota: LV95 viene mostrato solo per coordinate nella Svizzera (altrimenti «–»). «Scarica GPX» crea un file da importare in Garmin Connect o Garmin Explore – l’ordine delle righe corrisponde al percorso; servono almeno due righe valide. Nome predefinito: <code>route-DATA_NPUNTI.gpx</code> (es. <code>route-13.11.2026_7punkte.gpx</code>) ; con la casella di controllo viene chiesto un nome personalizzato al download e il formato della data è commutabile (Deutsch, English/US, Français, Italiano).',
+    batchPlaceholder: 'es.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
+    batchGo: 'Converti serie',
+    batchGpx: 'Scarica GPX',
+    lblGpxAsk: 'Chiedere il nome del file al download (altrimenti nome predefinito)',
+    helpH2: 'Formati di input riconosciuti',
+    helpP1: 'Come separatori funzionano virgola, punto e virgola, spazio o barra. Sono ammessi punto o virgola decimali, così come la separazione delle migliaia con apostrofo alla svizzera (<code>2\'683\'303</code>).',
+    helpP2: '<strong>Limitazione di input:</strong> tranne per UTM/MGRS possono essere inseriti solo numeri. UTM consente al massimo due lettere (es. <code>32T</code> o <code>E … N …</code>), MGRS tre (<code>32TMT…</code>), gradi/minuti/secondi solo N, S, E o W. Il campo di input filtra subito i caratteri non validi.',
+    helpLi1: '<strong>WGS84 gradi decimali:</strong> <code>47.376895, 8.541694</code> (prima la latitudine; per <code>8.541694, 47.376895</code> spuntare «Il primo numero è la longitudine»)',
+    helpLi2: '<strong>Gradi/minuti/secondi:</strong> <code>37°42\'10"N 111°23\'16"W</code> oppure <code>47° 22\' 36.8" N, 8° 32\' 30.1" E</code> (anche minuti decimali: <code>47° 22.615\' N</code> ; anche i segni tipografici ‘ ’ e ‘‘ ’’ ” ´´ vengono riconosciuti)',
+    helpLi3: '<strong>Gradi + minuti decimali (GPS):</strong> <code>N37 09.729 W111 42.701</code> (senza il segno di grado; direzione N/S/E/W prima o dopo i numeri)',
+    helpLi4: '<strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (est 2\'4xx xxx–2\'9xx xxx, nord 1\'0xx xxx–1\'4xx xxx)',
+    helpLi5: '<strong>NAD83 (Nordamerica):</strong> coordinate geografiche; i valori corrispondono al WGS84 (scostamento tipicamente &lt; 2 m, perché NAD83 è fissato alla placca nordamericana)',
+    helpLi6: '<strong>UTM:</strong> <code>32T 465403 5247150</code> oppure <code>465403, 5247150</code> (senza zona si assume la zona 32)',
+    helpLi7: '<strong>MGRS:</strong> <code>32TMT6540247150</code> oppure <code>32T MT 65402 47150</code>',
+    helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – per valori piccoli leggibili anche come UTM, scegliere esplicitamente il formato sopra',
+    footer: 'Precisione: UTM/Mercator/MGRS calcolati al centimetro; LV95 tramite le formule di approssimazione ufficiali di swisstopo (scostamento tipicamente &lt; 0,2 m). Le quote non vengono convertite. Il calcolo avviene interamente nel browser. · <a href="datenschutz.html">Privacy</a>',
+    copyBtn: 'Copia',
+    copied: 'Copiato ✓',
+    fmtUnknown: 'Formato sconosciuto',
+    noLines: 'Nessuna riga inserita.',
+    cap1000: 'Limitato a 1000 righe.',
+    min2: 'Servono min. 2 punti',
+    promptName: 'Nome del file GPX (senza .gpx):',
+    notRecognized: 'Input non riconosciuto: ',
+    resultFor: 'Conversione per {a}, {b} (WGS84)',
+    rowWgs84: 'WGS84 · gradi decimali (lat, lon)',
+    rowDms: 'WGS84 · gradi, minuti, secondi',
+    rowGeojson: 'WGS84 · gradi decimali (longitudine, latitudine) — GeoJSON/Leaflet',
+    rowNad83: 'NAD83 (Nordamerica) · geografiche (lat, lon)',
+    rowLv95: 'Svizzera · LV95 / CH1903+ (est, nord)',
+    rowUtm: 'UTM (zona, est, nord)',
+    rowMgrs: 'MGRS / USNG (1 m)',
+    rowMercator: 'Web Mercator · EPSG:3857 (Google Maps) (X, Y)',
+    noteUtmZone32: 'Nessuna zona UTM indicata – si è assunta la zona 32. Indica preferibilmente la zona, es. «32T 465403 5247150».',
+    noteMgrs: 'MGRS riconosciuto.',
+    noteDms: 'WGS84 riconosciuto in gradi/minuti/secondi.',
+    noteZone32: 'Nessuna zona indicata – zona 32 assunta. Esempio con zona: «32T 465403 5247150».',
+    noteDmm: 'Gradi + minuti decimali riconosciuti (es. N37 09.729 W111 42.701).',
+    noteUtmZoneN: 'UTM riconosciuto con la zona {z}.',
+    errMgrs: 'Formato sconosciuto: MGRS non riconosciuto. Esempio: 32TMT6540247150 oppure 32T MT 65402 47150.',
+    errDms: 'Formato sconosciuto: gradi/minuti/secondi non riconosciuti. Esempio: 37° 42\' 10" N, 111° 23\' 16" W oppure N37 09.729 W111 42.701',
+    errGeneral: 'Formato sconosciuto. Esempi: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)',
+    errMgrsRange: 'La coordinata è fuori dall’intervallo MGRS di questa zona.',
+    errLat: 'Latitudine fuori dall’intervallo valido (-90 a +90).',
+    errLon: 'Longitudine fuori dall’intervallo valido (-180 a +180).',
+    errUnknown: 'Formato sconosciuto.',
+    errEmpty: 'Inserisci le coordinate.',
+    errMgrsLetters: 'MGRS consente al massimo 3 lettere (es. 32TMT…).',
+    errDmsLetters: 'Gradi/minuti/secondi: al massimo due lettere: N, S, E o W.',
+    errUtmLetters: 'UTM consente al massimo due lettere (es. «32T» o «E … N …»).',
+    errLetters: 'Inserisci solo numeri – le lettere non sono ammesse qui.',
+    errLettersAuto: 'Inserisci solo numeri – lettere solo per UTM/MGRS o come direzione (N/S/E/W).',
+    errTwoValues: 'Inserisci due valori (latitudine, longitudine).',
+    errLv95: 'Inserisci est e nord, es. 2\'683\'303, 1\'247\'925',
+    errMercator: 'Inserisci est (x) e nord (y), es. 683303, 247925',
+    errMercXY: 'Inserisci X e Y in metri (EPSG:3857).',
+    errUtm: 'Inserisci zona (facoltativa), est e nord, es. 32T 465403 5247150'
+  }
+};
+var curLang = 'de';
+function t(k) {
+  var d = TEXTE[curLang] || TEXTE.de;
+  if (d[k] !== undefined) { return d[k]; }
+  return TEXTE.de[k] !== undefined ? TEXTE.de[k] : k;
+}
+function applyLang(lang) {
+  curLang = lang;
+  var d = TEXTE[lang] || TEXTE.de;
+  var els = document.querySelectorAll('[data-i18n]');
+  var i, k;
+  for (i = 0; i < els.length; i++) {
+    k = els[i].getAttribute('data-i18n');
+    if (d[k] !== undefined) { els[i].innerHTML = d[k]; }
+  }
+  var phs = document.querySelectorAll('[data-i18n-ph]');
+  for (i = 0; i < phs.length; i++) {
+    k = phs[i].getAttribute('data-i18n-ph');
+    if (d[k] !== undefined) { phs[i].placeholder = d[k]; }
+  }
+  var ars = document.querySelectorAll('[data-i18n-aria]');
+  for (i = 0; i < ars.length; i++) {
+    k = ars[i].getAttribute('data-i18n-aria');
+    if (d[k] !== undefined) { ars[i].setAttribute('aria-label', d[k]); }
+  }
+  var tis = document.querySelectorAll('[data-i18n-title]');
+  for (i = 0; i < tis.length; i++) {
+    k = tis[i].getAttribute('data-i18n-title');
+    if (d[k] !== undefined) { tis[i].setAttribute('title', d[k]); }
+  }
+  document.title = d.docTitle;
+  document.documentElement.lang = lang;
+}
+
 function utmZoneFromLon(lon) {
   return Math.max(1, Math.min(60, Math.floor((lon + 180.0) / 6.0) + 1));
 }
@@ -335,7 +780,7 @@ function latlonToMgrs(lat, lon) {
   var rows = 'ABCDEFGHJKLMNPQRSTUV';
   var col = Math.floor(e / 100000) - 1;
   if (col < 0 || col > 7) {
-    throw new Error('Koordinate liegt ausserhalb des MGRS-Bereichs dieser Zone.');
+    throw new Error(t('errMgrsRange'));
   }
   var row = Math.floor(n / 100000) % 20;
   if (zone % 2 === 0) { row = (row + 5) % 20; }
@@ -403,10 +848,10 @@ function normalizeLon(lon) {
 
 function checkLatLon(lat, lon) {
   if (Math.abs(lat) > 90.0) {
-    throw new Error('Breite ausserhalb des gültigen Bereichs (-90 bis +90).');
+    throw new Error(t('errLat'));
   }
   if (Math.abs(lon) > 180.0000001) {
-    throw new Error('Länge ausserhalb des gültigen Bereichs (-180 bis +180).');
+    throw new Error(t('errLon'));
   }
 }
 
@@ -525,7 +970,7 @@ function classifyPair(a, b) {
     return { type: 'mercator', a: a, b: b, note: '' };
   }
   if (a >= 100000.0 && a < 1000000.0 && b >= 0.0 && b <= 10000000.0) {
-    return { type: 'utm', a: a, b: b, note: 'Keine UTM-Zone angegeben – es wurde Zone 32 angenommen. Gib die Zone am besten mit an, z. B. «32T 465403 5247150».' };
+    return { type: 'utm', a: a, b: b, note: t('noteUtmZone32') };
   }
   if (Math.abs(a) <= 20037508.342789244 && Math.abs(b) <= 20037508.342789244) {
     return { type: 'mercator', a: a, b: b, note: '' };
@@ -555,13 +1000,13 @@ function pairToLatLon(c) {
     ll = utmToLatLon(32.0, a, b, b < 0.0);
     return { lat: ll.lat, lon: ll.lon, note: c.note };
   }
-  throw new Error('Unbekanntes Format.');
+  throw new Error(t('errUnknown'));
 }
 
 function parseInput(raw, mode, swap) {
   raw = raw.trim();
   if (raw === '') {
-    throw new Error('Bitte Koordinaten eingeben.');
+    throw new Error(t('errEmpty'));
   }
 
   var compact = raw.replace(/\s+/g, '');
@@ -581,42 +1026,42 @@ function parseInput(raw, mode, swap) {
 
   if (mode === 'mgrs') {
     if (letterCount > 3) {
-      throw new Error('Bei MGRS sind höchstens 3 Buchstaben erlaubt (z. B. 32TMT…).');
+      throw new Error(t('errMgrsLetters'));
     }
   } else if (mode === 'dms') {
     var bad = letters.filter(function (l) { return 'NSEW'.indexOf(l) === -1; });
     if (letterCount > 2 || bad.length > 0) {
-      throw new Error('Bei Grad/Minuten/Sekunden sind höchstens zwei Buchstaben erlaubt: N, S, E oder W.');
+      throw new Error(t('errDmsLetters'));
     }
   } else if (mode === 'utm') {
     if (letterCount > 2) {
-      throw new Error('Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. «32T» oder «E … N …»).');
+      throw new Error(t('errUtmLetters'));
     }
   } else if (mode === 'wgs84' || mode === 'lv95' || mode === 'lv03' || mode === 'mercator') {
     if (letterCount > 0) {
-      throw new Error('Bitte nur Zahlen eingeben – Buchstaben sind hier nicht erlaubt.');
+      throw new Error(t('errLetters'));
     }
   } else if (letterCount > 3) {
-    throw new Error('Bitte nur Zahlen eingeben – Buchstaben nur bei UTM/MGRS oder als Himmelsrichtung (N/S/E/W).');
+    throw new Error(t('errLettersAuto'));
   }
 
   if (mode === 'mgrs') {
     var llm = mgrsToLatLon(compact);
     if (llm === null) {
-      throw new Error('Format unbekannt: MGRS nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
+      throw new Error(t('errMgrs'));
     }
-    return { lat: llm.lat, lon: llm.lon, note: 'MGRS erkannt.' };
+    return { lat: llm.lat, lon: llm.lon, note: t('noteMgrs') };
   }
 
   if (mode === 'dms') {
     var lld = parseDmsString(raw);
     if (lld === null) { lld = parseDmmString(raw); }
     if (lld === null) {
-      throw new Error('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W oder N37 09.729 W111 42.701');
+      throw new Error(t('errDms'));
     }
     if (swap) { var td = lld.lat; lld.lat = lld.lon; lld.lon = td; }
     lld.lon = normalizeLon(lld.lon);
-    lld.note = 'WGS84 in Grad/Minuten/Sekunden erkannt.';
+    lld.note = t('noteDms');
     return lld;
   }
 
@@ -625,10 +1070,10 @@ function parseInput(raw, mode, swap) {
 
   if (mode === 'wgs84') {
     if (nums.length < 2) {
-      throw new Error('Bitte zwei Werte angeben (Breite, Länge).');
+      throw new Error(t('errTwoValues'));
     }
     var llw = orderLatLon(nums[0], nums[1]);
-    if (swap) { var t = llw.lat; llw.lat = llw.lon; llw.lon = t; }
+    if (swap) { var tmp = llw.lat; llw.lat = llw.lon; llw.lon = tmp; }
     checkLatLon(llw.lat, llw.lon);
     llw.lon = normalizeLon(llw.lon);
     llw.note = '';
@@ -637,7 +1082,7 @@ function parseInput(raw, mode, swap) {
 
   if (mode === 'lv95') {
     if (nums.length < 2) {
-      throw new Error('Bitte Ost und Nord angeben, z. B. 2\'683\'303, 1\'247\'925');
+      throw new Error(t('errLv95'));
     }
     var ll95 = lv95ToLatLon(nums[0], nums[1]);
     ll95.note = '';
@@ -646,7 +1091,7 @@ function parseInput(raw, mode, swap) {
 
   if (mode === 'lv03') {
     if (nums.length < 2) {
-      throw new Error('Bitte Ost (x) und Nord (y) angeben, z. B. 683303, 247925');
+      throw new Error(t('errMercator'));
     }
     var ll03 = lv03ToLatLon(nums[0], nums[1]);
     ll03.note = '';
@@ -655,7 +1100,7 @@ function parseInput(raw, mode, swap) {
 
   if (mode === 'mercator') {
     if (nums.length < 2) {
-      throw new Error('Bitte X und Y in Metern angeben (EPSG:3857).');
+      throw new Error(t('errMercXY'));
     }
     var llme = mercatorToLatLon(nums[0], nums[1]);
     checkLatLon(llme.lat, llme.lon);
@@ -667,7 +1112,7 @@ function parseInput(raw, mode, swap) {
   if (mode === 'utm') {
     var countU = nums.length;
     if (countU < 2) {
-      throw new Error('Bitte Zone (optional), Ost und Nord angeben, z. B. 32T 465403 5247150');
+      throw new Error(t('errUtm'));
     }
     var zoneU = 32.0;
     var idx = 0;
@@ -688,7 +1133,7 @@ function parseInput(raw, mode, swap) {
     var llu = utmToLatLon(zoneU, eastU, northU, southU);
     var noteU = '';
     if (band === '' && countU === 2) {
-      noteU = 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «32T 465403 5247150».';
+      noteU = t('noteZone32');
     }
     return { lat: llu.lat, lon: llu.lon, note: noteU };
   }
@@ -697,7 +1142,7 @@ function parseInput(raw, mode, swap) {
     var llmm = parseDmmString(raw);
     if (llmm !== null) {
       llmm.lon = normalizeLon(llmm.lon);
-      llmm.note = 'Grad + Dezimalminuten erkannt (z. B. N37 09.729 W111 42.701).';
+      llmm.note = t('noteDmm');
       return llmm;
     }
   }
@@ -717,7 +1162,7 @@ function parseInput(raw, mode, swap) {
     var south = (bandA !== '' && 'CDEFGHJKLM'.indexOf(bandA) !== -1) || north < 0.0;
     if (north < 0.0 && north > -10000000.0) { north = Math.abs(north); }
     var ll3 = utmToLatLon(zone, east, north, south);
-    return { lat: ll3.lat, lon: ll3.lon, note: 'UTM mit Zone ' + Math.round(zone) + ' erkannt.' };
+    return { lat: ll3.lat, lon: ll3.lon, note: t('noteUtmZoneN').replace('{z}', Math.round(zone)) };
   }
 
   if (count === 2) {
@@ -730,7 +1175,7 @@ function parseInput(raw, mode, swap) {
     }
   }
 
-  throw new Error('Format unbekannt. Beispiele: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
+  throw new Error(t('errGeneral'));
 }
 
 function formatNum(v, dec) {
@@ -749,18 +1194,18 @@ function buildResults(lat, lon, forceLv95) {
   var merc = latlonToMercator(lat, lon);
   var mgrs = latlonToMgrs(lat, lon);
   var rows = [
-    ['WGS84 · Dezimalgrad (Breite, Länge)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
-    ['WGS84 · Grad, Minuten, Sekunden', formatDms(lat, lon)],
-    ['WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum(lon, 6) + ', ' + formatNum(lat, 6)],
-    ['NAD83 (Nordamerika) · geografisch (B, L)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)]
+    [t('rowWgs84'), formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
+    [t('rowDms'), formatDms(lat, lon)],
+    [t('rowGeojson'), formatNum(lon, 6) + ', ' + formatNum(lat, 6)],
+    [t('rowNad83'), formatNum(lat, 6) + ', ' + formatNum(lon, 6)]
   ];
   if (isInChArea(lv95) || forceLv95) {
-    rows.push(['Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)]);
+    rows.push([t('rowLv95'), formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)]);
   }
   rows.push(
-    ['UTM (Zone, Ost, Nord)', utm.zone + latBand(lat) + ' ' + formatNum(utm.east, 2) + ' ' + formatNum(utm.north, 2)],
-    ['MGRS / USNG (1 m)', mgrs],
-    ['Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum(merc.x, 2) + ', ' + formatNum(merc.y, 2)]
+    [t('rowUtm'), utm.zone + latBand(lat) + ' ' + formatNum(utm.east, 2) + ' ' + formatNum(utm.north, 2)],
+    [t('rowMgrs'), mgrs],
+    [t('rowMercator'), formatNum(merc.x, 2) + ', ' + formatNum(merc.y, 2)]
   );
   return rows;
 }
@@ -870,6 +1315,30 @@ function buildResults(lat, lon, forceLv95) {
       try { localStorage.setItem('konverter-gpxname', gpxAskEl.checked ? '1' : '0'); } catch (e) {}
     });
   }
+  var gpxDatumEl = document.getElementById('gpxDatum');
+  try { if (gpxDatumEl && localStorage.getItem('konverter-gpxdatum')) { gpxDatumEl.value = localStorage.getItem('konverter-gpxdatum'); } } catch (e) {}
+  if (gpxDatumEl) {
+    gpxDatumEl.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-gpxdatum', gpxDatumEl.value); } catch (e) {}
+    });
+  }
+  var spracheEl = document.getElementById('sprache');
+  var lang = 'de';
+  try {
+    var savedLang = localStorage.getItem('konverter-sprache');
+    if (savedLang && TEXTE[savedLang]) { lang = savedLang; }
+    else {
+      var nav = (navigator.language || 'de').slice(0, 2).toLowerCase();
+      if (TEXTE[nav]) { lang = nav; }
+    }
+  } catch (e) {}
+  spracheEl.value = lang;
+  applyLang(lang);
+  spracheEl.addEventListener('change', function () {
+    applyLang(spracheEl.value);
+    try { localStorage.setItem('konverter-sprache', spracheEl.value); } catch (e) {}
+    if (el.value.trim() !== '') { run(); }
+  });
 
   var liveTimer = null;
   el.addEventListener('input', function () {
@@ -891,13 +1360,13 @@ function buildResults(lat, lon, forceLv95) {
     errorBox.classList.add('hidden');
     var latS = formatNum(lat, 6);
     var lonS = formatNum(lon, 6);
-    resultsTitle.textContent = 'Umrechnung für ' + latS + ', ' + lonS + ' (WGS84)';
+    resultsTitle.textContent = t('resultFor').replace('{a}', latS).replace('{b}', lonS);
     var rows = buildResults(lat, lon, lv95ForceEl && lv95ForceEl.checked);
     var html = '';
     for (var i = 0; i < rows.length; i++) {
       html += '<div class="resrow"><div class="lbl">' + esc(rows[i][0]) + '</div>' +
         '<div class="val">' + esc(rows[i][1]) + '</div>' +
-        '<button type="button" class="copy" data-v="' + esc(rows[i][1]) + '">Kopieren</button></div>';
+        '<button type="button" class="copy" data-v="' + esc(rows[i][1]) + '">' + t('copyBtn') + '</button></div>';
     }
     resrows.innerHTML = html;
     var lv95 = latlonToLv95(lat, lon);
@@ -928,7 +1397,7 @@ function buildResults(lat, lon, forceLv95) {
         if (navigator.clipboard) {
           navigator.clipboard.writeText(v).then(function () {
             var t = btn.textContent;
-            btn.textContent = 'Kopiert ✓';
+            btn.textContent = t('copied');
             setTimeout(function () { btn.textContent = t; }, 1200);
           });
         }
@@ -940,7 +1409,7 @@ function buildResults(lat, lon, forceLv95) {
     resultsBox.classList.add('hidden');
     noteBox.classList.add('hidden');
     mapFrame.classList.add('hidden');
-    errorBox.textContent = 'Eingabe nicht erkannt: ' + msg;
+    errorBox.textContent = t('notRecognized') + msg;
     errorBox.classList.remove('hidden');
   }
 
@@ -975,7 +1444,7 @@ function buildResults(lat, lon, forceLv95) {
 
   function copyFeedback(btn) {
     var t = btn.textContent;
-    btn.textContent = 'Kopiert \u2713';
+    btn.textContent = t('copied');
     setTimeout(function () { btn.textContent = t; }, 1200);
   }
   var copyAllBtn = document.getElementById('copyAll');
@@ -1035,11 +1504,11 @@ function buildResults(lat, lon, forceLv95) {
       var val = null;
       try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(val); batchPoints.push({ lat: ll.lat, lon: ll.lon }); } catch (e) { val = null; }
       html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
-        '<div class="val">' + (val === null ? '<span class="batcherr">Format unbekannt</span>' : esc(val)) + '</div>' +
-        (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">Kopieren</button>') + '</div>';
+        '<div class="val">' + (val === null ? '<span class="batcherr">' + t('fmtUnknown') + '</span>' : esc(val)) + '</div>' +
+        (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">' + t('copyBtn') + '</button>') + '</div>';
     }
-    if (count > 1000) { html += '<p class="help">Auf 1000 Zeilen begrenzt.</p>'; }
-    out.innerHTML = (html === '') ? '<p class="help">Keine Zeilen eingegeben.</p>' : html;
+    if (count > 1000) { html += '<p class="help">' + t('cap1000') + '</p>'; }
+    out.innerHTML = (html === '') ? '<p class="help">' + t('noLines') + '</p>' : html;
     var copies = out.querySelectorAll('.copy');
     for (var j = 0; j < copies.length; j++) {
       copies[j].addEventListener('click', function () {
@@ -1061,16 +1530,20 @@ function buildResults(lat, lon, forceLv95) {
     var btn = this;
     if (batchPoints.length < 2) {
       var old = btn.textContent;
-      btn.textContent = 'Min. 2 Punkte n\u00f6tig';
+      btn.textContent = t('min2');
       setTimeout(function () { btn.textContent = old; }, 1600);
       return;
     }
     var d = new Date();
-    var day = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    var fm = gpxDatumEl ? gpxDatumEl.value : 'de';
+    var sep = (fm === 'de') ? '.' : '-';
+    var day;
+    if (fm === 'en') { day = ('0' + (d.getMonth() + 1)).slice(-2) + sep + ('0' + d.getDate()).slice(-2) + sep + d.getFullYear(); }
+    else { day = ('0' + d.getDate()).slice(-2) + sep + ('0' + (d.getMonth() + 1)).slice(-2) + sep + d.getFullYear(); }
     var defName = 'route-' + day + '_' + batchPoints.length + 'punkte';
     var name = defName;
     if (!gpxAskEl || gpxAskEl.checked) {
-      var input = window.prompt('Name der GPX-Datei (ohne .gpx):', defName);
+      var input = window.prompt(t('promptName'), defName);
       if (input === null) { return; }
       name = input.replace(/\.gpx$/i, '').replace(/[\\/:*?"<>|]/g, '-').trim();
       if (name === '') { name = defName; }

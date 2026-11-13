@@ -305,44 +305,55 @@ function parseDmsString(string $s): ?array
     if (strpos($s, '°') === false) {
         return null;
     }
-    $re = '/([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*[\'′‘’´m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|\'\'|″|‘‘|’’|”|´´))?\s*([NSEW])?/i';
-    if (!preg_match_all($re, $s, $ms, PREG_SET_ORDER)) {
-        return null;
-    }
-    $consumed = 0;
-    foreach ($ms as $g) {
-        $consumed += 1;
-        if (isset($g[3]) && $g[3] !== '') { $consumed++; }
-        if (isset($g[4]) && $g[4] !== '') { $consumed++; }
-    }
-    if ($consumed !== count(extractNumbers($s))) {
-        return null;
-    }
-    $vals = array();
-    $hems = array();
-    foreach ($ms as $g) {
-        $deg = (float) str_replace(',', '.', $g[2]);
-        $min = (isset($g[3]) && $g[3] !== '') ? (float) str_replace(',', '.', $g[3]) : 0.0;
-        $sec = (isset($g[4]) && $g[4] !== '') ? (float) str_replace(',', '.', $g[4]) : 0.0;
-        $val = $deg + $min / 60.0 + $sec / 3600.0;
-        $h = strtoupper(($g[1] !== '' && $g[1] !== null) ? $g[1] : (($g[5] !== '' && $g[5] !== null) ? $g[5] : ''));
-        if ($h === 'S' || $h === 'W') {
-            $val = -abs($val);
+    $regexes = array(
+        '/([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*[\'′‘’´m](?![\'′‘’´m])\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|\'\'|″|‘‘|’’|”|´´))?\s*([NSEW])?/i',
+        '/([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*(?:\'\'|′′|″|[\'′‘’´m](?![\'′‘’´m]))\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|\'\'|″|‘‘|’’|”|´´))?\s*([NSEW])?/i'
+    );
+    $result = null;
+    foreach ($regexes as $re) {
+        if (!preg_match_all($re, $s, $ms, PREG_SET_ORDER)) {
+            continue;
         }
-        $vals[] = $val;
-        $hems[] = $h;
+        $consumed = 0;
+        foreach ($ms as $g) {
+            $consumed += 1;
+            if (isset($g[3]) && $g[3] !== '') { $consumed++; }
+            if (isset($g[4]) && $g[4] !== '') { $consumed++; }
+        }
+        if ($consumed !== count(extractNumbers($s))) {
+            continue;
+        }
+        $vals = array();
+        $hems = array();
+        foreach ($ms as $g) {
+            $deg = (float) str_replace(',', '.', $g[2]);
+            $min = (isset($g[3]) && $g[3] !== '') ? (float) str_replace(',', '.', $g[3]) : 0.0;
+            $sec = (isset($g[4]) && $g[4] !== '') ? (float) str_replace(',', '.', $g[4]) : 0.0;
+            $val = abs($deg) + $min / 60.0 + $sec / 3600.0;
+            $h = strtoupper(($g[1] !== '' && $g[1] !== null) ? $g[1] : (($g[5] !== '' && $g[5] !== null) ? $g[5] : ''));
+            if ($h === 'S' || $h === 'W') {
+                $val = -$val;
+            } elseif ($h === '' && $deg < 0.0) {
+                $val = -$val;
+            }
+            $vals[] = $val;
+            $hems[] = $h;
+        }
+        if (count($vals) < 2) {
+            continue;
+        }
+        $a = $vals[0];
+        $b = $vals[1];
+        $ha = $hems[0];
+        $hb = $hems[1];
+        if (($ha === 'E' || $ha === 'W') && ($hb === 'N' || $hb === 'S')) {
+            $result = array('lat' => $b, 'lon' => $a);
+        } else {
+            $result = orderLatLon($a, $b);
+        }
+        break;
     }
-    if (count($vals) < 2) {
-        return null;
-    }
-    $a = $vals[0];
-    $b = $vals[1];
-    $ha = $hems[0];
-    $hb = $hems[1];
-    if (($ha === 'E' || $ha === 'W') && ($hb === 'N' || $hb === 'S')) {
-        return array('lat' => $b, 'lon' => $a);
-    }
-    return orderLatLon($a, $b);
+    return $result;
 }
 
 function parseDmmString(string $s): ?array
@@ -467,6 +478,9 @@ function parseInput(string $raw, string $mode, bool $swap): array
         $mode = 'mgrs';
     }
     if ($mode === 'auto' && strpos($raw, '°') !== false) {
+        $mode = 'dms';
+    }
+    if (in_array($mode, array('wgs84', 'lv95', 'lv03', 'mercator'), true) && strpos($raw, '°') !== false) {
         $mode = 'dms';
     }
 

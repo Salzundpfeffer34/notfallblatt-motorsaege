@@ -662,23 +662,26 @@ function formatNum(float $v, int $dec): string
     return number_format($v, $dec, '.', '');
 }
 
-function buildResults(float $lat, float $lon): array
+function buildResults(float $lat, float $lon, bool $forceLv95 = false): array
 {
     $lv95 = latlonToLv95($lat, $lon);
     $utm = latlonToUtm($lat, $lon);
     $merc = latlonToMercator($lat, $lon);
     $mgrs = latlonToMgrs($lat, $lon);
 
-    return array(
+    $rows = array(
         array('WGS84 · Dezimalgrad (Breite, Länge)', formatNum($lat, 6) . ', ' . formatNum($lon, 6)),
         array('WGS84 · Grad, Minuten, Sekunden', formatDms($lat, $lon)),
         array('WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum($lon, 6) . ', ' . formatNum($lat, 6)),
         array('NAD83 (Nordamerika) · geografisch (B, L)', formatNum($lat, 6) . ', ' . formatNum($lon, 6)),
-        array('Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum($lv95['east'], 1) . ', ' . formatNum($lv95['north'], 1)),
-        array('UTM (Zone, Ost, Nord)', sprintf('%d%s %s %s', $utm['zone'], latBand($lat), formatNum($utm['east'], 2), formatNum($utm['north'], 2))),
-        array('MGRS / USNG (1 m)', $mgrs),
-        array('Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum($merc['x'], 2) . ', ' . formatNum($merc['y'], 2)),
     );
+    if ($forceLv95 || ($lv95['east'] >= 2400000 && $lv95['east'] <= 2900000 && $lv95['north'] >= 1000000 && $lv95['north'] <= 1350000)) {
+        $rows[] = array('Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum($lv95['east'], 1) . ', ' . formatNum($lv95['north'], 1));
+    }
+    $rows[] = array('UTM (Zone, Ost, Nord)', sprintf('%d%s %s %s', $utm['zone'], latBand($lat), formatNum($utm['east'], 2), formatNum($utm['north'], 2)));
+    $rows[] = array('MGRS / USNG (1 m)', $mgrs);
+    $rows[] = array('Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum($merc['x'], 2) . ', ' . formatNum($merc['y'], 2));
+    return $rows;
 }
 
 function renderPage(): void
@@ -686,6 +689,7 @@ function renderPage(): void
     $q = isset($_GET['q']) ? (string) $_GET['q'] : '';
     $f = isset($_GET['f']) ? (string) $_GET['f'] : 'auto';
     $swap = !empty($_GET['swap']);
+    $lv95force = !empty($_GET['lv95force']);
     $allowed = array('auto', 'wgs84', 'dms', 'lv95', 'lv03', 'utm', 'mgrs', 'mercator');
     if (!in_array($f, $allowed, true)) {
         $f = 'auto';
@@ -703,7 +707,7 @@ function renderPage(): void
             $lat = $ll['lat'];
             $lon = $ll['lon'];
             $note = isset($ll['note']) ? $ll['note'] : '';
-            $results = buildResults($lat, $lon);
+            $results = buildResults($lat, $lon, $lv95force);
         } catch (RuntimeException $e) {
             $error = $e->getMessage();
         } catch (Exception $e) {
@@ -805,6 +809,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="check">
 <input type="checkbox" id="swap" name="swap" value="1"<?php echo $swap ? ' checked' : ''; ?>>
 <label for="swap" style="margin:0;font-weight:400">Erste Zahl ist die Länge (lon, y) – nicht die Breite</label>
+</div>
+<div class="check">
+<input type="checkbox" id="lv95force" name="lv95force" value="1"<?php echo $lv95force ? ' checked' : ''; ?>>
+<label for="lv95force" style="margin:0;font-weight:400">LV95 immer anzeigen (auch ausserhalb der Schweiz)</label>
 </div>
 <div class="check">
 <input type="checkbox" id="autoclear" checked>

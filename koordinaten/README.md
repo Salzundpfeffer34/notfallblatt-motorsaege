@@ -17,6 +17,7 @@ Koordinaten in irgendeinem Format eingeben – alle anderen Formate werden autom
 
 Zusätzlich ausgegeben: GeoJSON-Reihenfolge (Länge, Breite) sowie Direktlinks zu
 Google Maps, Swisstopo (geo.admin.ch) und OpenStreetMap + Kartenausschnitt.
+LV95 wird nur angezeigt, wenn die Koordinaten im Schweiz-Bereich liegen.
 
 ## Installation
 

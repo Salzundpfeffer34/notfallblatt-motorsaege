@@ -87,6 +87,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <label for="swap" style="margin:0;font-weight:400">Erste Zahl ist die Länge (lon, y) &ndash; nicht die Breite</label>
 </div>
 <div class="check">
+<input type="checkbox" id="lv95force">
+<label for="lv95force" style="margin:0;font-weight:400">LV95 immer anzeigen (auch ausserhalb der Schweiz)</label>
+</div>
+<div class="check">
 <input type="checkbox" id="autoclear" checked>
 <label for="autoclear" style="margin:0;font-weight:400">Feld beim Klicken automatisch leeren</label>
 </div>
@@ -139,7 +143,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 liefert ausserhalb der Schweiz keine sinnvollen Werte.</p>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat">
@@ -730,21 +734,30 @@ function formatNum(v, dec) {
   return out;
 }
 
-function buildResults(lat, lon) {
+function isInChArea(lv95) {
+  return lv95.east >= 2400000 && lv95.east <= 2900000 && lv95.north >= 1000000 && lv95.north <= 1350000;
+}
+
+function buildResults(lat, lon, forceLv95) {
   var lv95 = latlonToLv95(lat, lon);
   var utm = latlonToUtm(lat, lon);
   var merc = latlonToMercator(lat, lon);
   var mgrs = latlonToMgrs(lat, lon);
-  return [
+  var rows = [
     ['WGS84 · Dezimalgrad (Breite, Länge)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
     ['WGS84 · Grad, Minuten, Sekunden', formatDms(lat, lon)],
     ['WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum(lon, 6) + ', ' + formatNum(lat, 6)],
-    ['NAD83 (Nordamerika) · geografisch (B, L)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
-    ['Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)],
+    ['NAD83 (Nordamerika) · geografisch (B, L)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)]
+  ];
+  if (isInChArea(lv95) || forceLv95) {
+    rows.push(['Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)]);
+  }
+  rows.push(
     ['UTM (Zone, Ost, Nord)', utm.zone + latBand(lat) + ' ' + formatNum(utm.east, 2) + ' ' + formatNum(utm.north, 2)],
     ['MGRS / USNG (1 m)', mgrs],
     ['Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum(merc.x, 2) + ', ' + formatNum(merc.y, 2)]
-  ];
+  );
+  return rows;
 }
 </script>
 
@@ -836,6 +849,15 @@ function buildResults(lat, lon) {
       if (liveEl.checked && el.value.trim() !== '') { run(); }
     });
   }
+  var lv95ForceEl = document.getElementById('lv95force');
+  try { if (lv95ForceEl && localStorage.getItem('konverter-lv95') === '1') { lv95ForceEl.checked = true; } } catch (e) {}
+  if (lv95ForceEl) {
+    lv95ForceEl.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-lv95', lv95ForceEl.checked ? '1' : '0'); } catch (e) {}
+      if (el.value.trim() !== '') { run(); }
+    });
+  }
+
   var liveTimer = null;
   el.addEventListener('input', function () {
     if (!liveEl || !liveEl.checked) { return; }
@@ -857,7 +879,7 @@ function buildResults(lat, lon) {
     var latS = formatNum(lat, 6);
     var lonS = formatNum(lon, 6);
     resultsTitle.textContent = 'Umrechnung für ' + latS + ', ' + lonS + ' (WGS84)';
-    var rows = buildResults(lat, lon);
+    var rows = buildResults(lat, lon, lv95ForceEl && lv95ForceEl.checked);
     var html = '';
     for (var i = 0; i < rows.length; i++) {
       html += '<div class="resrow"><div class="lbl">' + esc(rows[i][0]) + '</div>' +
@@ -973,9 +995,9 @@ function buildResults(lat, lon) {
   }
 
   var batchLines = [];
-  function batchValue(lat, lon, target) {
+  function batchValue(lat, lon, target, forceLv95) {
     if (target === 'dms') { return formatDms(lat, lon); }
-    if (target === 'lv95') { var v = latlonToLv95(lat, lon); return formatNum(v.east, 2) + ', ' + formatNum(v.north, 2); }
+    if (target === 'lv95') { var v = latlonToLv95(lat, lon); if (!isInChArea(v) && !forceLv95) { return '\u2013'; } return formatNum(v.east, 2) + ', ' + formatNum(v.north, 2); }
     if (target === 'utm') { var u = latlonToUtm(lat, lon); return u.zone + latBand(lat) + ' ' + formatNum(u.east, 2) + ' ' + formatNum(u.north, 2); }
     if (target === 'mgrs') { return latlonToMgrs(lat, lon); }
     if (target === 'mercator') { var m = latlonToMercator(lat, lon); return formatNum(m.x, 0) + ', ' + formatNum(m.y, 0); }
@@ -985,6 +1007,7 @@ function buildResults(lat, lon) {
   function runBatch() {
     var out = document.getElementById('batchOut');
     var target = document.getElementById('batchTarget').value;
+    var forceLv95 = lv95ForceEl && lv95ForceEl.checked;
     var lines = document.getElementById('batchInput').value.split(/\r?\n/);
     var html = '';
     batchLines = [];
@@ -995,7 +1018,7 @@ function buildResults(lat, lon) {
       count++;
       if (count > 1000) { break; }
       var val = null;
-      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target); batchLines.push(q + '\t' + val); } catch (e) { val = null; }
+      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(q + '\t' + val); } catch (e) { val = null; }
       html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
         '<div class="val">' + (val === null ? '<span class="batcherr">Format unbekannt</span>' : esc(val)) + '</div>' +
         (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">Kopieren</button>') + '</div>';

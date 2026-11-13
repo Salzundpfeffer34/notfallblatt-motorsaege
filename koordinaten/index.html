@@ -143,7 +143,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt.</p>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt, das Datumsformat ist umschaltbar (Deutsch, English/US, Français, Italiano).</p>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat">
@@ -162,6 +162,12 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="check" style="margin-top:10px">
 <input type="checkbox" id="gpxAsk" checked>
 <label for="gpxAsk" style="margin:0;font-weight:400">Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)</label>
+<select id="gpxDatum" aria-label="Datumsformat im Standardnamen" style="margin-left:10px;padding:4px 6px">
+<option value="de" selected>13.11.2026 (Deutsch)</option>
+<option value="en">11-13-2026 (English/US)</option>
+<option value="fr">13-11-2026 (Français)</option>
+<option value="it">13-11-2026 (Italiano)</option>
+</select>
 </div>
 <div id="batchOut" style="margin-top:12px"></div>
 </div>
@@ -870,6 +876,13 @@ function buildResults(lat, lon, forceLv95) {
       try { localStorage.setItem('konverter-gpxname', gpxAskEl.checked ? '1' : '0'); } catch (e) {}
     });
   }
+  var gpxDatumEl = document.getElementById('gpxDatum');
+  try { if (gpxDatumEl && localStorage.getItem('konverter-gpxdatum')) { gpxDatumEl.value = localStorage.getItem('konverter-gpxdatum'); } } catch (e) {}
+  if (gpxDatumEl) {
+    gpxDatumEl.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-gpxdatum', gpxDatumEl.value); } catch (e) {}
+    });
+  }
 
   var liveTimer = null;
   el.addEventListener('input', function () {
@@ -1066,7 +1079,11 @@ function buildResults(lat, lon, forceLv95) {
       return;
     }
     var d = new Date();
-    var day = ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear();
+    var fm = gpxDatumEl ? gpxDatumEl.value : 'de';
+    var sep = (fm === 'de') ? '.' : '-';
+    var day;
+    if (fm === 'en') { day = ('0' + (d.getMonth() + 1)).slice(-2) + sep + ('0' + d.getDate()).slice(-2) + sep + d.getFullYear(); }
+    else { day = ('0' + d.getDate()).slice(-2) + sep + ('0' + (d.getMonth() + 1)).slice(-2) + sep + d.getFullYear(); }
     var defName = 'route-' + day + '_' + batchPoints.length + 'punkte';
     var name = defName;
     if (!gpxAskEl || gpxAskEl.checked) {

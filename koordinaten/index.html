@@ -143,7 +143,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig.</p>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat">
@@ -157,6 +157,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 </select>
 <button class="go" type="button" id="batchGo">Stapel umrechnen</button>
 <button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">Alle kopieren</button>
+<button type="button" class="copy" id="batchGpx" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">GPX herunterladen</button>
 </div>
 <div id="batchOut" style="margin-top:12px"></div>
 </div>
@@ -995,6 +996,7 @@ function buildResults(lat, lon, forceLv95) {
   }
 
   var batchLines = [];
+  var batchPoints = [];
   function batchValue(lat, lon, target, forceLv95) {
     if (target === 'dms') { return formatDms(lat, lon); }
     if (target === 'lv95') { var v = latlonToLv95(lat, lon); if (!isInChArea(v) && !forceLv95) { return '\u2013'; } return formatNum(v.east, 2) + ', ' + formatNum(v.north, 2); }
@@ -1011,6 +1013,7 @@ function buildResults(lat, lon, forceLv95) {
     var lines = document.getElementById('batchInput').value.split(/\r?\n/);
     var html = '';
     batchLines = [];
+    batchPoints = [];
     var count = 0;
     for (var i = 0; i < lines.length; i++) {
       var q = lines[i].trim();
@@ -1018,7 +1021,7 @@ function buildResults(lat, lon, forceLv95) {
       count++;
       if (count > 1000) { break; }
       var val = null;
-      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(val); } catch (e) { val = null; }
+      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(val); batchPoints.push({ lat: ll.lat, lon: ll.lon }); } catch (e) { val = null; }
       html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
         '<div class="val">' + (val === null ? '<span class="batcherr">Format unbekannt</span>' : esc(val)) + '</div>' +
         (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">Kopieren</button>') + '</div>';
@@ -1041,6 +1044,30 @@ function buildResults(lat, lon, forceLv95) {
     if (navigator.clipboard && batchLines.length) {
       navigator.clipboard.writeText(batchLines.join('\n')).then(function () { copyFeedback(this); }.bind(this));
     }
+  });
+  document.getElementById('batchGpx').addEventListener('click', function () {
+    var btn = this;
+    if (batchPoints.length < 2) {
+      var old = btn.textContent;
+      btn.textContent = 'Min. 2 Punkte n\u00f6tig';
+      setTimeout(function () { btn.textContent = old; }, 1600);
+      return;
+    }
+    var pts = '';
+    for (var i = 0; i < batchPoints.length; i++) {
+      pts += '<trkpt lat="' + formatNum(batchPoints[i].lat, 6) + '" lon="' + formatNum(batchPoints[i].lon, 6) + '"></trkpt>';
+    }
+    var d = new Date();
+    var name = 'Stapel-Route ' + d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Koordinaten-Konverter" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>' + esc(name) + '</name><trkseg>' + pts + '</trkseg></trk>\n</gpx>\n';
+    var blob = new Blob([gpx], { type: 'application/gpx+xml' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'stapel-route.gpx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+    copyFeedback(btn);
   });
 
   document.querySelectorAll('.chip').forEach(function (b) {

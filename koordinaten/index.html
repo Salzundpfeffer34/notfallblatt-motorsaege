@@ -143,7 +143,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-2026-11-13_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt.</p>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»). &laquo;GPX herunterladen&raquo; erzeugt eine Datei zum Import in Garmin Connect oder Garmin Explore – die Reihenfolge der Zeilen entspricht der Route, dafür sind mindestens zwei gültige Zeilen nötig. Standardname: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>); mit der Checkbox wird beim Herunterladen nach einem eigenen Namen gefragt.</p>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat">
@@ -1066,7 +1066,7 @@ function buildResults(lat, lon, forceLv95) {
       return;
     }
     var d = new Date();
-    var day = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    var day = ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear();
     var defName = 'route-' + day + '_' + batchPoints.length + 'punkte';
     var name = defName;
     if (!gpxAskEl || gpxAskEl.checked) {

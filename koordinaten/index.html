@@ -1018,6 +1018,7 @@ function pairToLatLon(c) {
 }
 
 function parseInput(raw, mode, swap) {
+  raw = String(raw).replace(/[\u0009\u000A\u000D\u000B\u000C]/g, ' ').replace(/[\u0000-\u0008\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u{E0000}-\u{E007F}]/gu, '');
   raw = raw.trim();
   if (raw === '') {
     throw new Error(t('errEmpty'));
@@ -1490,6 +1491,14 @@ function buildResults(lat, lon, forceLv95) {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(function () { copyFeedback(copyLinkBtn); });
       }
+    });
+  }
+
+  var batchInputEl = document.getElementById('batchInput');
+  if (batchInputEl) {
+    batchInputEl.addEventListener('input', function () {
+      var v = batchInputEl.value.replace(/[\u0000-\u0008\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u{E0000}-\u{E007F}]/gu, '');
+      if (v !== batchInputEl.value) { batchInputEl.value = v; }
     });
   }
 

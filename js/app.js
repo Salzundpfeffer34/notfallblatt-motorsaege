@@ -132,10 +132,12 @@
     sel.value = state.aktuellId;
   }
 
+  const CTRL_RE = /[\u0000-\u0009\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u{E0000}-\u{E007F}]/gu;
   function inputHandler(feld) {
     return function () {
       const e = aktuellerEinsatz();
       if (!e) return;
+      if (this.type !== 'checkbox') { this.value = this.value.replace(CTRL_RE, ''); }
       e.daten[feld] = this.type === 'checkbox' ? this.checked : this.value;
       if (feld === 'mitteE' || feld === 'mitteN') koordinateManuell('mitte');
       if (feld === 'tE' || feld === 'tN') koordinateManuell('tpunkt');

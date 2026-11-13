@@ -732,6 +732,9 @@ function renderPage(): void
 :root { --bg:#f0f0ee; --card:#ffffff; --ink:#1c1c1c; --muted:#6b6b6b; --line:#d8d8d4; --accent:#d52b1e; --accent2:#a91e14; }
 * { box-sizing: border-box; }
 body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
+.schrift { display:flex; justify-content:flex-end; gap:6px; margin-bottom:2px; }
+.schrift button { font-size:.85rem; padding:4px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); cursor:pointer; font-family:inherit; }
+.schrift button:hover { border-color:var(--accent); color:var(--accent); }
 .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; }
 header h1 { font-size: 1.6rem; margin: 8px 0 4px; }
 header p { color: var(--muted); margin: 0 0 20px; }
@@ -774,6 +777,11 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <body>
 <div class="wrap">
 <header>
+<div class="schrift" role="group" aria-label="Schriftgrösse">
+<button type="button" id="fontMinus" aria-label="Schrift verkleinern" title="Schrift verkleinern">A−</button>
+<button type="button" id="fontReset" aria-label="Normale Schriftgrösse" title="Normale Schriftgrösse">A</button>
+<button type="button" id="fontPlus" aria-label="Schrift vergrössern" title="Schrift vergrössern">A+</button>
+</div>
 <h1>Koordinaten-Konverter</h1>
 <p>Koordinaten in <em>irgendeinem</em> Format einsetzen – alle anderen Formate werden automatisch berechnet.</p>
 </header>
@@ -958,6 +966,27 @@ Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die 
     if (v !== el.value) { el.value = v; }
   });
 })();
+  var FONT_SIZES = [90, 100, 115, 130, 150];
+  var fontIdx = 1;
+  try {
+    var savedFont = parseInt(localStorage.getItem('konverter-schrift'), 10);
+    if (savedFont >= 0 && savedFont < FONT_SIZES.length) { fontIdx = savedFont; }
+  } catch (e) {}
+  function applyFont() {
+    document.documentElement.style.fontSize = (16 * FONT_SIZES[fontIdx] / 100) + 'px';
+    try { localStorage.setItem('konverter-schrift', String(fontIdx)); } catch (e) {}
+  }
+  applyFont();
+  document.getElementById('fontMinus').addEventListener('click', function () {
+    if (fontIdx > 0) { fontIdx--; applyFont(); }
+  });
+  document.getElementById('fontPlus').addEventListener('click', function () {
+    if (fontIdx < FONT_SIZES.length - 1) { fontIdx++; applyFont(); }
+  });
+  document.getElementById('fontReset').addEventListener('click', function () {
+    fontIdx = 1; applyFont();
+  });
+
 document.querySelectorAll('.chip').forEach(function (b) {
   b.addEventListener('click', function () {
     var el = document.getElementById('q');

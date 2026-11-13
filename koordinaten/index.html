@@ -44,6 +44,9 @@ button.go:hover { background:var(--accent2); }
 .links button { cursor:pointer; }
 .links a:hover, .links button:hover { border-color:var(--accent); }
 .map { width:100%; height:300px; border:0; border-radius:10px; margin-top:14px; }
+textarea { width:100%; padding:12px 14px; font-size:1.05rem; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); font-family:inherit; line-height:1.5; resize:vertical; }
+textarea:focus { outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+.batcherr { color:#991b1b; }
 .help { font-size:.9rem; color:var(--muted); }
 .help h2 { font-size:1rem; color:var(--ink); }
 .help code { background:#e9e9e5; padding:1px 5px; border-radius:4px; font-size:.85rem; }
@@ -132,6 +135,26 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <iframe id="osmmap" class="map hidden" loading="lazy" title="Kartenausschnitt"></iframe>
+</div>
+
+<div class="card">
+<h2>Stapel-Umrechnung</h2>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 liefert ausserhalb der Schweiz keine sinnvollen Werte.</p>
+<textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
+<div class="row" style="margin-top:10px">
+<select id="batchTarget" aria-label="Zielformat">
+<option value="wgs84" selected>WGS84 &middot; Dezimalgrad</option>
+<option value="dms">Grad / Minuten / Sekunden</option>
+<option value="lv95">Schweiz &middot; LV95 (CH1903+)</option>
+<option value="utm">UTM</option>
+<option value="mgrs">MGRS</option>
+<option value="mercator">Web Mercator (EPSG:3857)</option>
+<option value="geojson">GeoJSON (L&auml;nge, Breite)</option>
+</select>
+<button class="go" type="button" id="batchGo">Stapel umrechnen</button>
+<button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem">Alle kopieren</button>
+</div>
+<div id="batchOut" style="margin-top:12px"></div>
 </div>
 
 <div class="card help">
@@ -948,6 +971,54 @@ function buildResults(lat, lon) {
       }
     });
   }
+
+  var batchLines = [];
+  function batchValue(lat, lon, target) {
+    if (target === 'dms') { return formatDms(lat, lon); }
+    if (target === 'lv95') { var v = latlonToLv95(lat, lon); return formatNum(v.east, 2) + ', ' + formatNum(v.north, 2); }
+    if (target === 'utm') { var u = latlonToUtm(lat, lon); return u.zone + latBand(lat) + ' ' + formatNum(u.east, 2) + ' ' + formatNum(u.north, 2); }
+    if (target === 'mgrs') { return latlonToMgrs(lat, lon); }
+    if (target === 'mercator') { var m = latlonToMercator(lat, lon); return formatNum(m.x, 0) + ', ' + formatNum(m.y, 0); }
+    if (target === 'geojson') { return formatNum(lon, 6) + ', ' + formatNum(lat, 6); }
+    return formatNum(lat, 6) + ', ' + formatNum(lon, 6);
+  }
+  function runBatch() {
+    var out = document.getElementById('batchOut');
+    var target = document.getElementById('batchTarget').value;
+    var lines = document.getElementById('batchInput').value.split(/\r?\n/);
+    var html = '';
+    batchLines = [];
+    var count = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var q = lines[i].trim();
+      if (q === '') { continue; }
+      count++;
+      if (count > 1000) { break; }
+      var val = null;
+      try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target); batchLines.push(q + '\t' + val); } catch (e) { val = null; }
+      html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
+        '<div class="val">' + (val === null ? '<span class="batcherr">Format unbekannt</span>' : esc(val)) + '</div>' +
+        (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">Kopieren</button>') + '</div>';
+    }
+    if (count > 1000) { html += '<p class="help">Auf 1000 Zeilen begrenzt.</p>'; }
+    out.innerHTML = (html === '') ? '<p class="help">Keine Zeilen eingegeben.</p>' : html;
+    var copies = out.querySelectorAll('.copy');
+    for (var j = 0; j < copies.length; j++) {
+      copies[j].addEventListener('click', function () {
+        var btn = this;
+        var v = btn.getAttribute('data-v');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(v).then(function () { copyFeedback(btn); });
+        }
+      });
+    }
+  }
+  document.getElementById('batchGo').addEventListener('click', runBatch);
+  document.getElementById('batchCopy').addEventListener('click', function () {
+    if (navigator.clipboard && batchLines.length) {
+      navigator.clipboard.writeText(batchLines.join('\n')).then(function () { copyFeedback(this); }.bind(this));
+    }
+  });
 
   document.querySelectorAll('.chip').forEach(function (b) {
     b.addEventListener('click', function () {

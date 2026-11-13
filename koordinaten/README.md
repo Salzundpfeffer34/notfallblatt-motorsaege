@@ -1,6 +1,10 @@
 # Koordinaten-Konverter (PHP)
 
 Eine einzige PHP-Datei (`index.php`), keine Abhängigkeiten, keine Datenbank.
+
+> **Hinweis:** Diese PHP-Version ist die Basisversion für eigenes Hosting (z. B. Hostpoint).
+> Stapel-Umrechnung, Live-Umrechnung, Mehrsprachigkeit und GPX-Download bietet die
+> HTML-Version (`index.html`) – sie ist der Massstab.
 Koordinaten in irgendeinem Format eingeben – alle anderen Formate werden automatisch berechnet.
 
 ## Unterstützte Formate

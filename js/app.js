@@ -251,10 +251,20 @@
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const e = JSON.parse(reader.result);
-          if (!e || !e.daten) throw new Error('ungültig');
+          const raw = JSON.parse(reader.result);
+          if (!raw || typeof raw !== 'object' || !raw.daten || typeof raw.daten !== 'object') throw new Error('ungültig');
+          const e = { daten: {} };
+          TEXTFELDER.forEach(f => { if (typeof raw.daten[f] === 'string') { e.daten[f] = raw.daten[f].slice(0, 500); } });
+          CHECKFELDER.forEach(f => { e.daten[f] = !!raw.daten[f]; });
+          if (Array.isArray(raw.skizze)) {
+            e.skizze = raw.skizze
+              .filter(st => st && typeof st === 'object' && typeof st.farbe === 'string' && typeof st.breite === 'number' && Array.isArray(st.punkte))
+              .map(st => ({ farbe: st.farbe.slice(0, 20), breite: Math.min(Math.max(st.breite, 1), 40), punkte: st.punkte.filter(pt => Array.isArray(pt) && pt.length === 2 && typeof pt[0] === 'number' && typeof pt[1] === 'number').slice(0, 5000) }))
+              .filter(st => st.punkte.length > 1)
+              .slice(0, 2000);
+          }
           e.id = 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          if (!e.name) e.name = T('msgImportierterEinsatz');
+          e.name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.slice(0, 120) : T('msgImportierterEinsatz');
           state.einsaetze.push(e);
           state.aktuellId = e.id;
           formularFuellen();
@@ -597,7 +607,11 @@
     const w = lv95ToWgs84(kv.e, kv.n);
     const box = $('wetterBox');
     box.hidden = false;
-    box.innerHTML = '<p class="hint">' + T('msgWetterLaden') + '</p>';
+    box.textContent = '';
+    const ladeP = document.createElement('p');
+    ladeP.className = 'hint';
+    ladeP.textContent = T('msgWetterLaden');
+    box.appendChild(ladeP);
     try {
       const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + w.lat + '&longitude=' + w.lon +
         '&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max' +
@@ -606,17 +620,42 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const d = data.daily;
+      if (!d || !Array.isArray(d.time)) throw new Error('ungültige Daten');
       const cur = data.current;
-      let html = '<table><tr><th></th>' + d.time.map(t => '<th>' + new Date(t).toLocaleDateString(locale(), { weekday: 'short', day: '2-digit', month: '2-digit' }) + '</th>').join('') + '</tr>';
-      html += '<tr><th>' + T('wetterTemp') + '</th>' + d.temperature_2m_min.map((v, i) => '<td>' + Math.round(v) + ' / ' + Math.round(d.temperature_2m_max[i]) + ' °C</td>').join('') + '</tr>';
-      html += '<tr><th>' + T('wetterNiederschlag') + '</th>' + d.precipitation_sum.map((v, i) => '<td>' + v + ' mm (' + (d.precipitation_probability_max[i] || 0) + ' %)</td>').join('') + '</tr>';
-      html += '<tr><th>' + T('wetterWind') + '</th>' + d.wind_speed_10m_max.map(v => '<td>' + Math.round(v) + ' km/h</td>').join('') + '</tr></table>';
+      const table = document.createElement('table');
+      const kopf = document.createElement('tr');
+      kopf.appendChild(document.createElement('th'));
+      d.time.forEach(zeit => {
+        const th = document.createElement('th');
+        th.textContent = new Date(zeit).toLocaleDateString(locale(), { weekday: 'short', day: '2-digit', month: '2-digit' });
+        kopf.appendChild(th);
+      });
+      table.appendChild(kopf);
+      const zeile = (label, werte) => {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.textContent = label;
+        tr.appendChild(th);
+        werte.forEach(wert => { const td = document.createElement('td'); td.textContent = wert; tr.appendChild(td); });
+        table.appendChild(tr);
+      };
+      zeile(T('wetterTemp'), d.temperature_2m_min.map((v, i) => Math.round(v) + ' / ' + Math.round(d.temperature_2m_max[i]) + ' °C'));
+      zeile(T('wetterNiederschlag'), d.precipitation_sum.map((v, i) => v + ' mm (' + (d.precipitation_probability_max[i] || 0) + ' %)'));
+      zeile(T('wetterWind'), d.wind_speed_10m_max.map(v => Math.round(v) + ' km/h'));
+      box.textContent = '';
+      box.appendChild(table);
       if (cur) {
-        html += '<p class="hint">' + T('wetterAktuell') + Math.round(cur.temperature_2m) + ' °C, ' + cur.precipitation + ' mm, ' + Math.round(cur.wind_speed_10m) + ' km/h – ' + T('wetterPruefen') + '</p>';
+        const p = document.createElement('p');
+        p.className = 'hint';
+        p.textContent = T('wetterAktuell') + Math.round(cur.temperature_2m) + ' °C, ' + cur.precipitation + ' mm, ' + Math.round(cur.wind_speed_10m) + ' km/h – ' + T('wetterPruefen');
+        box.appendChild(p);
       }
-      box.innerHTML = html;
     } catch (err) {
-      box.innerHTML = '<p class="hint">' + T('msgWetterOffline') + '</p>';
+      box.textContent = '';
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = T('msgWetterOffline');
+      box.appendChild(p);
     }
   }
 

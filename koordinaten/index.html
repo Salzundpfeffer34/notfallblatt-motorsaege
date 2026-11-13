@@ -368,36 +368,44 @@ function orderLatLon(a, b) {
 
 function parseDmsString(s) {
   if (s.indexOf('°') === -1) { return null; }
-  var re = /([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*['′‘’´m]\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|''|″|‘‘|’’|”|´´))?\s*([NSEW])?/gi;
-  var ms = [];
-  var m;
-  while ((m = re.exec(s)) !== null) {
-    ms.push(m);
+  var regexes = [
+    /([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*['′‘’´m](?!['′‘’´m])\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|''|″|‘‘|’’|”|´´))?\s*([NSEW])?/gi,
+    /([NSEW])?\s*(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*(?:''|′′|″|['′‘’´m](?!['′‘’´m]))\s*)?(?:(\d+(?:[.,]\d+)?)\s*(?:"|''|″|‘‘|’’|”|´´))?\s*([NSEW])?/gi
+  ];
+  for (var r = 0; r < regexes.length; r++) {
+    var re = regexes[r];
+    var ms = [];
+    var m;
+    while ((m = re.exec(s)) !== null) {
+      ms.push(m);
+    }
+    if (ms.length === 0) { continue; }
+    var consumed = 0;
+    for (var ci = 0; ci < ms.length; ci++) {
+      consumed += 1 + (ms[ci][3] ? 1 : 0) + (ms[ci][4] ? 1 : 0);
+    }
+    if (consumed !== extractNumbers(s).length) { continue; }
+    var vals = [], hems = [];
+    for (var i = 0; i < ms.length; i++) {
+      var g = ms[i];
+      var deg = parseFloat(g[2].replace(',', '.'));
+      var mn = g[3] ? parseFloat(g[3].replace(',', '.')) : 0.0;
+      var sec = g[4] ? parseFloat(g[4].replace(',', '.')) : 0.0;
+      var val = Math.abs(deg) + mn / 60.0 + sec / 3600.0;
+      var h = ((g[1] || g[5] || '')).toUpperCase();
+      if (h === 'S' || h === 'W') { val = -val; }
+      else if (h === '' && deg < 0.0) { val = -val; }
+      vals.push(val);
+      hems.push(h);
+    }
+    if (vals.length < 2) { continue; }
+    var a = vals[0], b = vals[1], ha = hems[0], hb = hems[1];
+    if ((ha === 'E' || ha === 'W') && (hb === 'N' || hb === 'S')) {
+      return { lat: b, lon: a };
+    }
+    return orderLatLon(a, b);
   }
-  if (ms.length === 0) { return null; }
-  var consumed = 0;
-  for (var ci = 0; ci < ms.length; ci++) {
-    consumed += 1 + (ms[ci][3] ? 1 : 0) + (ms[ci][4] ? 1 : 0);
-  }
-  if (consumed !== extractNumbers(s).length) { return null; }
-  var vals = [], hems = [];
-  for (var i = 0; i < ms.length; i++) {
-    var g = ms[i];
-    var deg = parseFloat(g[2].replace(',', '.'));
-    var mn = g[3] ? parseFloat(g[3].replace(',', '.')) : 0.0;
-    var sec = g[4] ? parseFloat(g[4].replace(',', '.')) : 0.0;
-    var val = deg + mn / 60.0 + sec / 3600.0;
-    var h = ((g[1] || g[5] || '')).toUpperCase();
-    if (h === 'S' || h === 'W') { val = -Math.abs(val); }
-    vals.push(val);
-    hems.push(h);
-  }
-  if (vals.length < 2) { return null; }
-  var a = vals[0], b = vals[1], ha = hems[0], hb = hems[1];
-  if ((ha === 'E' || ha === 'W') && (hb === 'N' || hb === 'S')) {
-    return { lat: b, lon: a };
-  }
-  return orderLatLon(a, b);
+  return null;
 }
 
 function parseDmmString(s) {
@@ -501,6 +509,9 @@ function parseInput(raw, mode, swap) {
     mode = 'mgrs';
   }
   if (mode === 'auto' && raw.indexOf('°') !== -1) {
+    mode = 'dms';
+  }
+  if ((mode === 'wgs84' || mode === 'lv95' || mode === 'lv03' || mode === 'mercator') && raw.indexOf('°') !== -1) {
     mode = 'dms';
   }
 

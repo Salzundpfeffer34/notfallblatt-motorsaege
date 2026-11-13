@@ -1411,9 +1411,9 @@ function buildResults(lat, lon, forceLv95) {
         var v = btn.getAttribute('data-v');
         if (navigator.clipboard) {
           navigator.clipboard.writeText(v).then(function () {
-            var t = btn.textContent;
+            var oldT = btn.textContent;
             btn.textContent = t('copied');
-            setTimeout(function () { btn.textContent = t; }, 1200);
+            setTimeout(function () { btn.textContent = oldT; }, 1200);
           });
         }
       });
@@ -1458,9 +1458,9 @@ function buildResults(lat, lon, forceLv95) {
   });
 
   function copyFeedback(btn) {
-    var t = btn.textContent;
+    var oldT = btn.textContent;
     btn.textContent = t('copied');
-    setTimeout(function () { btn.textContent = t; }, 1200);
+    setTimeout(function () { btn.textContent = oldT; }, 1200);
   }
   var copyAllBtn = document.getElementById('copyAll');
   if (copyAllBtn) {

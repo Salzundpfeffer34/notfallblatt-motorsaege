@@ -139,7 +139,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2>Stapel-Umrechnung</h2>
-<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 liefert ausserhalb der Schweiz keine sinnvollen Werte.</p>
+<p class="help">Mehrere Koordinaten auf einmal umrechnen: eine pro Zeile einf&uuml;gen (Format wird automatisch erkannt), Zielformat w&auml;hlen, &laquo;Stapel umrechnen&raquo; klicken. Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat">
@@ -730,21 +730,30 @@ function formatNum(v, dec) {
   return out;
 }
 
+function isInChArea(lv95) {
+  return lv95.east >= 2400000 && lv95.east <= 2900000 && lv95.north >= 1000000 && lv95.north <= 1350000;
+}
+
 function buildResults(lat, lon) {
   var lv95 = latlonToLv95(lat, lon);
   var utm = latlonToUtm(lat, lon);
   var merc = latlonToMercator(lat, lon);
   var mgrs = latlonToMgrs(lat, lon);
-  return [
+  var rows = [
     ['WGS84 · Dezimalgrad (Breite, Länge)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
     ['WGS84 · Grad, Minuten, Sekunden', formatDms(lat, lon)],
     ['WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum(lon, 6) + ', ' + formatNum(lat, 6)],
-    ['NAD83 (Nordamerika) · geografisch (B, L)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)],
-    ['Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)],
+    ['NAD83 (Nordamerika) · geografisch (B, L)', formatNum(lat, 6) + ', ' + formatNum(lon, 6)]
+  ];
+  if (isInChArea(lv95)) {
+    rows.push(['Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum(lv95.east, 1) + ', ' + formatNum(lv95.north, 1)]);
+  }
+  rows.push(
     ['UTM (Zone, Ost, Nord)', utm.zone + latBand(lat) + ' ' + formatNum(utm.east, 2) + ' ' + formatNum(utm.north, 2)],
     ['MGRS / USNG (1 m)', mgrs],
     ['Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum(merc.x, 2) + ', ' + formatNum(merc.y, 2)]
-  ];
+  );
+  return rows;
 }
 </script>
 
@@ -975,7 +984,7 @@ function buildResults(lat, lon) {
   var batchLines = [];
   function batchValue(lat, lon, target) {
     if (target === 'dms') { return formatDms(lat, lon); }
-    if (target === 'lv95') { var v = latlonToLv95(lat, lon); return formatNum(v.east, 2) + ', ' + formatNum(v.north, 2); }
+    if (target === 'lv95') { var v = latlonToLv95(lat, lon); if (!isInChArea(v)) { return '\u2013'; } return formatNum(v.east, 2) + ', ' + formatNum(v.north, 2); }
     if (target === 'utm') { var u = latlonToUtm(lat, lon); return u.zone + latBand(lat) + ' ' + formatNum(u.east, 2) + ' ' + formatNum(u.north, 2); }
     if (target === 'mgrs') { return latlonToMgrs(lat, lon); }
     if (target === 'mercator') { var m = latlonToMercator(lat, lon); return formatNum(m.x, 0) + ', ' + formatNum(m.y, 0); }

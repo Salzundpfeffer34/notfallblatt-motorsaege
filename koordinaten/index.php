@@ -669,16 +669,19 @@ function buildResults(float $lat, float $lon): array
     $merc = latlonToMercator($lat, $lon);
     $mgrs = latlonToMgrs($lat, $lon);
 
-    return array(
+    $rows = array(
         array('WGS84 · Dezimalgrad (Breite, Länge)', formatNum($lat, 6) . ', ' . formatNum($lon, 6)),
         array('WGS84 · Grad, Minuten, Sekunden', formatDms($lat, $lon)),
         array('WGS84 · Dezimalgrad (Länge, Breite) — GeoJSON/Leaflet', formatNum($lon, 6) . ', ' . formatNum($lat, 6)),
         array('NAD83 (Nordamerika) · geografisch (B, L)', formatNum($lat, 6) . ', ' . formatNum($lon, 6)),
-        array('Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum($lv95['east'], 1) . ', ' . formatNum($lv95['north'], 1)),
-        array('UTM (Zone, Ost, Nord)', sprintf('%d%s %s %s', $utm['zone'], latBand($lat), formatNum($utm['east'], 2), formatNum($utm['north'], 2))),
-        array('MGRS / USNG (1 m)', $mgrs),
-        array('Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum($merc['x'], 2) . ', ' . formatNum($merc['y'], 2)),
     );
+    if ($lv95['east'] >= 2400000 && $lv95['east'] <= 2900000 && $lv95['north'] >= 1000000 && $lv95['north'] <= 1350000) {
+        $rows[] = array('Schweiz · LV95 / CH1903+ (Ost, Nord)', formatNum($lv95['east'], 1) . ', ' . formatNum($lv95['north'], 1));
+    }
+    $rows[] = array('UTM (Zone, Ost, Nord)', sprintf('%d%s %s %s', $utm['zone'], latBand($lat), formatNum($utm['east'], 2), formatNum($utm['north'], 2)));
+    $rows[] = array('MGRS / USNG (1 m)', $mgrs);
+    $rows[] = array('Web Mercator · EPSG:3857 (Google Maps) (X, Y)', formatNum($merc['x'], 2) . ', ' . formatNum($merc['y'], 2));
+    return $rows;
 }
 
 function renderPage(): void

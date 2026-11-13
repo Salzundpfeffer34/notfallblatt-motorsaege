@@ -100,6 +100,7 @@ window.NOTFALL_TEXTE.es = {
   legende: "↑ flecha del norte · ▲ comienzo del trabajo, la flecha indica la dirección de trabajo · → dirección de tala · ▦ patio de troncos (número = capacidad en m³, abreviatura = especie) · ▤ patio de leña troceada · ⊕ coordinación rescate aéreo (punto central) · ⊗ coordinación punto T · ▭ vehículo del equipo · ── carretera practicable con dirección de saca · ┄ calle de arrastre · ┈ camino forestal · ⋯ línea de cable · – sendero",
   pflichtHinweis: "La organización de emergencia debe estar formulada por escrito, ser conocida por todos y comprobarse a diario (tiempo, visibilidad, acceso).",
   footer: "Los datos permanecen exclusivamente en este dispositivo (localStorage). Ninguna transmisión a un servidor. Geocodificación: Photon/Nominatim © colaboradores de OpenStreetMap · Tiempo: Open-Meteo · Mapas: Leaflet + OpenStreetMap.",
+  datenschutzLink: "Privacidad",
   druckTitel: "Encargo de trabajo y organización de emergencia en el bosque",
   druckMotorsaegearbeiten: "Trabajos con motosierra",
   druckAuftrag: "Encargo:",

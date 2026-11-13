@@ -100,6 +100,7 @@ window.NOTFALL_TEXTE.it = {
   legende: "↑ freccia del nord · ▲ inizio del lavoro, la freccia indica la direzione di lavoro · → direzione di abbattimento · ▦ piazza di stoccaggio tronchi (numero = capacità in m³, sigla = specie legnosa) · ▤ piazza di stoccaggio legna spaccata · ⊕ coordinamento soccorso aereo (punto centrale) · ⊗ coordinamento punto T · ▭ veicolo della squadra · ── strada praticabile in auto con direzione di esbosco · ┄ falcata di esbosco · ┈ strada forestale · ⋯ linea di cavo · – sentiero",
   pflichtHinweis: "L’organizzazione d’emergenza deve essere formulata per iscritto, nota a tutti e verificata ogni giorno (meteo, visibilità, accesso).",
   footer: "I dati restano esclusivamente su questo apparecchio (localStorage). Nessuna trasmissione a un server. Geocodifica: Photon/Nominatim © collaboratori OpenStreetMap · Meteo: Open-Meteo · Carte: Leaflet + OpenStreetMap.",
+  datenschutzLink: "Privacy",
   druckTitel: "Mandato di lavoro e organizzazione d’emergenza in foresta",
   druckMotorsaegearbeiten: "Lavori con motosega",
   druckAuftrag: "Mandato:",

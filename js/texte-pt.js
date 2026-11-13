@@ -100,6 +100,7 @@ window.NOTFALL_TEXTE.pt = {
   legende: "↑ seta do norte · ▲ início do trabalho, a seta indica a direcção de trabalho · → direcção de abate · ▦ pátio de troncos (número = capacidade em m³, abreviatura = espécie) · ▤ pátio de lenha rachada · ⊕ coordenação resgate aéreo (ponto central) · ⊗ coordenação ponto T · ▭ viatura da equipa · ── estrada praticável com direcção de saída · ┄ corredor de arrasto · ┈ caminho florestal · ⋯ linha de cabo · – trilho",
   pflichtHinweis: "A organização de emergência deve estar formulada por escrito, ser conhecida por todos e verificada diariamente (tempo, visibilidade, acesso).",
   footer: "Os dados permanecem exclusivamente neste aparelho (localStorage). Nenhuma transmissão para um servidor. Geocodificação: Photon/Nominatim © colaboradores OpenStreetMap · Tempo: Open-Meteo · Mapas: Leaflet + OpenStreetMap.",
+  datenschutzLink: "Privacidade",
   druckTitel: "Encargo de trabalho e organização de emergência na floresta",
   druckMotorsaegearbeiten: "Trabalhos com motosserra",
   druckAuftrag: "Encargo:",

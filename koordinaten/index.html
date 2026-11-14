@@ -70,6 +70,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <option value="en">English</option>
 <option value="fr">Français</option>
 <option value="it">Italiano</option>
+<option value="es">Español</option>
 </select>
 <button type="button" id="fontMinus" aria-label="Schrift verkleinern" title="Schrift verkleinern" data-i18n-aria="ariaFontMinus" data-i18n-title="ariaFontMinus">A−</button>
 <button type="button" id="fontReset" aria-label="Normale Schriftgrösse" title="Normale Schriftgrösse" data-i18n-aria="ariaFontReset" data-i18n-title="ariaFontReset">A</button>
@@ -156,7 +157,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card">
 <h2 data-i18n="batchH2">Stapel-Umrechnung</h2>
-<div class="help" data-i18n="batchHelp">Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Deutsch, English/US, Français, Italiano)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p></div>
+<div class="help" data-i18n="batchHelp">Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Deutsch, English/US, Français, Italiano, Español)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p></div>
 <textarea id="batchInput" rows="7" placeholder="z. B.&#10;48.8566, 2.3522&#10;41&#176; 54' 10.1&quot; N, 12&#176; 29' 47&quot; E&#10;30U 699316 5710164" autocomplete="off" spellcheck="false" data-i18n-ph="batchPlaceholder"></textarea>
 <div class="row" style="margin-top:10px">
 <select id="batchTarget" aria-label="Zielformat" data-i18n-aria="ariaTarget">
@@ -180,6 +181,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <option value="en">11-13-2026 (English/US)</option>
 <option value="fr">13-11-2026 (Français)</option>
 <option value="it">13-11-2026 (Italiano)</option>
+<option value="es">13-11-2026 (Español)</option>
 </select>
 </div>
 <div class="check" style="margin-top:6px">
@@ -256,7 +258,7 @@ var TEXTE = {
     copyLink: 'Link kopieren',
     mapTitle: 'Kartenausschnitt',
     batchH2: 'Stapel-Umrechnung',
-    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Deutsch, English/US, Français, Italiano)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>',
+    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Deutsch, English/US, Français, Italiano, Español)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>',
     batchPlaceholder: 'z. B.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Stapel umrechnen',
     batchGpx: 'GPX herunterladen',
@@ -358,7 +360,7 @@ var TEXTE = {
     copyLink: 'Copy link',
     mapTitle: 'Map view',
     batchH2: 'Batch conversion',
-    batchHelp: 'Convert several coordinates at once – the format is detected automatically.<h3>How it works</h3><ul><li>Paste <strong>one coordinate per line</strong></li><li>Choose the target format</li><li>Click <strong>«Convert batch»</strong></li></ul><h3>GPX for Garmin</h3><ul><li><strong>«Download GPX»</strong> creates a file for Garmin Connect or Garmin Explore</li><li>The order of the lines is the route</li><li><strong>At least two valid lines</strong> are required</li><li>Checkbox <strong>«Sort points by proximity»</strong>: order is optimized automatically (nearest point next; the first point stays the start)</li></ul><h3>File name</h3><ul><li>Checkbox <strong>«Name the file automatically after the place»</strong> (default): named after the place of the first coordinate (via OpenStreetMap), e.g. <code>Green-River.gpx</code></li><li>Otherwise: <code>route-DATE_NPOINTS.gpx</code> (e.g. <code>route-13.11.2026_7punkte.gpx</code>; date format switchable: Deutsch, English/US, Français, Italiano)</li><li>Checkbox <strong>«Ask for the file name when downloading»</strong>: custom name at download</li></ul><p class="batchhint">Note: LV95 is only shown for coordinates within Switzerland (otherwise «–»).</p>',
+    batchHelp: 'Convert several coordinates at once – the format is detected automatically.<h3>How it works</h3><ul><li>Paste <strong>one coordinate per line</strong></li><li>Choose the target format</li><li>Click <strong>«Convert batch»</strong></li></ul><h3>GPX for Garmin</h3><ul><li><strong>«Download GPX»</strong> creates a file for Garmin Connect or Garmin Explore</li><li>The order of the lines is the route</li><li><strong>At least two valid lines</strong> are required</li><li>Checkbox <strong>«Sort points by proximity»</strong>: order is optimized automatically (nearest point next; the first point stays the start)</li></ul><h3>File name</h3><ul><li>Checkbox <strong>«Name the file automatically after the place»</strong> (default): named after the place of the first coordinate (via OpenStreetMap), e.g. <code>Green-River.gpx</code></li><li>Otherwise: <code>route-DATE_NPOINTS.gpx</code> (e.g. <code>route-13.11.2026_7punkte.gpx</code>; date format switchable: Deutsch, English/US, Français, Italiano, Español)</li><li>Checkbox <strong>«Ask for the file name when downloading»</strong>: custom name at download</li></ul><p class="batchhint">Note: LV95 is only shown for coordinates within Switzerland (otherwise «–»).</p>',
     batchPlaceholder: 'e.g.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Convert batch',
     batchGpx: 'Download GPX',
@@ -460,7 +462,7 @@ var TEXTE = {
     copyLink: 'Copier le lien',
     mapTitle: 'Aperçu de la carte',
     batchH2: 'Conversion par lot',
-    batchHelp: 'Convertissez plusieurs coordonnées à la fois – le format est détecté automatiquement.<h3>Mode d’emploi</h3><ul><li>Collez <strong>une coordonnée par ligne</strong></li><li>Choisissez le format cible</li><li>Cliquez sur <strong>«Convertir le lot»</strong></li></ul><h3>GPX pour Garmin</h3><ul><li><strong>«Télécharger GPX»</strong> crée un fichier pour Garmin Connect ou Garmin Explore</li><li>L’ordre des lignes correspond à l’itinéraire</li><li><strong>Au moins deux lignes valides</strong> sont nécessaires</li><li>Case <strong>« Trier les points par proximité »</strong> : l’ordre est optimisé automatiquement (le point le plus proche ensuite ; le premier point reste le départ)</li></ul><h3>Nom du fichier</h3><ul><li>Case <strong>« Nommer automatiquement le fichier d’après le lieu »</strong> (par défaut) : nommé d’après le lieu de la première coordonnée (via OpenStreetMap), p.&nbsp;ex. <code>Green-River.gpx</code></li><li>Sinon : <code>route-DATE_NPOINTS.gpx</code> (p. ex. <code>route-13.11.2026_7punkte.gpx</code> ; format de date commutable : Deutsch, English/US, Français, Italiano)</li><li>Case <strong>« Demander le nom du fichier au téléchargement »</strong> : nom personnalisé au téléchargement</li></ul><p class="batchhint">Remarque : LV95 n’est affiché que pour les coordonnées en Suisse (sinon «–»).</p>',
+    batchHelp: 'Convertissez plusieurs coordonnées à la fois – le format est détecté automatiquement.<h3>Mode d’emploi</h3><ul><li>Collez <strong>une coordonnée par ligne</strong></li><li>Choisissez le format cible</li><li>Cliquez sur <strong>«Convertir le lot»</strong></li></ul><h3>GPX pour Garmin</h3><ul><li><strong>«Télécharger GPX»</strong> crée un fichier pour Garmin Connect ou Garmin Explore</li><li>L’ordre des lignes correspond à l’itinéraire</li><li><strong>Au moins deux lignes valides</strong> sont nécessaires</li><li>Case <strong>« Trier les points par proximité »</strong> : l’ordre est optimisé automatiquement (le point le plus proche ensuite ; le premier point reste le départ)</li></ul><h3>Nom du fichier</h3><ul><li>Case <strong>« Nommer automatiquement le fichier d’après le lieu »</strong> (par défaut) : nommé d’après le lieu de la première coordonnée (via OpenStreetMap), p.&nbsp;ex. <code>Green-River.gpx</code></li><li>Sinon : <code>route-DATE_NPOINTS.gpx</code> (p. ex. <code>route-13.11.2026_7punkte.gpx</code> ; format de date commutable : Deutsch, English/US, Français, Italiano, Español)</li><li>Case <strong>« Demander le nom du fichier au téléchargement »</strong> : nom personnalisé au téléchargement</li></ul><p class="batchhint">Remarque : LV95 n’est affiché que pour les coordonnées en Suisse (sinon «–»).</p>',
     batchPlaceholder: 'p. ex.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Convertir le lot',
     batchGpx: 'Télécharger GPX',
@@ -562,7 +564,7 @@ var TEXTE = {
     copyLink: 'Copia link',
     mapTitle: 'Vista mappa',
     batchH2: 'Conversione in blocco',
-    batchHelp: 'Converti più coordinate contemporaneamente – il formato viene rilevato automaticamente.<h3>Come funziona</h3><ul><li>Incolla <strong>una coordinata per riga</strong></li><li>Scegli il formato di destinazione</li><li>Clicca su <strong>«Converti serie»</strong></li></ul><h3>GPX per Garmin</h3><ul><li><strong>«Scarica GPX»</strong> crea un file per Garmin Connect o Garmin Explore</li><li>L’ordine delle righe corrisponde al percorso</li><li>Servono <strong>almeno due righe valide</strong></li><li>Casella <strong>«Ordina i punti per prossimità»</strong>: l’ordine viene ottimizzato automaticamente (il punto più vicino come prossimo; il primo punto resta la partenza)</li></ul><h3>Nome del file</h3><ul><li>Casella <strong>«Nomina automaticamente il file in base al luogo»</strong> (predefinita): nominato in base al luogo della prima coordinata (tramite OpenStreetMap), ad&nbsp;es. <code>Green-River.gpx</code></li><li>Altrimenti: <code>route-DATA_NPUNTI.gpx</code> (es. <code>route-13.11.2026_7punkte.gpx</code>; formato data commutabile: Deutsch, English/US, Français, Italiano)</li><li>Casella <strong>«Chiedere il nome del file al download»</strong>: nome personalizzato al download</li></ul><p class="batchhint">Nota: LV95 viene mostrato solo per coordinate nella Svizzera (altrimenti «–»).</p>',
+    batchHelp: 'Converti più coordinate contemporaneamente – il formato viene rilevato automaticamente.<h3>Come funziona</h3><ul><li>Incolla <strong>una coordinata per riga</strong></li><li>Scegli il formato di destinazione</li><li>Clicca su <strong>«Converti serie»</strong></li></ul><h3>GPX per Garmin</h3><ul><li><strong>«Scarica GPX»</strong> crea un file per Garmin Connect o Garmin Explore</li><li>L’ordine delle righe corrisponde al percorso</li><li>Servono <strong>almeno due righe valide</strong></li><li>Casella <strong>«Ordina i punti per prossimità»</strong>: l’ordine viene ottimizzato automaticamente (il punto più vicino come prossimo; il primo punto resta la partenza)</li></ul><h3>Nome del file</h3><ul><li>Casella <strong>«Nomina automaticamente il file in base al luogo»</strong> (predefinita): nominato in base al luogo della prima coordinata (tramite OpenStreetMap), ad&nbsp;es. <code>Green-River.gpx</code></li><li>Altrimenti: <code>route-DATA_NPUNTI.gpx</code> (es. <code>route-13.11.2026_7punkte.gpx</code>; formato data commutabile: Deutsch, English/US, Français, Italiano, Español)</li><li>Casella <strong>«Chiedere il nome del file al download»</strong>: nome personalizzato al download</li></ul><p class="batchhint">Nota: LV95 viene mostrato solo per coordinate nella Svizzera (altrimenti «–»).</p>',
     batchPlaceholder: 'es.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Converti serie',
     batchGpx: 'Scarica GPX',
@@ -623,6 +625,108 @@ var TEXTE = {
     errMercator: 'Inserisci est (x) e nord (y), es. 683303, 247925',
     errMercXY: 'Inserisci X e Y in metri (EPSG:3857).',
     errUtm: 'Inserisci zona (facoltativa), est e nord, es. 32T 465403 5247150'
+  },
+  es: {
+    docTitle: 'Convertidor de coordenadas · WGS84, DMS, LV95, NAD83, UTM, MGRS, Mercator',
+    h1: 'Convertidor de coordenadas',
+    subtitle: 'Introduzca coordenadas en <em>cualquier</em> formato – todos los demás formatos se calculan automáticamente.',
+    labelQ: 'Coordenadas',
+    qPlaceholder: 'p. ej. 47.376895, 8.541694',
+    ariaSchrift: 'Tamaño de letra',
+    ariaSprache: 'Idioma',
+    ariaFontMinus: 'Reducir letra',
+    ariaFontReset: 'Tamaño normal de letra',
+    ariaFontPlus: 'Aumentar letra',
+    ariaFormat: 'Formato',
+    ariaTarget: 'Formato de destino',
+    ariaGpxDatum: 'Formato de fecha en el nombre estándar',
+    optAuto: 'Reconocimiento automático',
+    optWgs84: 'WGS84 · Grados decimales',
+    optDms: 'Grados / minutos / segundos',
+    optLv95: 'Suiza · LV95 (CH1903+)',
+    optGeojson: 'GeoJSON (longitud, latitud)',
+    goBtn: 'Convertir',
+    lblSwap: 'El primer número es la longitud (lon, y) – no la latitud',
+    lblLv95force: 'Mostrar siempre LV95 (también fuera de Suiza)',
+    lblAutoclear: 'Vaciar el campo automáticamente al hacer clic',
+    lblKarte: 'Mostrar mapa (OpenStreetMap se carga solo al convertir)',
+    lblLive: 'Conversión en vivo mientras se escribe',
+    beispieleTitel: 'Ejemplos – haga clic para probar:',
+    chipParis: 'WGS84 · París',
+    chipRom: 'DMS · Roma',
+    chipNy: 'DMS · Nueva York',
+    chipLa: 'Minutos decimales · Los Ángeles',
+    chipZh: 'LV95 · Zúrich',
+    chipLondon: 'UTM · Londres',
+    chipTokio: 'MGRS · Tokio',
+    chipMercNy: 'Mercator · Nueva York',
+    lblMaplinks: 'Enlaces a mapas',
+    lblTeilen: 'Compartir',
+    copyAll: 'Copiar todo',
+    copyLink: 'Copiar enlace',
+    mapTitle: 'Vista del mapa',
+    batchH2: 'Conversión por lotes',
+    batchHelp: 'Convierta varias coordenadas a la vez – el formato se detecta automáticamente.<h3>Cómo funciona</h3><ul><li>Pegue <strong>una coordenada por línea</strong></li><li>Elija el formato de destino</li><li>Haga clic en <strong>«Convertir lote»</strong></li></ul><h3>GPX para Garmin</h3><ul><li><strong>«Descargar GPX»</strong> crea un archivo para Garmin Connect o Garmin Explore</li><li>El orden de las líneas corresponde a la ruta</li><li>Se necesitan <strong>al menos dos líneas válidas</strong></li><li>Casilla <strong>«Ordenar los puntos por proximidad»</strong>: el orden se optimiza automáticamente (el punto más cercano a continuación; el primer punto sigue siendo el inicio)</li></ul><h3>Nombre del archivo</h3><ul><li>Casilla <strong>«Nombrar automáticamente el archivo según el lugar»</strong> (predeterminada): nombrado según el lugar de la primera coordenada (vía OpenStreetMap), p.&nbsp;ej. <code>Green-River.gpx</code></li><li>Si no: <code>route-FECHA_NPUNTOS.gpx</code> (p. ej. <code>route-13.11.2026_7punkte.gpx</code>; formato de fecha conmutable: Deutsch, English/US, Français, Italiano, Español)</li><li>Casilla <strong>«Preguntar el nombre del archivo al descargar»</strong>: nombre personalizado al descargar</li></ul><p class="batchhint">Nota: LV95 solo se muestra para coordenadas dentro de Suiza (si no, «–»).</p>',
+    batchPlaceholder: 'p. ej.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
+    batchGo: 'Convertir lote',
+    batchGpx: 'Descargar GPX',
+    lblGpxAsk: 'Preguntar el nombre del archivo al descargar (si no, nombre estándar)',
+    lblGpxGeo: 'Nombrar automáticamente el archivo según el lugar de la primera coordenada (OpenStreetMap)',
+    gpxGeoWait: 'Buscando el lugar …',
+    lblGpxSort: 'Ordenar los puntos por proximidad (orden sensato; el primer punto sigue siendo el inicio)',
+    helpH2: 'Formatos de entrada reconocidos',
+    helpP1: 'Como separadores funcionan la coma, el punto y coma, el espacio o la barra. Se admiten punto o coma decimal, así como la separación de miles suiza con apóstrofe (<code>2\'683\'303</code>).',
+    helpP2: '<strong>Restricción de entrada:</strong> salvo para UTM/MGRS solo se pueden introducir números. En UTM se admiten como máximo dos letras (p. ej. <code>32T</code> o <code>E … N …</code>), en MGRS tres (<code>32TMT…</code>), en grados/minutos/segundos solo N, S, E o W. El campo de entrada filtra inmediatamente los caracteres no válidos.',
+    helpLi1: '<strong>WGS84 grados decimales:</strong> <code>47.376895, 8.541694</code> (latitud primero; con <code>8.541694, 47.376895</code> marque «El primer número es la longitud»)',
+    helpLi2: '<strong>Grados/minutos/segundos:</strong> <code>37°42\'10"N 111°23\'16"W</code> o <code>47° 22\' 36.8" N, 8° 32\' 30.1" E</code> (también minutos decimales: <code>47° 22.615\' N</code>; también se reconocen los caracteres tipográficos ‘ ’ o ‘‘ ’’ ” ´´)',
+    helpLi3: '<strong>Grados + minutos decimales (GPS):</strong> <code>N37 09.729 W111 42.701</code> (sin símbolo de grado; el punto cardinal N/S/E/W antes o después de los números)',
+    helpLi4: '<strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Este 2\'4xx xxx–2\'9xx xxx, Norte 1\'0xx xxx–1\'4xx xxx)',
+    helpLi5: '<strong>NAD83 (Norteamérica):</strong> coordenadas geográficas; los valores corresponden a WGS84 (desviación típicamente &lt; 2 m, porque NAD83 está fijado a la placa norteamericana)',
+    helpLi6: '<strong>UTM:</strong> <code>32T 465403 5247150</code> o <code>465403, 5247150</code> (sin zona se asume la zona 32)',
+    helpLi7: '<strong>MGRS:</strong> <code>32TMT6540247150</code> o <code>32T MT 65402 47150</code>',
+    helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – con valores pequeños que también podrían interpretarse como UTM, elija el formato arriba explícitamente',
+    footer: 'Precisión: UTM/Mercator/MGRS exactos al centímetro por cálculo; LV95 mediante las fórmulas de aproximación oficiales de swisstopo (desviación típicamente &lt; 0,2 m). Las altitudes no se convierten. El cálculo se ejecuta completamente en el navegador. · <a href="datenschutz.html">Privacidad</a>',
+    copyBtn: 'Copiar',
+    copied: 'Copiado ✓',
+    fmtUnknown: 'Formato desconocido',
+    noLines: 'No se han introducido líneas.',
+    cap1000: 'Limitado a 1000 líneas.',
+    min2: 'Se necesitan mín. 2 puntos',
+    promptName: 'Nombre del archivo GPX (sin .gpx):',
+    notRecognized: 'Entrada no reconocida: ',
+    resultFor: 'Conversión para {a}, {b} (WGS84)',
+    rowWgs84: 'WGS84 · Grados decimales (latitud, longitud)',
+    rowDms: 'WGS84 · Grados, minutos, segundos',
+    rowGeojson: 'WGS84 · Grados decimales (longitud, latitud) — GeoJSON/Leaflet',
+    rowNad83: 'NAD83 (Norteamérica) · geográfico (B, L)',
+    rowLv95: 'Suiza · LV95 / CH1903+ (Este, Norte)',
+    rowUtm: 'UTM (zona, Este, Norte)',
+    rowMgrs: 'MGRS / USNG (1 m)',
+    rowMercator: 'Web Mercator · EPSG:3857 (Google Maps) (X, Y)',
+    noteUtmZone32: 'No se ha indicado zona UTM – se ha asumido la zona 32. Indique mejor la zona, p. ej. «32T 465403 5247150».',
+    noteMgrs: 'MGRS reconocido.',
+    noteDms: 'WGS84 en grados/minutos/segundos reconocido.',
+    noteZone32: 'No se ha indicado zona – se ha asumido la zona 32. Ejemplo con zona: «32T 465403 5247150».',
+    noteDmm: 'Grados + minutos decimales reconocidos (p. ej. N37 09.729 W111 42.701).',
+    noteUtmZoneN: 'UTM con zona {z} reconocido.',
+    errMgrs: 'Formato desconocido: MGRS no reconocido. Ejemplo: 32TMT6540247150 o 32T MT 65402 47150.',
+    errDms: 'Formato desconocido: grados/minutos/segundos no reconocidos. Ejemplo: 37° 42\' 10" N, 111° 23\' 16" W o N37 09.729 W111 42.701',
+    errGeneral: 'Formato desconocido. Ejemplos: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)',
+    errMgrsRange: 'La coordenada está fuera del rango MGRS de esta zona.',
+    errLat: 'Latitud fuera del rango válido (-90 a +90).',
+    errLon: 'Longitud fuera del rango válido (-180 a +180).',
+    errUnknown: 'Formato desconocido.',
+    errEmpty: 'Introduzca coordenadas.',
+    errMgrsLetters: 'En MGRS se admiten como máximo 3 letras (p. ej. 32TMT…).',
+    errDmsLetters: 'En grados/minutos/segundos se admiten como máximo dos letras: N, S, E o W.',
+    errUtmLetters: 'En UTM se admiten como máximo dos letras (p. ej. «32T» o «E … N …»).',
+    errLetters: 'Introduzca solo números – aquí no se permiten letras.',
+    errLettersAuto: 'Introduzca solo números – letras solo en UTM/MGRS o como punto cardinal (N/S/E/W).',
+    errTwoValues: 'Indique dos valores (latitud, longitud).',
+    errLv95: 'Indique Este y Norte, p. ej. 2\'683\'303, 1\'247\'925',
+    errMercator: 'Indique Este (x) y Norte (y), p. ej. 683303, 247925',
+    errMercXY: 'Indique X e Y en metros (EPSG:3857).',
+    errUtm: 'Indique zona (opcional), Este y Norte, p. ej. 32T 465403 5247150',
   }
 };
 var curLang = 'de';

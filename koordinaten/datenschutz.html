@@ -99,6 +99,7 @@ E-Mail: [E-Mail-Adresse]
 <li data-i18n="s5li1"><code>konverter-*</code> &ndash; Einstellungen des Koordinaten-Konverters (z. B. Live-Umrechnung, Karte, Schriftgr&ouml;sse, Sprache, GPX-Optionen)</li>
 <li data-i18n="s5li2"><code>notfallblatt.sprache</code> &ndash; gew&auml;hlte Sprache</li>
 <li data-i18n="s5li3">Beim Notfallblatt ausserdem Ihre Einsatzdaten (werden nur lokal im Browser gespeichert, nie &uuml;bertragen)</li>
+<li data-i18n="s5li4"><code>konverter-bildgps-*</code> &ndash; Zuordnung von Bildern zu (manuell hinzugef&uuml;gten) Koordinaten; die Bilder selbst werden nie gespeichert oder &uuml;bertragen</li>
 </ul>
 </div>
 
@@ -153,6 +154,7 @@ var TEXTE = {
     s5li1: '<code>konverter-*</code> &ndash; Einstellungen des Koordinaten-Konverters (z. B. Live-Umrechnung, Karte, Schriftgr&ouml;sse, Sprache, GPX-Optionen)',
     s5li2: '<code>notfallblatt.sprache</code> &ndash; gew&auml;hlte Sprache',
     s5li3: 'Beim Notfallblatt ausserdem Ihre Einsatzdaten (werden nur lokal im Browser gespeichert, nie &uuml;bertragen)',
+    s5li4: '<code>konverter-bildgps-*</code> &ndash; Zuordnung von Bildern zu (manuell hinzugef&uuml;gten) Koordinaten; die Bilder selbst werden nie gespeichert oder &uuml;bertragen',
     s6h2: '6. Ihre Rechte',
     s6p1: 'Sie haben im Rahmen des schweizerischen Datenschutzgesetzes (DSG) sowie &ndash; soweit anwendbar &ndash; der DSGVO das Recht auf Auskunft, Berichtigung, L&ouml;schung und Einschr&auml;nkung der Bearbeitung Ihrer Personendaten. Da diese Website keine Personendaten auf Servern speichert, betrifft dies im Wesentlichen die Server-Logs des Hosting-Anbieters.',
     s6p2: 'F&uuml;r Fragen, Auskunft oder L&ouml;schung wenden Sie sich an: [E-Mail-Adresse]',
@@ -195,6 +197,7 @@ var TEXTE = {
     s5li1: '<code>konverter-*</code> &ndash; settings of the coordinate converter (e.g. live conversion, map, font size, language, GPX options)',
     s5li2: '<code>notfallblatt.sprache</code> &ndash; selected language',
     s5li3: 'For the emergency sheet, also your operational data (stored only locally in the browser, never transmitted)',
+    s5li4: '<code>konverter-bildgps-*</code> &ndash; association of images with (manually added) coordinates; the images themselves are never stored or transmitted',
     s6h2: '6. Your rights',
     s6p1: 'Under the Swiss Federal Act on Data Protection (FADP) and &ndash; where applicable &ndash; the GDPR, you have the right to information, rectification, deletion and restriction of the processing of your personal data. Since this website does not store personal data on servers, this mainly concerns the server logs of the hosting provider.',
     s6p2: 'For questions, information or deletion, contact: [email address]',
@@ -237,6 +240,7 @@ var TEXTE = {
     s5li1: '<code>konverter-*</code> &ndash; r&eacute;glages du convertisseur de coordonn&eacute;es (p. ex. conversion en direct, carte, taille de police, langue, options GPX)',
     s5li2: '<code>notfallblatt.sprache</code> &ndash; langue choisie',
     s5li3: 'Pour la fiche d&rsquo;urgence, &eacute;galement vos donn&eacute;es d&rsquo;intervention (stock&eacute;es uniquement localement dans le navigateur, jamais transmises)',
+    s5li4: '<code>konverter-bildgps-*</code> &ndash; association des images aux coordonn&eacute;es (ajout&eacute;es manuellement) ; les images elles-m&ecirc;mes ne sont jamais stock&eacute;es ni transmises',
     s6h2: '6. Vos droits',
     s6p1: 'Dans le cadre de la loi suisse sur la protection des donn&eacute;es (LPD) et &ndash; le cas &eacute;ch&eacute;ant &ndash; du RGPD, vous avez droit &agrave; l&rsquo;information, &agrave; la rectification, &agrave; la suppression et &agrave; la limitation du traitement de vos donn&eacute;es personnelles. Comme ce site ne stocke pas de donn&eacute;es personnelles sur des serveurs, cela concerne essentiellement les journaux serveur de l&rsquo;h&eacute;bergeur.',
     s6p2: 'Pour toute question, information ou suppression, contactez&nbsp;: [adresse e-mail]',
@@ -279,6 +283,7 @@ var TEXTE = {
     s5li1: '<code>konverter-*</code> &ndash; impostazioni del convertitore di coordinate (ad es. conversione live, mappa, dimensione del carattere, lingua, opzioni GPX)',
     s5li2: '<code>notfallblatt.sprache</code> &ndash; lingua scelta',
     s5li3: 'Per la scheda d&rsquo;emergenza inoltre i vostri dati di impiego (salvati solo localmente nel browser, mai trasmessi)',
+    s5li4: '<code>konverter-bildgps-*</code> &ndash; associazione delle immagini alle coordinate (aggiunte manualmente); le immagini stesse non vengono mai salvate n&eacute; trasmesse',
     s6h2: '6. I vostri diritti',
     s6p1: 'Ai sensi della legge svizzera sulla protezione dei dati (LPD) e &ndash; ove applicabile &ndash; del GDPR, avete diritto all&rsquo;informazione, alla rettifica, alla cancellazione e alla limitazione del trattamento dei vostri dati personali. Poich&eacute; questo sito non memorizza dati personali su server, ci&ograve; riguarda essenzialmente i log del server del provider di hosting.',
     s6p2: 'Per domande, informazioni o cancellazione, rivolgetevi a: [indirizzo e-mail]',
@@ -321,6 +326,7 @@ var TEXTE = {
     s5li1: '<code>konverter-*</code> &ndash; ajustes del convertidor de coordenadas (p. ej. conversión en vivo, mapa, tamaño de letra, idioma, opciones GPX)',
     s5li2: '<code>notfallblatt.sprache</code> &ndash; idioma seleccionado',
     s5li3: 'En el Notfallblatt además sus datos de empleo (se guardan solo localmente en el navegador, nunca se transmiten)',
+    s5li4: '<code>konverter-bildgps-*</code> &ndash; asociación de las imágenes con las coordenadas (añadidas manualmente); las imágenes mismas nunca se guardan ni se transmiten',
     s6h2: '6. Sus derechos',
     s6p1: 'En el marco de la ley suiza de protección de datos (LPD) y &ndash; en la medida en que sea aplicable &ndash; del RGPD, usted tiene derecho a la información, a la rectificación, a la supresión y a la limitación del tratamiento de sus datos personales. Como este sitio web no almacena datos personales en servidores, esto afecta esencialmente a los registros del servidor del proveedor de alojamiento.',
     s6p2: 'Para preguntas, información o supresión, diríjase a: [dirección de correo electrónico]',

@@ -38,6 +38,8 @@ button.go:hover { background:var(--accent2); }
 .chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; }
 .chip { font-size:.82rem; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#f7f7f5; cursor:pointer; color:var(--ink); }
 .chip:hover { border-color:var(--accent); color:var(--accent); }
+.bilddrop { margin-top:14px; border:2px dashed var(--line); border-radius:10px; padding:14px 16px; text-align:center; color:var(--muted); font-size:.92rem; cursor:pointer; background:#fafaf8; }
+.bilddrop:hover, .bilddrop.drag { border-color:var(--accent); color:var(--accent); }
 .error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:14px 16px; margin-bottom:20px; }
 .note { background:#f7f7f5; border:1px solid var(--line); color:#444444; border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:.93rem; }
 .results { padding:0; overflow:hidden; }
@@ -133,6 +135,20 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="54SUE8843349290" data-i18n="chipTokio">MGRS · Tokio</button>
 <button type="button" class="chip" data-q="-8238310, 4970072" data-i18n="chipMercNy">Mercator · New York</button>
 </div>
+</div>
+<div class="bilddrop" id="bildDrop" tabindex="0" role="button" aria-label="Bild mit GPS-Daten auswählen" data-i18n-aria="ariaBild">
+<input type="file" id="bildFile" accept="image/jpeg,image/tiff,.dng,.cr2,.nef,.arw,.orf,.rw2" class="hidden">
+<span data-i18n="lblBild">Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken</span>
+</div>
+<div id="bildMsg" class="note hidden"></div>
+<div id="bildManuell" class="hidden">
+<div class="row">
+<input type="text" id="bildManuellQ" placeholder="z. B. 47.376895, 8.541694" data-i18n-ph="phBildManuell" autocomplete="off" spellcheck="false">
+<button type="button" id="bildManuellBtn" class="go" style="flex:0 0 auto" data-i18n="btnBildUebernehmen">Übernehmen</button>
+</div>
+</div>
+<div id="bildSchreibenRow" class="row hidden">
+<button type="button" id="bildSchreiben" class="go" style="flex:0 0 auto" data-i18n="btnBildSchreiben">GPS ins Bild schreiben und herunterladen</button>
 </div>
 </div>
 </form>
@@ -271,6 +287,19 @@ var TEXTE = {
     lblGpxGeo: 'Dateiname automatisch nach dem Ort der ersten Koordinate benennen (OpenStreetMap)',
     gpxGeoWait: 'Ort wird gesucht …',
     lblGpxSort: 'Punkte nach Nähe sortieren (sinnvolle Abfolge; Start bleibt der erste Punkt)',
+    lblBild: 'Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken',
+    ariaBild: 'Bild mit GPS-Daten auswählen',
+    noteBildGps: 'GPS aus Bild übernommen: {a}, {b}',
+    noteBildKeinGps: 'Keine GPS-Daten im Bild. Koordinaten manuell eingeben – sie werden lokal für dieses Bild gespeichert (das Bild selbst wird nicht verändert).',
+    noteBildGespeichert: 'Gespeicherte Koordinaten für dieses Bild verwendet: {a}, {b}',
+    noteBildManuell: 'Koordinaten übernommen und lokal für dieses Bild gespeichert.',
+    phBildManuell: "z. B. 47.376895, 8.541694 oder 47° 22' 36.8\" N, 8° 32' 30.1\" E",
+    btnBildUebernehmen: 'Übernehmen',
+    errBildManuell: 'Koordinaten nicht erkannt.',
+    errBildTyp: 'Bitte eine JPEG-, TIFF- oder RAW-Datei ziehen.',
+    btnBildSchreiben: 'GPS ins Bild schreiben und herunterladen',
+    noteBildSchreiben: 'GPS ins Bild geschrieben und heruntergeladen: {a}, {b}',
+    errBildSchreiben: 'GPS konnte nicht ins Bild geschrieben werden.',
     helpH2: 'Erkannte Eingabeformate',
     helpP1: 'Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2\'683\'303</code>) ebenfalls.',
     helpP2: '<strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.',
@@ -373,6 +402,19 @@ var TEXTE = {
     lblGpxGeo: 'Name the file automatically after the place of the first coordinate (OpenStreetMap)',
     gpxGeoWait: 'Looking up place …',
     lblGpxSort: 'Sort points by proximity (sensible order; the first point stays the start)',
+    lblBild: 'Drop an image with GPS data (JPEG/TIFF/RAW) here, or click',
+    ariaBild: 'Choose an image with GPS data',
+    noteBildGps: 'GPS taken from the image: {a}, {b}',
+    noteBildKeinGps: 'No GPS data in the image. Enter the coordinates manually \u2013 they are stored locally for this image (the image itself is not modified).',
+    noteBildGespeichert: 'Using the coordinates stored for this image: {a}, {b}',
+    noteBildManuell: 'Coordinates applied and stored locally for this image.',
+    phBildManuell: "e.g. 47.376895, 8.541694 or 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
+    btnBildUebernehmen: 'Apply',
+    errBildManuell: 'Coordinates not recognised.',
+    errBildTyp: 'Please drop a JPEG, TIFF or RAW file.',
+    btnBildSchreiben: 'Write GPS into image and download',
+    noteBildSchreiben: 'GPS written into the image and downloaded: {a}, {b}',
+    errBildSchreiben: 'GPS could not be written into the image.',
     helpH2: 'Recognised input formats',
     helpP1: 'Comma, semicolon, space or slash work as separators. Decimal point or decimal comma are allowed, as is Swiss thousands separation with an apostrophe (<code>2\'683\'303</code>).',
     helpP2: '<strong>Input restriction:</strong> except for UTM/MGRS only numbers can be entered. UTM allows at most two letters (e.g. <code>32T</code> or <code>E … N …</code>), MGRS three (<code>32TMT…</code>), degrees/minutes/seconds only N, S, E or W. The input field filters out invalid characters immediately.',
@@ -475,6 +517,19 @@ var TEXTE = {
     lblGpxGeo: 'Nommer automatiquement le fichier d’après le lieu de la première coordonnée (OpenStreetMap)',
     gpxGeoWait: 'Recherche du lieu …',
     lblGpxSort: 'Trier les points par proximité (ordre logique ; le premier point reste le départ)',
+    lblBild: 'Déposez ici une image avec données GPS (JPEG/TIFF/RAW) ou cliquez',
+    ariaBild: 'Choisir une image avec données GPS',
+    noteBildGps: 'GPS repris de l’image : {a}, {b}',
+    noteBildKeinGps: 'Aucune donnée GPS dans l’image. Saisissez les coordonnées manuellement \u2013 elles sont enregistrées localement pour cette image (l’image n’est pas modifiée).',
+    noteBildGespeichert: 'Coordonnées enregistrées pour cette image utilisées : {a}, {b}',
+    noteBildManuell: 'Coordonnées appliquées et enregistrées localement pour cette image.',
+    phBildManuell: "p. ex. 47.376895, 8.541694 ou 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
+    btnBildUebernehmen: 'Appliquer',
+    errBildManuell: 'Coordonnées non reconnues.',
+    errBildTyp: 'Veuillez déposer un fichier JPEG, TIFF ou RAW.',
+    btnBildSchreiben: 'Écrire le GPS dans l’image et télécharger',
+    noteBildSchreiben: 'GPS écrit dans l’image et téléchargé : {a}, {b}',
+    errBildSchreiben: 'Impossible d’écrire le GPS dans l’image.',
     helpH2: 'Formats d’entrée reconnus',
     helpP1: 'La virgule, le point-virgule, l’espace ou la barre oblique servent de séparateurs. Le point ou la virgule décimale sont admis, ainsi que la séparation des milliers à la suisse avec apostrophe (<code>2\'683\'303</code>).',
     helpP2: '<strong>Limitation de saisie :</strong> sauf pour UTM/MGRS, seuls des chiffres peuvent être saisis. UTM accepte au maximum deux lettres (p. ex. <code>32T</code> ou <code>E … N …</code>), MGRS trois (<code>32TMT…</code>), degrés/minutes/secondes seulement N, S, E ou W. Le champ de saisie filtre immédiatement les caractères invalides.',
@@ -577,6 +632,19 @@ var TEXTE = {
     lblGpxGeo: 'Nomina automaticamente il file in base al luogo della prima coordinata (OpenStreetMap)',
     gpxGeoWait: 'Ricerca del luogo …',
     lblGpxSort: 'Ordina i punti per prossimità (ordine sensato; il primo punto resta la partenza)',
+    lblBild: 'Trascinate qui un’immagine con dati GPS (JPEG/TIFF/RAW) o cliccate',
+    ariaBild: 'Scegliere un’immagine con dati GPS',
+    noteBildGps: 'GPS acquisito dall’immagine: {a}, {b}',
+    noteBildKeinGps: 'Nessun dato GPS nell’immagine. Inserite le coordinate manualmente \u2013 vengono salvate localmente per questa immagine (l’immagine non viene modificata).',
+    noteBildGespeichert: 'Coordinate salvate per questa immagine utilizzate: {a}, {b}',
+    noteBildManuell: 'Coordinate applicate e salvate localmente per questa immagine.',
+    phBildManuell: "ad es. 47.376895, 8.541694 o 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
+    btnBildUebernehmen: 'Applica',
+    errBildManuell: 'Coordinate non riconosciute.',
+    errBildTyp: 'Trascinate un file JPEG, TIFF o RAW.',
+    btnBildSchreiben: 'Scrivere il GPS nell’immagine e scaricare',
+    noteBildSchreiben: 'GPS scritto nell’immagine e scaricato: {a}, {b}',
+    errBildSchreiben: 'Impossibile scrivere il GPS nell’immagine.',
     helpH2: 'Formati di input riconosciuti',
     helpP1: 'Come separatori funzionano virgola, punto e virgola, spazio o barra. Sono ammessi punto o virgola decimali, così come la separazione delle migliaia con apostrofo alla svizzera (<code>2\'683\'303</code>).',
     helpP2: '<strong>Limitazione di input:</strong> tranne per UTM/MGRS possono essere inseriti solo numeri. UTM consente al massimo due lettere (es. <code>32T</code> o <code>E … N …</code>), MGRS tre (<code>32TMT…</code>), gradi/minuti/secondi solo N, S, E o W. Il campo di input filtra subito i caratteri non validi.',
@@ -679,6 +747,19 @@ var TEXTE = {
     lblGpxGeo: 'Nombrar automáticamente el archivo según el lugar de la primera coordenada (OpenStreetMap)',
     gpxGeoWait: 'Buscando el lugar …',
     lblGpxSort: 'Ordenar los puntos por proximidad (orden sensato; el primer punto sigue siendo el inicio)',
+    lblBild: 'Arrastre aquí una imagen con datos GPS (JPEG/TIFF/RAW) o haga clic',
+    ariaBild: 'Elegir una imagen con datos GPS',
+    noteBildGps: 'GPS tomado de la imagen: {a}, {b}',
+    noteBildKeinGps: 'No hay datos GPS en la imagen. Introduzca las coordenadas manualmente \u2013 se guardan localmente para esta imagen (la imagen no se modifica).',
+    noteBildGespeichert: 'Coordenadas guardadas para esta imagen utilizadas: {a}, {b}',
+    noteBildManuell: 'Coordenadas aplicadas y guardadas localmente para esta imagen.',
+    phBildManuell: "p. ej. 47.376895, 8.541694 o 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
+    btnBildUebernehmen: 'Aplicar',
+    errBildManuell: 'Coordenadas no reconocidas.',
+    errBildTyp: 'Arrastre un archivo JPEG, TIFF o RAW.',
+    btnBildSchreiben: 'Escribir el GPS en la imagen y descargar',
+    noteBildSchreiben: 'GPS escrito en la imagen y descargado: {a}, {b}',
+    errBildSchreiben: 'No se pudo escribir el GPS en la imagen.',
     helpH2: 'Formatos de entrada reconocidos',
     helpP1: 'Como separadores funcionan la coma, el punto y coma, el espacio o la barra. Se admiten punto o coma decimal, así como la separación de miles suiza con apóstrofe (<code>2\'683\'303</code>).',
     helpP2: '<strong>Restricción de entrada:</strong> salvo para UTM/MGRS solo se pueden introducir números. En UTM se admiten como máximo dos letras (p. ej. <code>32T</code> o <code>E … N …</code>), en MGRS tres (<code>32TMT…</code>), en grados/minutos/segundos solo N, S, E o W. El campo de entrada filtra inmediatamente los caracteres no válidos.',
@@ -1138,6 +1219,216 @@ function pairToLatLon(c) {
   throw new Error(t('errUnknown'));
 }
 
+function exifGps(buf) {
+  var v = new DataView(buf);
+  if (v.byteLength < 12) { return null; }
+  var tiff = -1;
+  if (v.getUint16(0) === 0xFFD8) {
+    var p = 2;
+    while (p + 4 < v.byteLength) {
+      if (v.getUint8(p) !== 0xFF) { p++; continue; }
+      var marker = v.getUint8(p + 1);
+      if (marker === 0xD8 || (marker >= 0xD0 && marker <= 0xD9) || marker === 0x01) { p += 2; continue; }
+      var len = v.getUint16(p + 2);
+      if (marker === 0xE1 && v.getUint32(p + 4) === 0x45786966) { tiff = p + 10; break; }
+      p += 2 + len;
+    }
+  } else if (v.getUint16(0) === 0x4949 || v.getUint16(0) === 0x4D4D) { tiff = 0; }
+  if (tiff < 0) { return null; }
+  var le = v.getUint16(tiff) === 0x4949;
+  function u16(o) { return v.getUint16(tiff + o, le); }
+  function u32(o) { return v.getUint32(tiff + o, le); }
+  if (u16(2) !== 42) { return null; }
+  var ifd0 = u32(4);
+  var gpsPtr = -1, n = u16(ifd0), i, e;
+  for (i = 0; i < n; i++) {
+    e = ifd0 + 2 + i * 12;
+    if (u16(e) === 0x8825) { gpsPtr = u32(e + 8); break; }
+  }
+  if (gpsPtr < 0) { return null; }
+  var latRef = '', lonRef = '', lat = null, lon = null, m = u16(gpsPtr);
+  function rationals(eo, cnt) {
+    var valOff = cnt * 8 > 4 ? u32(eo + 8) : eo + 8, out = [], k, num, den;
+    for (k = 0; k < cnt; k++) { num = u32(valOff + k * 8); den = u32(valOff + k * 8 + 4); out.push(den ? num / den : 0); }
+    return out;
+  }
+  for (i = 0; i < m; i++) {
+    e = gpsPtr + 2 + i * 12;
+    var tag = u16(e), cnt = u32(e + 4);
+    if (tag === 1) { latRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
+    else if (tag === 2 && cnt === 3) { var a = rationals(e, 3); lat = a[0] + a[1] / 60 + a[2] / 3600; }
+    else if (tag === 3) { lonRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
+    else if (tag === 4 && cnt === 3) { var b = rationals(e, 3); lon = b[0] + b[1] / 60 + b[2] / 3600; }
+  }
+  if (lat === null || lon === null) { return null; }
+  if (latRef === 'S') { lat = -lat; }
+  if (lonRef === 'W') { lon = -lon; }
+  return { lat: lat, lon: lon };
+}
+
+function exifWriteGps(buf, lat, lon) {
+  var v = new DataView(buf);
+  if (v.byteLength < 4 || v.getUint16(0) !== 0xFFD8) { return null; }
+  function dms(x) {
+    var d = Math.floor(x), mf = (x - d) * 60, m = Math.floor(mf), s = Math.round((mf - m) * 60 * 10000);
+    if (s >= 600000) { s -= 600000; m += 1; }
+    if (m >= 60) { m -= 60; d += 1; }
+    return [d, 1, m, 1, s, 10000];
+  }
+  var latR = dms(Math.abs(lat)), lonR = dms(Math.abs(lon));
+  var p = 2, app1Start = -1, app1End = -1;
+  while (p + 4 < v.byteLength) {
+    if (v.getUint8(p) !== 0xFF) { break; }
+    var marker = v.getUint8(p + 1);
+    if (marker === 0xD8 || (marker >= 0xD0 && marker <= 0xD9) || marker === 0x01) { p += 2; continue; }
+    if (marker === 0xDA) { break; }
+    var len = v.getUint16(p + 2);
+    if (marker === 0xE1 && v.getUint32(p + 4) === 0x45786966) { app1Start = p; app1End = p + 2 + len; break; }
+    p += 2 + len;
+  }
+  var entries0 = [], entriesE = [];
+  if (app1Start >= 0) {
+    try {
+      var t0 = app1Start + 10;
+      var le0 = v.getUint16(t0) === 0x4949;
+      function g16(o) { return v.getUint16(t0 + o, le0); }
+      function g32(o) { return v.getUint32(t0 + o, le0); }
+      var typeSizes = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8 };
+      function readIfd(off, out) {
+        var n = g16(off), i, e;
+        for (i = 0; i < n; i++) {
+          e = off + 2 + i * 12;
+          var tag = g16(e), ty = g16(e + 2), cnt = g32(e + 4);
+          if (!(ty in typeSizes)) { continue; }
+          var sz = typeSizes[ty] * cnt;
+          var valOff = sz > 4 ? g32(e + 8) : e + 8;
+          var k, data = [];
+          if (ty === 2) {
+            var str = '';
+            for (k = 0; k < cnt; k++) {
+              var ch = v.getUint8(t0 + valOff + k);
+              if (ch === 0) { break; }
+              str += String.fromCharCode(ch);
+            }
+            out.push({ tag: tag, ty: ty, str: str });
+          } else {
+            for (k = 0; k < cnt; k++) {
+              var o = valOff + k * typeSizes[ty];
+              if (ty === 1) { data.push(v.getUint8(t0 + o)); }
+              else if (ty === 3) { data.push(g16(o)); }
+              else if (ty === 4) { data.push(g32(o)); }
+              else { data.push([g32(o), g32(o + 4)]); }
+            }
+            out.push({ tag: tag, ty: ty, data: data });
+          }
+        }
+      }
+      readIfd(g32(4), entries0);
+      var q2;
+      for (q2 = 0; q2 < entries0.length; q2++) {
+        if (entries0[q2].tag === 0x8769 && entries0[q2].ty === 4) { readIfd(entries0[q2].data[0], entriesE); }
+      }
+    } catch (e) { entries0 = []; entriesE = []; }
+  }
+  function keep(list, skip) {
+    var out = [], i, k, ok;
+    for (i = 0; i < list.length; i++) {
+      if (skip[list[i].tag]) { continue; }
+      if (list[i].ty === 5) {
+        ok = true;
+        for (k = 0; k < list[i].data.length; k++) { if (!list[i].data[k] || list[i].data[k][1] === 0) { ok = false; break; } }
+        if (!ok) { continue; }
+      }
+      out.push(list[i]);
+    }
+    return out;
+  }
+  entries0 = keep(entries0, { 0x8769: 1, 0x8825: 1 });
+  entriesE = keep(entriesE, { 0x927C: 1, 0xA005: 1 });
+  entries0.sort(function (a, b) { return a.tag - b.tag; });
+  entriesE.sort(function (a, b) { return a.tag - b.tag; });
+  var n0 = entries0.length + 1 + (entriesE.length ? 1 : 0);
+  var ifd0Size = 2 + n0 * 12 + 4;
+  var exifIfdOff = 8 + ifd0Size;
+  var exifSize = entriesE.length ? 2 + entriesE.length * 12 + 4 : 0;
+  var gpsIfdOff = exifIfdOff + exifSize;
+  var bytes = [], dataRefs = [], pending = [];
+  function w8(x) { bytes.push(x & 0xFF); }
+  function w16(x) { bytes.push(x & 0xFF, (x >> 8) & 0xFF); }
+  function w32(x) { x = x >>> 0; bytes.push(x & 0xFF, (x >> 8) & 0xFF, (x >> 16) & 0xFF, (x >> 24) & 0xFF); }
+  function wPtr() { var pos = bytes.length; bytes.push(0, 0, 0, 0); return pos; }
+  function patch(pos, val) { val = val >>> 0; bytes[pos] = val & 0xFF; bytes[pos + 1] = (val >> 8) & 0xFF; bytes[pos + 2] = (val >> 16) & 0xFF; bytes[pos + 3] = (val >> 24) & 0xFF; }
+  function writeEntry(tag, ty, data, str) {
+    var flat = null, i;
+    if (ty === 5) {
+      flat = [];
+      for (i = 0; i < data.length; i++) { if (data[i] instanceof Array) { flat.push(data[i][0], data[i][1]); } else { flat.push(data[i]); } }
+      data = flat;
+    }
+    w16(tag); w16(ty);
+    var cnt = (ty === 2) ? str.length + 1 : (ty === 5 ? data.length / 2 : data.length);
+    w32(cnt);
+    var unit = ty === 2 ? 1 : { 1: 1, 3: 2, 4: 4, 5: 8 }[ty];
+    var sz = unit * cnt;
+    if (sz <= 4) {
+      var start = bytes.length;
+      if (ty === 2) { for (i = 0; i < cnt; i++) { w8(i < str.length ? str.charCodeAt(i) : 0); } }
+      else if (ty === 1) { for (i = 0; i < cnt; i++) { w8(data[i]); } }
+      else if (ty === 3) { for (i = 0; i < cnt; i++) { w16(data[i]); } }
+      else { for (i = 0; i < cnt; i++) { w32(data[i]); } }
+      while (bytes.length - start < 4) { w8(0); }
+    } else {
+      dataRefs.push(bytes.length);
+      bytes.push(0, 0, 0, 0);
+      pending.push({ ty: ty, data: data, str: str });
+    }
+  }
+  var exifPtrPos = -1, gpsPtrPos;
+  w8(0x49); w8(0x49); w16(42); w32(8);
+  w16(n0);
+  var i2;
+  for (i2 = 0; i2 < entries0.length; i2++) { writeEntry(entries0[i2].tag, entries0[i2].ty, entries0[i2].data, entries0[i2].str); }
+  if (entriesE.length) { w16(0x8769); w16(4); w32(1); exifPtrPos = wPtr(); }
+  w16(0x8825); w16(4); w32(1); gpsPtrPos = wPtr();
+  w32(0);
+  if (entriesE.length) {
+    w16(entriesE.length);
+    for (i2 = 0; i2 < entriesE.length; i2++) { writeEntry(entriesE[i2].tag, entriesE[i2].ty, entriesE[i2].data, entriesE[i2].str); }
+    w32(0);
+  }
+  w16(5);
+  writeEntry(0, 1, [2, 3, 0, 0], null);
+  writeEntry(1, 2, null, lat < 0 ? 'S' : 'N');
+  writeEntry(2, 5, latR, null);
+  writeEntry(3, 2, null, lon < 0 ? 'W' : 'E');
+  writeEntry(4, 5, lonR, null);
+  w32(0);
+  for (i2 = 0; i2 < pending.length; i2++) {
+    patch(dataRefs[i2], bytes.length);
+    var it = pending[i2], k;
+    if (it.ty === 2) { for (k = 0; k < it.str.length; k++) { w8(it.str.charCodeAt(k)); } w8(0); }
+    else if (it.ty === 1) { for (k = 0; k < it.data.length; k++) { w8(it.data[k]); } }
+    else if (it.ty === 3) { for (k = 0; k < it.data.length; k++) { w16(it.data[k]); } }
+    else if (it.ty === 4) { for (k = 0; k < it.data.length; k++) { w32(it.data[k]); } }
+    else { for (k = 0; k < it.data.length; k++) { w32(it.data[k]); } }
+  }
+  if (exifPtrPos >= 0) { patch(exifPtrPos, exifIfdOff); }
+  patch(gpsPtrPos, gpsIfdOff);
+  var tiff = new Uint8Array(bytes);
+  var segLen = 2 + 6 + tiff.length;
+  if (segLen > 0xFFFF) { return null; }
+  var head = app1Start >= 0 ? app1Start : 2;
+  var tail = app1Start >= 0 ? app1End : 2;
+  var out = new Uint8Array(head + 4 + 6 + tiff.length + (v.byteLength - tail));
+  out.set(new Uint8Array(buf, 0, head), 0);
+  var o = head;
+  out[o] = 0xFF; out[o + 1] = 0xE1; out[o + 2] = (segLen >> 8) & 0xFF; out[o + 3] = segLen & 0xFF; o += 4;
+  out[o] = 0x45; out[o + 1] = 0x78; out[o + 2] = 0x69; out[o + 3] = 0x66; out[o + 4] = 0; out[o + 5] = 0; o += 6;
+  out.set(tiff, o); o += tiff.length;
+  out.set(new Uint8Array(buf, tail, v.byteLength - tail), o);
+  return out.buffer;
+}
+
 function parseInput(raw, mode, swap) {
   raw = String(raw).replace(/[\u0009\u000A\u000D\u000B\u000C]/g, ' ').replace(/[\u0000-\u0008\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF\u{E0000}-\u{E007F}]/gu, '');
   raw = raw.trim();
@@ -1485,6 +1776,105 @@ function buildResults(lat, lon, forceLv95) {
     try { localStorage.setItem('konverter-sprache', spracheEl.value); } catch (e) {}
     if (el.value.trim() !== '') { run(); }
   });
+
+  var bildDropEl = document.getElementById('bildDrop');
+  var bildFileEl = document.getElementById('bildFile');
+  var bildMsgEl = document.getElementById('bildMsg');
+  var bildManuellEl = document.getElementById('bildManuell');
+  var bildManuellQEl = document.getElementById('bildManuellQ');
+  var bildManuellBtnEl = document.getElementById('bildManuellBtn');
+  var bildSchreibenRowEl = document.getElementById('bildSchreibenRow');
+  var bildSchreibenEl = document.getElementById('bildSchreiben');
+  var bildLetzterKey = null;
+  var bildLetzterBuffer = null;
+  var bildLetzterName = '';
+  var bildLetzterLat = null;
+  var bildLetzterLon = null;
+  function bildKey(file) {
+    var s = file.name + ':' + file.size;
+    var h = 2166136261, i;
+    for (i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+    return 'bild-' + h.toString(36);
+  }
+  function bildShow(key) { bildMsgEl.textContent = t(key); bildMsgEl.classList.remove('hidden'); }
+  function bildUse(lat, lon, noteKey) {
+    bildManuellEl.classList.add('hidden');
+    bildLetzterLat = lat;
+    bildLetzterLon = lon;
+    bildSchreibenRowEl.classList.toggle('hidden', !bildLetzterBuffer);
+    el.value = formatNum(lat, 6) + ', ' + formatNum(lon, 6);
+    run();
+    bildMsgEl.textContent = t(noteKey).replace('{a}', formatNum(lat, 6)).replace('{b}', formatNum(lon, 6));
+    bildMsgEl.classList.remove('hidden');
+  }
+  function bildHandle(file) {
+    if (!file) { return; }
+    if (!/\/(jpeg|tiff)$/i.test(file.type || '') && !/[-.](dng|cr2|nef|arw|orf|rw2)$/i.test(file.type || '') && !/\.(jpe?g|tiff?|dng|cr2|nef|arw|orf|rw2)$/i.test(file.name)) { bildShow('errBildTyp'); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var gps = null;
+      try { gps = exifGps(reader.result); } catch (e) { gps = null; }
+      var istJpeg = /\/jpeg$/i.test(file.type || '') || /\.jpe?g$/i.test(file.name);
+      bildLetzterBuffer = (!gps && istJpeg) ? reader.result : null;
+      bildLetzterName = istJpeg ? file.name : '';
+      var key = bildKey(file), saved = null;
+      if (gps) {
+        try { localStorage.setItem('konverter-bildgps-' + key, JSON.stringify({ la: gps.lat, lo: gps.lon })); } catch (e) {}
+        bildUse(gps.lat, gps.lon, 'noteBildGps');
+      } else {
+        try { saved = JSON.parse(localStorage.getItem('konverter-bildgps-' + key) || 'null'); } catch (e) {}
+        if (saved && typeof saved.la === 'number' && typeof saved.lo === 'number') {
+          bildUse(saved.la, saved.lo, 'noteBildGespeichert');
+        } else {
+          bildLetzterKey = key;
+          bildShow('noteBildKeinGps');
+          bildManuellEl.classList.remove('hidden');
+          bildManuellQEl.focus();
+        }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+  bildDropEl.addEventListener('click', function () { bildFileEl.click(); });
+  bildDropEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bildFileEl.click(); } });
+  bildFileEl.addEventListener('change', function () { if (bildFileEl.files[0]) { bildHandle(bildFileEl.files[0]); } bildFileEl.value = ''; });
+  bildDropEl.addEventListener('dragover', function (e) { e.preventDefault(); bildDropEl.classList.add('drag'); });
+  bildDropEl.addEventListener('dragleave', function () { bildDropEl.classList.remove('drag'); });
+  bildDropEl.addEventListener('drop', function (e) { e.preventDefault(); bildDropEl.classList.remove('drag'); if (e.dataTransfer.files[0]) { bildHandle(e.dataTransfer.files[0]); } });
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); });
+  bildManuellBtnEl.addEventListener('click', function () {
+    var q = bildManuellQEl.value.trim();
+    if (q === '') { return; }
+    try {
+      var ll = parseInput(q, 'auto', false);
+      if (bildLetzterKey) { try { localStorage.setItem('konverter-bildgps-' + bildLetzterKey, JSON.stringify({ la: ll.lat, lo: ll.lon })); } catch (e) {} }
+      bildUse(ll.lat, ll.lon, 'noteBildManuell');
+    } catch (e) { bildShow('errBildManuell'); }
+  });
+  bildManuellQEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); bildManuellBtnEl.click(); } });
+  bildSchreibenEl.addEventListener('click', function () {
+    if (!bildLetzterBuffer) { return; }
+    var lat = bildLetzterLat, lon = bildLetzterLon;
+    if (lat === null || lon === null) {
+      var q = bildManuellQEl.value.trim();
+      if (q === '') { return; }
+      try { var ll = parseInput(q, 'auto', false); lat = ll.lat; lon = ll.lon; } catch (e) { bildShow('errBildManuell'); return; }
+    }
+    var out = null;
+    try { out = exifWriteGps(bildLetzterBuffer, lat, lon); } catch (e) { out = null; }
+    if (!out) { bildShow('errBildSchreiben'); return; }
+    if (bildLetzterKey) { try { localStorage.setItem('konverter-bildgps-' + bildLetzterKey, JSON.stringify({ la: lat, lo: lon })); } catch (e) {} }
+    var blob = new Blob([out], { type: 'image/jpeg' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = bildLetzterName.replace(/\.jpe?g$/i, '') + '-gps.jpg';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+    bildUse(lat, lon, 'noteBildSchreiben');
+  });
+
 
   var liveTimer = null;
   el.addEventListener('input', function () {

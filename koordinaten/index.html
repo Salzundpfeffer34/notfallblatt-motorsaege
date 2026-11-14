@@ -150,6 +150,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div id="bildSchreibenRow" class="row hidden">
 <button type="button" id="bildSchreiben" class="go" style="flex:0 0 auto" data-i18n="btnBildSchreiben">GPS ins Bild schreiben und herunterladen</button>
 </div>
+<div id="bildAktionen" class="row hidden" style="margin-top:10px">
+<button type="button" id="bildGpx" class="copy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="btnBildGpx">Zur Stapel-/GPX-Liste hinzufügen</button>
+<button type="button" id="bildReset" class="copy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="btnBildReset">Bild-GPS zurücksetzen</button>
+</div>
 </div>
 </form>
 
@@ -300,6 +304,10 @@ var TEXTE = {
     btnBildSchreiben: 'GPS ins Bild schreiben und herunterladen',
     noteBildSchreiben: 'GPS ins Bild geschrieben und heruntergeladen: {a}, {b}',
     errBildSchreiben: 'GPS konnte nicht ins Bild geschrieben werden.',
+    btnBildGpx: 'Zur Stapel-/GPX-Liste hinzufügen',
+    btnBildReset: 'Bild-GPS zurücksetzen',
+    noteBildBatch: 'Koordinate zur Stapel-Liste hinzugefügt – dort «Stapel umrechnen» oder «GPX herunterladen» klicken.',
+    errBildLesen: 'Das Bild konnte nicht gelesen werden.',
     helpH2: 'Erkannte Eingabeformate',
     helpP1: 'Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2\'683\'303</code>) ebenfalls.',
     helpP2: '<strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.',
@@ -415,6 +423,10 @@ var TEXTE = {
     btnBildSchreiben: 'Write GPS into image and download',
     noteBildSchreiben: 'GPS written into the image and downloaded: {a}, {b}',
     errBildSchreiben: 'GPS could not be written into the image.',
+    btnBildGpx: 'Add to batch/GPX list',
+    btnBildReset: 'Reset image GPS',
+    noteBildBatch: 'Coordinate added to the batch list – click “Convert batch” or “Download GPX” there.',
+    errBildLesen: 'The image could not be read.',
     helpH2: 'Recognised input formats',
     helpP1: 'Comma, semicolon, space or slash work as separators. Decimal point or decimal comma are allowed, as is Swiss thousands separation with an apostrophe (<code>2\'683\'303</code>).',
     helpP2: '<strong>Input restriction:</strong> except for UTM/MGRS only numbers can be entered. UTM allows at most two letters (e.g. <code>32T</code> or <code>E … N …</code>), MGRS three (<code>32TMT…</code>), degrees/minutes/seconds only N, S, E or W. The input field filters out invalid characters immediately.',
@@ -530,6 +542,10 @@ var TEXTE = {
     btnBildSchreiben: 'Écrire le GPS dans l’image et télécharger',
     noteBildSchreiben: 'GPS écrit dans l’image et téléchargé : {a}, {b}',
     errBildSchreiben: 'Impossible d’écrire le GPS dans l’image.',
+    btnBildGpx: 'Ajouter à la liste de lot/GPX',
+    btnBildReset: 'Réinitialiser l’image GPS',
+    noteBildBatch: 'Coordonnée ajoutée à la liste de lot – cliquez là-bas sur « Convertir le lot » ou « Télécharger GPX ».',
+    errBildLesen: 'L’image n’a pas pu être lue.',
     helpH2: 'Formats d’entrée reconnus',
     helpP1: 'La virgule, le point-virgule, l’espace ou la barre oblique servent de séparateurs. Le point ou la virgule décimale sont admis, ainsi que la séparation des milliers à la suisse avec apostrophe (<code>2\'683\'303</code>).',
     helpP2: '<strong>Limitation de saisie :</strong> sauf pour UTM/MGRS, seuls des chiffres peuvent être saisis. UTM accepte au maximum deux lettres (p. ex. <code>32T</code> ou <code>E … N …</code>), MGRS trois (<code>32TMT…</code>), degrés/minutes/secondes seulement N, S, E ou W. Le champ de saisie filtre immédiatement les caractères invalides.',
@@ -645,6 +661,10 @@ var TEXTE = {
     btnBildSchreiben: 'Scrivere il GPS nell’immagine e scaricare',
     noteBildSchreiben: 'GPS scritto nell’immagine e scaricato: {a}, {b}',
     errBildSchreiben: 'Impossibile scrivere il GPS nell’immagine.',
+    btnBildGpx: 'Aggiungere all’elenco batch/GPX',
+    btnBildReset: 'Reimpostare il GPS dell’immagine',
+    noteBildBatch: 'Coordinata aggiunta all’elenco batch – là cliccate «Converti serie» o «Scarica GPX».',
+    errBildLesen: 'Impossibile leggere l’immagine.',
     helpH2: 'Formati di input riconosciuti',
     helpP1: 'Come separatori funzionano virgola, punto e virgola, spazio o barra. Sono ammessi punto o virgola decimali, così come la separazione delle migliaia con apostrofo alla svizzera (<code>2\'683\'303</code>).',
     helpP2: '<strong>Limitazione di input:</strong> tranne per UTM/MGRS possono essere inseriti solo numeri. UTM consente al massimo due lettere (es. <code>32T</code> o <code>E … N …</code>), MGRS tre (<code>32TMT…</code>), gradi/minuti/secondi solo N, S, E o W. Il campo di input filtra subito i caratteri non validi.',
@@ -760,6 +780,10 @@ var TEXTE = {
     btnBildSchreiben: 'Escribir el GPS en la imagen y descargar',
     noteBildSchreiben: 'GPS escrito en la imagen y descargado: {a}, {b}',
     errBildSchreiben: 'No se pudo escribir el GPS en la imagen.',
+    btnBildGpx: 'Añadir a la lista de lote/GPX',
+    btnBildReset: 'Restablecer el GPS de la imagen',
+    noteBildBatch: 'Coordenada añadida a la lista de lote – allí haga clic en «Convertir lote» o «Descargar GPX».',
+    errBildLesen: 'No se pudo leer la imagen.',
     helpH2: 'Formatos de entrada reconocidos',
     helpP1: 'Como separadores funcionan la coma, el punto y coma, el espacio o la barra. Se admiten punto o coma decimal, así como la separación de miles suiza con apóstrofe (<code>2\'683\'303</code>).',
     helpP2: '<strong>Restricción de entrada:</strong> salvo para UTM/MGRS solo se pueden introducir números. En UTM se admiten como máximo dos letras (p. ej. <code>32T</code> o <code>E … N …</code>), en MGRS tres (<code>32TMT…</code>), en grados/minutos/segundos solo N, S, E o W. El campo de entrada filtra inmediatamente los caracteres no válidos.',
@@ -1785,6 +1809,9 @@ function buildResults(lat, lon, forceLv95) {
   var bildManuellBtnEl = document.getElementById('bildManuellBtn');
   var bildSchreibenRowEl = document.getElementById('bildSchreibenRow');
   var bildSchreibenEl = document.getElementById('bildSchreiben');
+  var bildAktionenEl = document.getElementById('bildAktionen');
+  var bildGpxEl = document.getElementById('bildGpx');
+  var bildResetEl = document.getElementById('bildReset');
   var bildLetzterKey = null;
   var bildLetzterBuffer = null;
   var bildLetzterName = '';
@@ -1797,11 +1824,16 @@ function buildResults(lat, lon, forceLv95) {
     return 'bild-' + h.toString(36);
   }
   function bildShow(key) { bildMsgEl.textContent = t(key); bildMsgEl.classList.remove('hidden'); }
+  function bildAktionenZeigen(gpx) {
+    bildGpxEl.classList.toggle('hidden', !gpx);
+    bildAktionenEl.classList.remove('hidden');
+  }
   function bildUse(lat, lon, noteKey) {
     bildManuellEl.classList.add('hidden');
     bildLetzterLat = lat;
     bildLetzterLon = lon;
     bildSchreibenRowEl.classList.toggle('hidden', !bildLetzterBuffer);
+    bildAktionenZeigen(true);
     el.value = formatNum(lat, 6) + ', ' + formatNum(lon, 6);
     run();
     bildMsgEl.textContent = t(noteKey).replace('{a}', formatNum(lat, 6)).replace('{b}', formatNum(lon, 6));
@@ -1809,28 +1841,37 @@ function buildResults(lat, lon, forceLv95) {
   }
   function bildHandle(file) {
     if (!file) { return; }
-    if (!/\/(jpeg|tiff)$/i.test(file.type || '') && !/[-.](dng|cr2|nef|arw|orf|rw2)$/i.test(file.type || '') && !/\.(jpe?g|tiff?|dng|cr2|nef|arw|orf|rw2)$/i.test(file.name)) { bildShow('errBildTyp'); return; }
+    if (!file.size) { bildShow('errBildLesen'); bildAktionenZeigen(false); return; }
+    if (!/\/(jpeg|tiff)$/i.test(file.type || '') && !/[-.](dng|cr2|nef|arw|orf|rw2)$/i.test(file.type || '') && !/\.(jpe?g|tiff?|dng|cr2|nef|arw|orf|rw2)$/i.test(file.name)) { bildShow('errBildTyp'); bildAktionenZeigen(false); return; }
     var reader = new FileReader();
+    reader.onerror = function () { bildShow('errBildLesen'); bildAktionenZeigen(false); };
     reader.onload = function () {
-      var gps = null;
-      try { gps = exifGps(reader.result); } catch (e) { gps = null; }
-      var istJpeg = /\/jpeg$/i.test(file.type || '') || /\.jpe?g$/i.test(file.name);
-      bildLetzterBuffer = (!gps && istJpeg) ? reader.result : null;
-      bildLetzterName = istJpeg ? file.name : '';
-      var key = bildKey(file), saved = null;
-      if (gps) {
-        try { localStorage.setItem('konverter-bildgps-' + key, JSON.stringify({ la: gps.lat, lo: gps.lon })); } catch (e) {}
-        bildUse(gps.lat, gps.lon, 'noteBildGps');
-      } else {
-        try { saved = JSON.parse(localStorage.getItem('konverter-bildgps-' + key) || 'null'); } catch (e) {}
-        if (saved && typeof saved.la === 'number' && typeof saved.lo === 'number') {
-          bildUse(saved.la, saved.lo, 'noteBildGespeichert');
+      try {
+        var gps = null;
+        try { gps = exifGps(reader.result); } catch (e) { gps = null; }
+        var istJpeg = /\/jpeg$/i.test(file.type || '') || /\.jpe?g$/i.test(file.name);
+        bildLetzterBuffer = (!gps && istJpeg) ? reader.result : null;
+        bildLetzterName = istJpeg ? file.name : '';
+        var key = bildKey(file), saved = null;
+        if (gps) {
+          try { localStorage.setItem('konverter-bildgps-' + key, JSON.stringify({ la: gps.lat, lo: gps.lon })); } catch (e) {}
+          bildUse(gps.lat, gps.lon, 'noteBildGps');
         } else {
-          bildLetzterKey = key;
-          bildShow('noteBildKeinGps');
-          bildManuellEl.classList.remove('hidden');
-          bildManuellQEl.focus();
+          try { saved = JSON.parse(localStorage.getItem('konverter-bildgps-' + key) || 'null'); } catch (e) {}
+          if (saved && typeof saved.la === 'number' && typeof saved.lo === 'number') {
+            bildUse(saved.la, saved.lo, 'noteBildGespeichert');
+          } else {
+            bildLetzterKey = key;
+            bildShow('noteBildKeinGps');
+            bildAktionenZeigen(false);
+            bildManuellEl.classList.remove('hidden');
+            bildManuellQEl.focus();
+          }
         }
+      } catch (e) {
+        bildLetzterBuffer = null;
+        bildShow('errBildLesen');
+        bildAktionenZeigen(false);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -1873,6 +1914,27 @@ function buildResults(lat, lon, forceLv95) {
     a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
     bildUse(lat, lon, 'noteBildSchreiben');
+  });
+  bildGpxEl.addEventListener('click', function () {
+    if (bildLetzterLat === null || bildLetzterLon === null) { return; }
+    var batchEl = document.getElementById('batchInput');
+    var cur = batchEl.value.replace(/\s+$/, '');
+    var line = formatNum(bildLetzterLat, 6) + ', ' + formatNum(bildLetzterLon, 6);
+    batchEl.value = cur === '' ? line : cur + '\n' + line;
+    bildShow('noteBildBatch');
+  });
+  bildResetEl.addEventListener('click', function () {
+    bildAktionenEl.classList.add('hidden');
+    bildManuellEl.classList.add('hidden');
+    bildSchreibenRowEl.classList.add('hidden');
+    bildMsgEl.classList.add('hidden');
+    bildMsgEl.textContent = '';
+    bildManuellQEl.value = '';
+    bildLetzterKey = null;
+    bildLetzterBuffer = null;
+    bildLetzterName = '';
+    bildLetzterLat = null;
+    bildLetzterLon = null;
   });
 
 

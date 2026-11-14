@@ -306,7 +306,6 @@ var TEXTE = {
     ariaBild: 'Bild mit GPS-Daten auswählen',
     noteBildGps: 'GPS aus Bild übernommen: {a}, {b}',
     noteBildKeinGps: 'Keine GPS-Daten im Bild. Koordinaten manuell eingeben – sie werden lokal für dieses Bild gespeichert (das Bild selbst wird nicht verändert).',
-    noteBildGespeichert: 'Gespeicherte Koordinaten für dieses Bild verwendet: {a}, {b}',
     noteBildManuell: 'Koordinaten übernommen und lokal für dieses Bild gespeichert.',
     phBildManuell: "z. B. 47.376895, 8.541694 oder 47° 22' 36.8\" N, 8° 32' 30.1\" E",
     btnBildUebernehmen: 'Übernehmen',
@@ -426,7 +425,6 @@ var TEXTE = {
     ariaBild: 'Choose an image with GPS data',
     noteBildGps: 'GPS taken from the image: {a}, {b}',
     noteBildKeinGps: 'No GPS data in the image. Enter the coordinates manually \u2013 they are stored locally for this image (the image itself is not modified).',
-    noteBildGespeichert: 'Using the coordinates stored for this image: {a}, {b}',
     noteBildManuell: 'Coordinates applied and stored locally for this image.',
     phBildManuell: "e.g. 47.376895, 8.541694 or 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
     btnBildUebernehmen: 'Apply',
@@ -546,7 +544,6 @@ var TEXTE = {
     ariaBild: 'Choisir une image avec données GPS',
     noteBildGps: 'GPS repris de l’image : {a}, {b}',
     noteBildKeinGps: 'Aucune donnée GPS dans l’image. Saisissez les coordonnées manuellement \u2013 elles sont enregistrées localement pour cette image (l’image n’est pas modifiée).',
-    noteBildGespeichert: 'Coordonnées enregistrées pour cette image utilisées : {a}, {b}',
     noteBildManuell: 'Coordonnées appliquées et enregistrées localement pour cette image.',
     phBildManuell: "p. ex. 47.376895, 8.541694 ou 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
     btnBildUebernehmen: 'Appliquer',
@@ -666,7 +663,6 @@ var TEXTE = {
     ariaBild: 'Scegliere un’immagine con dati GPS',
     noteBildGps: 'GPS acquisito dall’immagine: {a}, {b}',
     noteBildKeinGps: 'Nessun dato GPS nell’immagine. Inserite le coordinate manualmente \u2013 vengono salvate localmente per questa immagine (l’immagine non viene modificata).',
-    noteBildGespeichert: 'Coordinate salvate per questa immagine utilizzate: {a}, {b}',
     noteBildManuell: 'Coordinate applicate e salvate localmente per questa immagine.',
     phBildManuell: "ad es. 47.376895, 8.541694 o 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
     btnBildUebernehmen: 'Applica',
@@ -786,7 +782,6 @@ var TEXTE = {
     ariaBild: 'Elegir una imagen con datos GPS',
     noteBildGps: 'GPS tomado de la imagen: {a}, {b}',
     noteBildKeinGps: 'No hay datos GPS en la imagen. Introduzca las coordenadas manualmente \u2013 se guardan localmente para esta imagen (la imagen no se modifica).',
-    noteBildGespeichert: 'Coordenadas guardadas para esta imagen utilizadas: {a}, {b}',
     noteBildManuell: 'Coordenadas aplicadas y guardadas localmente para esta imagen.',
     phBildManuell: "p. ej. 47.376895, 8.541694 o 47\u00b0 22' 36.8\" N, 8\u00b0 32' 30.1\" E",
     btnBildUebernehmen: 'Aplicar',
@@ -1882,17 +1877,11 @@ function buildResults(lat, lon, forceLv95) {
   var bildAktionenEl = document.getElementById('bildAktionen');
   var bildGpxEl = document.getElementById('bildGpx');
   var bildResetEl = document.getElementById('bildReset');
-  var bildLetzterKey = null;
+  try { var alteBildKeys = [], abi; for (abi = 0; abi < localStorage.length; abi++) { var abk = localStorage.key(abi); if (abk && abk.indexOf('konverter-bildgps-') === 0) { alteBildKeys.push(abk); } } for (abi = 0; abi < alteBildKeys.length; abi++) { localStorage.removeItem(alteBildKeys[abi]); } } catch (e) {}
   var bildLetzterBuffer = null;
   var bildLetzterName = '';
   var bildLetzterLat = null;
   var bildLetzterLon = null;
-  function bildKey(file) {
-    var s = file.name + ':' + file.size;
-    var h = 2166136261, i;
-    for (i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
-    return 'bild-' + h.toString(36);
-  }
   function bildShow(key) { bildMsgEl.textContent = t(key); bildMsgEl.classList.remove('hidden'); }
   var bildAudio = null;
   function bildKlick() {
@@ -1955,21 +1944,13 @@ function buildResults(lat, lon, forceLv95) {
         var istJpeg = /\/jpeg$/i.test(file.type || '') || /\.jpe?g$/i.test(file.name);
         bildLetzterBuffer = (!gps && istJpeg) ? reader.result : null;
         bildLetzterName = istJpeg ? file.name : '';
-        var key = bildKey(file), saved = null;
         if (gps) {
-          try { localStorage.setItem('konverter-bildgps-' + key, JSON.stringify({ la: gps.lat, lo: gps.lon })); } catch (e) {}
           bildUse(gps.lat, gps.lon, 'noteBildGps');
         } else {
-          try { saved = JSON.parse(localStorage.getItem('konverter-bildgps-' + key) || 'null'); } catch (e) {}
-          if (saved && typeof saved.la === 'number' && typeof saved.lo === 'number') {
-            bildUse(saved.la, saved.lo, 'noteBildGespeichert');
-          } else {
-            bildLetzterKey = key;
-            bildShow('noteBildKeinGps');
-            bildAktionenZeigen(false);
-            bildManuellEl.classList.remove('hidden');
-            bildManuellQEl.focus();
-          }
+          bildShow('noteBildKeinGps');
+          bildAktionenZeigen(false);
+          bildManuellEl.classList.remove('hidden');
+          bildManuellQEl.focus();
         }
       } catch (e) {
         bildLetzterBuffer = null;
@@ -1992,7 +1973,6 @@ function buildResults(lat, lon, forceLv95) {
     if (q === '') { return; }
     try {
       var ll = parseInput(q, 'auto', false);
-      if (bildLetzterKey) { try { localStorage.setItem('konverter-bildgps-' + bildLetzterKey, JSON.stringify({ la: ll.lat, lo: ll.lon })); } catch (e) {} }
       bildUse(ll.lat, ll.lon, 'noteBildManuell');
     } catch (e) { bildShow('errBildManuell'); }
   });
@@ -2013,7 +1993,6 @@ function buildResults(lat, lon, forceLv95) {
     var out = null;
     try { out = exifWriteGps(bildLetzterBuffer, lat, lon); } catch (e) { out = null; }
     if (!out) { bildShow('errBildSchreiben'); return; }
-    if (bildLetzterKey) { try { localStorage.setItem('konverter-bildgps-' + bildLetzterKey, JSON.stringify({ la: lat, lo: lon })); } catch (e) {} }
     bildDownload(out, outName, lat, lon, ev.shiftKey || ev.altKey);
   });
   var bildDb = null;
@@ -2041,7 +2020,6 @@ function buildResults(lat, lon, forceLv95) {
     bildManuellEl.classList.add('hidden');
     bildSchreibenRowEl.classList.add('hidden');
     bildManuellQEl.value = '';
-    bildLetzterKey = null;
     bildLetzterBuffer = null;
     bildLetzterName = '';
     bildLetzterLat = null;
@@ -2104,7 +2082,6 @@ function buildResults(lat, lon, forceLv95) {
     bildMsgEl.classList.add('hidden');
     bildMsgEl.textContent = '';
     bildManuellQEl.value = '';
-    bildLetzterKey = null;
     bildLetzterBuffer = null;
     bildLetzterName = '';
     bildLetzterLat = null;

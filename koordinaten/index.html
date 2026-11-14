@@ -1899,7 +1899,7 @@ function buildResults(lat, lon, forceLv95) {
         var gps = null;
         try { gps = exifGps(reader.result); } catch (e) { gps = null; }
         var istJpeg = /\/jpeg$/i.test(file.type || '') || /\.jpe?g$/i.test(file.name);
-        bildLetzterBuffer = istJpeg ? reader.result : null;
+        bildLetzterBuffer = (!gps && istJpeg) ? reader.result : null;
         bildLetzterName = istJpeg ? file.name : '';
         var key = bildKey(file), saved = null;
         if (gps) {

@@ -2268,6 +2268,11 @@ function buildResults(lat, lon, forceLv95) {
     a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
     copyFeedback(btn);
+    batchInputEl.value = '';
+    batchLines = [];
+    batchPoints = [];
+    var bout = document.getElementById('batchOut');
+    if (bout) { bout.innerHTML = ''; }
   }
 
   document.querySelectorAll('.chip').forEach(function (b) {

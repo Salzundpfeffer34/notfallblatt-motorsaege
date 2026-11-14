@@ -1262,7 +1262,7 @@ function pairToLatLon(c) {
 function exifGps(buf) {
   var v = new DataView(buf);
   if (v.byteLength < 12) { return null; }
-  var tiff = -1, xmpStart = -1, xmpEnd = -1;
+  var tiff = -1, xmpRanges = [];
   if (v.getUint16(0) === 0xFFD8) {
     var p = 2;
     while (p + 4 < v.byteLength) {
@@ -1274,66 +1274,88 @@ function exifGps(buf) {
       var len = v.getUint16(p + 2);
       if (len < 2) { return null; }
       if (marker === 0xE1 && tiff < 0 && p + 8 <= v.byteLength && v.getUint32(p + 4) === 0x45786966) { tiff = p + 10; }
-      else if (marker === 0xE1 && xmpStart < 0 && p + 8 <= v.byteLength && v.getUint32(p + 4) === 0x68747470) { xmpStart = p + 4; xmpEnd = Math.min(p + 2 + len, v.byteLength); }
+      else if (marker === 0xE1 && p + 8 <= v.byteLength && v.getUint32(p + 4) === 0x68747470) { xmpRanges.push([p + 4, Math.min(p + 2 + len, v.byteLength)]); }
       p += 2 + len;
     }
   } else if (v.getUint16(0) === 0x4949 || v.getUint16(0) === 0x4D4D) { tiff = 0; }
-  if (tiff < 0) { return exifGpsXmp(v, xmpStart, xmpEnd); }
+  if (tiff < 0) { return exifGpsXmp(v, xmpRanges); }
   var le = v.getUint16(tiff) === 0x4949;
   function u16(o) { return v.getUint16(tiff + o, le); }
   function u32(o) { return v.getUint32(tiff + o, le); }
-  if (u16(2) !== 42) { return exifGpsXmp(v, xmpStart, xmpEnd); }
+  var magic = u16(2);
+  if (magic !== 42 && magic !== 0x5555 && magic !== 0x4F52 && magic !== 0x5352) { return exifGpsXmp(v, xmpRanges); }
   var ifd0 = u32(4);
   var gpsPtr = -1, n = u16(ifd0), i, e;
   for (i = 0; i < n; i++) {
     e = ifd0 + 2 + i * 12;
+    if (e + 12 > v.byteLength - tiff) { break; }
     if (u16(e) === 0x8825) { gpsPtr = u32(e + 8); break; }
   }
-  if (gpsPtr < 0) { return exifGpsXmp(v, xmpStart, xmpEnd); }
+  if (gpsPtr < 0) { return exifGpsXmp(v, xmpRanges); }
   var latRef = '', lonRef = '', lat = null, lon = null, m = u16(gpsPtr);
   function rationals(eo, cnt) {
     var valOff = cnt * 8 > 4 ? u32(eo + 8) : eo + 8, out = [], k, num, den;
+    if (valOff < 0 || valOff + cnt * 8 > v.byteLength - tiff) { return null; }
     for (k = 0; k < cnt; k++) { num = u32(valOff + k * 8); den = u32(valOff + k * 8 + 4); out.push(den ? num / den : 0); }
     return out;
   }
   for (i = 0; i < m; i++) {
     e = gpsPtr + 2 + i * 12;
+    if (e + 12 > v.byteLength - tiff) { break; }
     var tag = u16(e), cnt = u32(e + 4);
     if (tag === 1) { latRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
-    else if (tag === 2 && cnt === 3) { var a = rationals(e, 3); lat = a[0] + a[1] / 60 + a[2] / 3600; }
+    else if (tag === 2 && (cnt === 2 || cnt === 3)) { var a = rationals(e, cnt); if (a) { lat = a[0] + a[1] / 60 + (cnt === 3 ? a[2] / 3600 : 0); } }
     else if (tag === 3) { lonRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
-    else if (tag === 4 && cnt === 3) { var b = rationals(e, 3); lon = b[0] + b[1] / 60 + b[2] / 3600; }
+    else if (tag === 4 && (cnt === 2 || cnt === 3)) { var b = rationals(e, cnt); if (b) { lon = b[0] + b[1] / 60 + (cnt === 3 ? b[2] / 3600 : 0); } }
   }
   if (lat !== null && lon !== null) {
     if (latRef === 'S') { lat = -lat; }
     if (lonRef === 'W') { lon = -lon; }
     return { lat: lat, lon: lon };
   }
-  return exifGpsXmp(v, xmpStart, xmpEnd);
+  return exifGpsXmp(v, xmpRanges);
 }
 
-function exifGpsXmp(v, anfang, ende) {
-  if (anfang < 0) { return null; }
-  var txt = '';
-  for (var x = anfang; x < ende; x++) { txt += String.fromCharCode(v.getUint8(x)); }
-  if (txt.indexOf('ns.adobe.com/xap/1.0/') < 0) { return null; }
+function exifGpsXmp(v, ranges) {
+  for (var r = 0; r < ranges.length; r++) {
+    var txt = '';
+    for (var x = ranges[r][0]; x < ranges[r][1]; x++) { txt += String.fromCharCode(v.getUint8(x)); }
+    if (txt.indexOf('ns.adobe.com/xap/1.0/') < 0) { continue; }
+    var erg = xmpGps(txt);
+    if (erg) { return erg; }
+  }
+  return null;
+}
+
+function xmpGps(txt) {
+  function neg(w, ref) { return (ref === 'S' || ref === 's' || ref === 'W' || ref === 'w') ? -w : w; }
   function zahl(s) {
     s = s.trim();
     var ref = '';
     if (/^[NSEW]/i.test(s)) { ref = s.charAt(0); s = s.slice(1).trim(); }
-    if (/[NSEW]$/i.test(s)) { ref = s.charAt(s.length - 1); s = s.slice(0, -1).trim(); }
-    var neg = (ref === 'S' || ref === 's' || ref === 'W' || ref === 'w');
-    var mm = s.match(/^(\d+)\s*,\s*(\d+(?:\.\d+)?)$/);
-    if (mm) { var w = parseFloat(mm[1]) + parseFloat(mm[2]) / 60; return neg ? -w : w; }
-    var dd = s.match(/^(-?\d+(?:\.\d+)?)$/);
-    if (dd) { var d = parseFloat(dd[1]); return neg ? -d : d; }
+    var m = s.match(/(\d+)\s*,\s*(\d+(?:\.\d+)?)\s*([NSEW])?/i);
+    if (m) { var min = parseFloat(m[2]); var w = min > 59.995 ? parseFloat(m[1] + '.' + m[2]) : parseFloat(m[1]) + min / 60; if (m[3]) { ref = m[3]; } return { w: neg(w, ref), ref: ref }; }
+    m = s.match(/(\d+)\s*(?:deg|°)\s*(\d+)\s*'\s*(\d+(?:\.\d+)?)\s*"?\s*([NSEW])?/i);
+    if (m) { var g = parseFloat(m[1]) + parseFloat(m[2]) / 60 + parseFloat(m[3]) / 3600; if (m[4]) { ref = m[4]; } return { w: neg(g, ref), ref: ref }; }
+    m = s.match(/(-?\d+(?:\.\d+)?)\s*([NSEW])?/i);
+    if (m) { if (m[2]) { ref = m[2]; } return { w: neg(parseFloat(m[1]), ref), ref: ref }; }
     return null;
   }
-  var ml = txt.match(/exif:GPSLatitude"?\s*[=>]\s*"?([^"<]+)|exif:GPSLatitude="([^"]+)"/);
-  var mo = txt.match(/exif:GPSLongitude"?\s*[=>]\s*"?([^"<]+)|exif:GPSLongitude="([^"]+)"/);
-  var lat = ml ? zahl(ml[1] || ml[2]) : null;
-  var lon = mo ? zahl(mo[1] || mo[2]) : null;
-  if (lat === null || lon === null) { return null; }
+  function xmpWert(name) {
+    var m = txt.match(new RegExp('exif:' + name + '"?\\s*[=>]\\s*"([^"]*)"'));
+    if (m) { return m[1]; }
+    m = txt.match(new RegExp('exif:' + name + "\"?\\s*[=>]\\s*'([^']*)'"));
+    if (m) { return m[1]; }
+    m = txt.match(new RegExp('exif:' + name + '"?\\s*[=>]\\s*([^<]+)'));
+    return m ? m[1] : null;
+  }
+  var latS = xmpWert('GPSLatitude'), lonS = xmpWert('GPSLongitude');
+  if (latS === null || lonS === null) { return null; }
+  var la = zahl(latS), lo = zahl(lonS);
+  if (!la || !lo) { return null; }
+  var lat = la.w, lon = lo.w;
+  if (!la.ref) { var lr = xmpWert('GPSLatitudeRef'); if (lr && /^s/i.test(lr.trim())) { lat = -lat; } }
+  if (!lo.ref) { var orr = xmpWert('GPSLongitudeRef'); if (orr && /^w/i.test(orr.trim())) { lon = -lon; } }
   return { lat: lat, lon: lon };
 }
 

@@ -36,6 +36,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <option value="en">English</option>
 <option value="fr">Fran&ccedil;ais</option>
 <option value="it">Italiano</option>
+<option value="es">Español</option>
 </select>
 </div>
 <h1 data-i18n="h1">Datenschutzerkl&auml;rung</h1>
@@ -285,6 +286,48 @@ var TEXTE = {
     s7h2: '7. Modifiche',
     s7p: 'Questa informativa sulla privacy pu&ograve; essere adattata in caso di modifiche del sito o dei servizi utilizzati. Fa fede la versione pubblicata su questa pagina.',
     back: '&larr; Torna al convertitore di coordinate'
+  },
+  es: {
+    docTitle: 'Política de privacidad &middot; Convertidor de coordenadas',
+    langAria: 'Idioma',
+    h1: 'Política de privacidad',
+    stand: 'Convertidor de coordenadas &middot; Estado: <em>[insertar fecha]</em>',
+    platz: '<strong>Nota:</strong> Los marcadores de posición rojos entre corchetes deben rellenarse antes de publicar (nombre, dirección, correo electrónico, fecha).',
+    s1h2: '1. Responsable del tratamiento',
+    s1p: 'El responsable del tratamiento de los datos en este sitio web es:',
+    s2h2: '2. Principio: cálculo en el navegador',
+    s2p1: 'El convertidor de coordenadas calcula <strong>completamente en su navegador</strong>. Las coordenadas que usted introduce:',
+    s2li1: '<strong>no</strong> se guardan en ningún servidor,',
+    s2li2: '<strong>no</strong> se transmiten a nosotros ni a terceros para el cálculo,',
+    s2li3: '<strong>no</strong> se combinan con otros datos.',
+    s2p2: 'No se establecen cookies, no se utiliza rastreo y no se integran redes publicitarias.',
+    s2p3: '<em>Particularidad al funcionar con PHP (alojamiento propio):</em> Si se usa la versión PHP en alojamiento propio (p.&nbsp;ej. Hostpoint), los datos del formulario se transmiten técnicamente al propio servidor web y pueden aparecer temporalmente en los registros del servidor (access logs). Estos registros son eliminados automáticamente por el proveedor de alojamiento según sus plazos de conservación.',
+    s3h2: '3. Alojamiento',
+    s3gh: 'GitHub Pages (actual)',
+    s3pgh: 'La versión estática de esta página se suministra a través de GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, EE. UU.). Al acceder a la página se procesan en registros del servidor datos técnicamente necesarios (dirección IP, hora, página solicitada). La base legal es nuestro interés legítimo en la explotación segura y eficiente del sitio web (art. 6 ap. 1 lit. f RGPD / art. 31 LPD / art. 30 nLPD).',
+    s3hp: 'Alojamiento propio (Hostpoint)',
+    s3php: 'En caso de explotación en alojamiento propio se aplica: Hostpoint AG, Watergrasse 2, 8600 Dübendorf, Suiza. Hostpoint procesa los registros del servidor (entre otros dirección IP, hora, página consultada) para garantizar el funcionamiento. Información: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">privacidad de Hostpoint</a>.',
+    s4h2: '4. Servicios externos (solo se cargan al utilizarlos)',
+    s4p1: 'Los siguientes servicios solo se contactan cuando usted utiliza activamente la función correspondiente (en particular activar el mapa o iniciar una búsqueda):',
+    s4li1: '<strong>Mapa OpenStreetMap (openstreetmap.org):</strong> Al activar el mapa se carga un mapa de OpenStreetMap en una ventana separada (iframe). Su dirección IP y las secciones de mapa mostradas se transmiten a la OpenStreetMap Foundation (St John’s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Reino Unido). <em>El mapa está activado por defecto; mediante la casilla «Mostrar mapa» puede desactivarlo de forma permanente – entonces OpenStreetMap no se carga en absoluto.</em>',
+    s4li2: '<strong>Biblioteca de mapas Leaflet (unpkg.com):</strong> El framework JavaScript para el mapa se carga desde el CDN unpkg.com (protegido mediante Subresource Integrity). Su dirección IP se transmite a unpkg.com.',
+    s4li3: '<strong>Búsqueda de lugares (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org):</strong> Cuando inicia una búsqueda de lugar o de coordenadas, el término de búsqueda o la coordenada se transmite a estos servicios para encontrar nombres de lugares a partir de coordenadas. Lo mismo se aplica cuando, al descargar GPX en la conversión por lotes, el nombre del archivo se asigna automáticamente según el lugar de la primera coordenada (casilla; solo se transmite la primera coordenada).',
+    s4li4: '<strong>Datos meteorológicos (Open-Meteo, open-meteo.com):</strong> En la comprobación meteorológica se transmiten a Open-Meteo las coordenadas del lugar de empleo.',
+    s4li5: '<strong>Búsqueda en los alrededores (Overpass API, overpass-api.de):</strong> En la búsqueda de hospitales/médicos cercanos se transmiten las coordenadas a la Overpass API.',
+    s4p2: 'A estos servicios se transmiten exclusivamente los datos necesarios para la función respectiva (coordenadas o término de búsqueda y su dirección IP). Sus entradas no se almacenan en este sitio web.',
+    s4p3: '<strong>Enlaces externos:</strong> Los enlaces a Google Maps, map.geo.admin.ch y openstreetmap.org solo se activan al hacer clic; a partir de ese momento se aplican las políticas de privacidad del proveedor respectivo.',
+    s5h2: '5. Almacenamiento local (localStorage)',
+    s5p1: 'Este sitio web guarda la configuración exclusivamente de forma local en su navegador (localStorage). Estos datos no salen de su dispositivo y puede eliminarlos en cualquier momento a través de la configuración del navegador:',
+    s5li1: '<code>konverter-*</code> &ndash; ajustes del convertidor de coordenadas (p. ej. conversión en vivo, mapa, tamaño de letra, idioma, opciones GPX)',
+    s5li2: '<code>notfallblatt.sprache</code> &ndash; idioma seleccionado',
+    s5li3: 'En el Notfallblatt además sus datos de empleo (se guardan solo localmente en el navegador, nunca se transmiten)',
+    s6h2: '6. Sus derechos',
+    s6p1: 'En el marco de la ley suiza de protección de datos (LPD) y &ndash; en la medida en que sea aplicable &ndash; del RGPD, usted tiene derecho a la información, a la rectificación, a la supresión y a la limitación del tratamiento de sus datos personales. Como este sitio web no almacena datos personales en servidores, esto afecta esencialmente a los registros del servidor del proveedor de alojamiento.',
+    s6p2: 'Para preguntas, información o supresión, diríjase a: [dirección de correo electrónico]',
+    s6p3: 'Autoridad de control competente en Suiza: Preposado federal de protección de datos y de transparencia (EDÖB), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a>',
+    s7h2: '7. Modificaciones',
+    s7p: 'Esta política de privacidad puede adaptarse en caso de cambios del sitio web o de los servicios utilizados. Es determinante la versión publicada en esta página.',
+    back: '&larr; Volver al convertidor de coordenadas',
   }
 };
 

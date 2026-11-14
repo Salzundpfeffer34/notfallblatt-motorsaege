@@ -1943,7 +1943,7 @@ function buildResults(lat, lon, forceLv95) {
     } catch (e) { bildShow('errBildManuell'); }
   });
   bildManuellQEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); bildManuellBtnEl.click(); } });
-  bildSchreibenEl.addEventListener('click', function () {
+  bildSchreibenEl.addEventListener('click', function (ev) {
     if (!bildLetzterBuffer) { return; }
     var defName = (bildLetzterName.replace(/\.jpe?g$/i, '') || 'bild') + '-gps.jpg';
     var input = window.prompt(t('promptBildName'), defName);
@@ -1960,15 +1960,81 @@ function buildResults(lat, lon, forceLv95) {
     try { out = exifWriteGps(bildLetzterBuffer, lat, lon); } catch (e) { out = null; }
     if (!out) { bildShow('errBildSchreiben'); return; }
     if (bildLetzterKey) { try { localStorage.setItem('konverter-bildgps-' + bildLetzterKey, JSON.stringify({ la: lat, lo: lon })); } catch (e) {} }
-    var blob = new Blob([out], { type: 'image/jpeg' });
+    bildDownload(out, outName, lat, lon, ev.shiftKey || ev.altKey);
+  });
+  var bildDb = null;
+  function bildDbOffen(cb) {
+    try {
+      if (bildDb) { cb(bildDb); return; }
+      if (!window.indexedDB) { cb(null); return; }
+      var rq = window.indexedDB.open('konverter-bildgps', 1);
+      rq.onupgradeneeded = function () { try { rq.result.createObjectStore('cfg'); } catch (e) {} };
+      rq.onsuccess = function () { bildDb = rq.result; cb(bildDb); };
+      rq.onerror = function () { cb(null); };
+    } catch (e) { cb(null); }
+  }
+  function bildBlobDownload(bytes, name) {
+    var blob = new Blob([bytes], { type: 'image/jpeg' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = outName;
+    a.download = name;
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
-    bildUse(lat, lon, 'noteBildSchreiben');
-  });
+  }
+  function bildBereichLeeren() {
+    bildAktionenEl.classList.add('hidden');
+    bildManuellEl.classList.add('hidden');
+    bildSchreibenRowEl.classList.add('hidden');
+    bildManuellQEl.value = '';
+    bildLetzterKey = null;
+    bildLetzterBuffer = null;
+    bildLetzterName = '';
+    bildLetzterLat = null;
+    bildLetzterLon = null;
+  }
+  function bildDownload(bytes, name, lat, lon, erzwingen) {
+    var fertig = function () { bildUse(lat, lon, 'noteBildSchreiben'); bildBereichLeeren(); };
+    var fallback = function () { bildBlobDownload(bytes, name); fertig(); };
+    var schreiben = function (d) {
+      try {
+        d.getFileHandle(name, { create: true }).then(function (fh) { return fh.createWritable(); }).then(function (w) { return w.write(bytes).then(function () { return w.close(); }); }).then(fertig)['catch'](fallback);
+      } catch (e) { fallback(); }
+    };
+    bildDbOffen(function (db) {
+      var hole = function (cb2) {
+        if (!db) { cb2(null); return; }
+        try {
+          var tx = db.transaction('cfg', 'readonly');
+          var rq = tx.objectStore('cfg').get('dir');
+          rq.onsuccess = function () { cb2(rq.result || null); };
+          rq.onerror = function () { cb2(null); };
+        } catch (e) { cb2(null); }
+      };
+      hole(function (dir) {
+        if (dir && !erzwingen) {
+          try {
+            var pr = dir.queryPermission ? dir.queryPermission({ mode: 'readwrite' }) : null;
+            if (pr && pr.then) {
+              pr.then(function (p) {
+                if (p === 'granted') { schreiben(dir); return; }
+                try {
+                  dir.requestPermission({ mode: 'readwrite' }).then(function (p2) { if (p2 === 'granted') { schreiben(dir); } else { fallback(); } })['catch'](fallback);
+                } catch (e) { fallback(); }
+              })['catch'](fallback);
+            } else { schreiben(dir); }
+          } catch (e) { fallback(); }
+        } else if (window.showDirectoryPicker) {
+          try {
+            window.showDirectoryPicker().then(function (d) {
+              if (db) { try { var tx = db.transaction('cfg', 'readwrite'); tx.objectStore('cfg').put(d, 'dir'); } catch (e) {} }
+              schreiben(d);
+            })['catch'](fallback);
+          } catch (e) { fallback(); }
+        } else { fallback(); }
+      });
+    });
+  }
   bildGpxEl.addEventListener('click', function () {
     if (bildLetzterLat === null || bildLetzterLon === null) { return; }
     var batchEl = document.getElementById('batchInput');

@@ -1308,7 +1308,7 @@ function exifGps(buf) {
     else if (tag === 3) { lonRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
     else if (tag === 4 && (cnt === 2 || cnt === 3)) { var b = rationals(e, cnt); if (b) { lon = b[0] + b[1] / 60 + (cnt === 3 ? b[2] / 3600 : 0); } }
   }
-  if (lat !== null && lon !== null) {
+  if (lat !== null && lon !== null && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0)) {
     if (latRef === 'S') { lat = -lat; }
     if (lonRef === 'W') { lon = -lon; }
     return { lat: lat, lon: lon };
@@ -1356,6 +1356,7 @@ function xmpGps(txt) {
   var lat = la.w, lon = lo.w;
   if (!la.ref) { var lr = xmpWert('GPSLatitudeRef'); if (lr && /^s/i.test(lr.trim())) { lat = -lat; } }
   if (!lo.ref) { var orr = xmpWert('GPSLongitudeRef'); if (orr && /^w/i.test(orr.trim())) { lon = -lon; } }
+  if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180 || (lat === 0 && lon === 0)) { return null; }
   return { lat: lat, lon: lon };
 }
 

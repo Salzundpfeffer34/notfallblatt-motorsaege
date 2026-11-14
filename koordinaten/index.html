@@ -338,6 +338,7 @@ var TEXTE = {
     cap1000: 'Auf 1000 Zeilen begrenzt.',
     min2: 'Min. 2 Punkte nötig',
     promptName: 'Name der GPX-Datei (ohne .gpx):',
+    promptBildName: 'Name der neuen Bild-Datei:',
     notRecognized: 'Eingabe nicht erkannt: ',
     resultFor: 'Umrechnung für {a}, {b} (WGS84)',
     rowWgs84: 'WGS84 · Dezimalgrad (Breite, Länge)',
@@ -457,6 +458,7 @@ var TEXTE = {
     cap1000: 'Limited to 1000 lines.',
     min2: 'Min. 2 points needed',
     promptName: 'Name of the GPX file (without .gpx):',
+    promptBildName: 'Name of the new image file:',
     notRecognized: 'Input not recognised: ',
     resultFor: 'Conversion for {a}, {b} (WGS84)',
     rowWgs84: 'WGS84 · decimal degrees (lat, lon)',
@@ -576,6 +578,7 @@ var TEXTE = {
     cap1000: 'Limité à 1000 lignes.',
     min2: 'Min. 2 points requis',
     promptName: 'Nom du fichier GPX (sans .gpx) :',
+    promptBildName: 'Nom du nouveau fichier image :',
     notRecognized: 'Entrée non reconnue : ',
     resultFor: 'Conversion pour {a}, {b} (WGS84)',
     rowWgs84: 'WGS84 · degrés décimaux (lat, lon)',
@@ -695,6 +698,7 @@ var TEXTE = {
     cap1000: 'Limitato a 1000 righe.',
     min2: 'Servono min. 2 punti',
     promptName: 'Nome del file GPX (senza .gpx):',
+    promptBildName: 'Nome del nuovo file immagine:',
     notRecognized: 'Input non riconosciuto: ',
     resultFor: 'Conversione per {a}, {b} (WGS84)',
     rowWgs84: 'WGS84 · gradi decimali (lat, lon)',
@@ -814,6 +818,7 @@ var TEXTE = {
     cap1000: 'Limitado a 1000 líneas.',
     min2: 'Se necesitan mín. 2 puntos',
     promptName: 'Nombre del archivo GPX (sin .gpx):',
+    promptBildName: 'Nombre del nuevo archivo de imagen:',
     notRecognized: 'Entrada no reconocida: ',
     resultFor: 'Conversión para {a}, {b} (WGS84)',
     rowWgs84: 'WGS84 · Grados decimales (latitud, longitud)',
@@ -1894,7 +1899,7 @@ function buildResults(lat, lon, forceLv95) {
         var gps = null;
         try { gps = exifGps(reader.result); } catch (e) { gps = null; }
         var istJpeg = /\/jpeg$/i.test(file.type || '') || /\.jpe?g$/i.test(file.name);
-        bildLetzterBuffer = (!gps && istJpeg) ? reader.result : null;
+        bildLetzterBuffer = istJpeg ? reader.result : null;
         bildLetzterName = istJpeg ? file.name : '';
         var key = bildKey(file), saved = null;
         if (gps) {
@@ -1940,6 +1945,11 @@ function buildResults(lat, lon, forceLv95) {
   bildManuellQEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); bildManuellBtnEl.click(); } });
   bildSchreibenEl.addEventListener('click', function () {
     if (!bildLetzterBuffer) { return; }
+    var defName = (bildLetzterName.replace(/\.jpe?g$/i, '') || 'bild') + '-gps.jpg';
+    var input = window.prompt(t('promptBildName'), defName);
+    if (input === null) { return; }
+    var outName = input.trim() !== '' ? input.trim() : defName;
+    if (!/\.jpe?g$/i.test(outName)) { outName += '.jpg'; }
     var lat = bildLetzterLat, lon = bildLetzterLon;
     if (lat === null || lon === null) {
       var q = bildManuellQEl.value.trim();
@@ -1953,7 +1963,7 @@ function buildResults(lat, lon, forceLv95) {
     var blob = new Blob([out], { type: 'image/jpeg' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = bildLetzterName.replace(/\.jpe?g$/i, '') + '-gps.jpg';
+    a.download = outName;
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);

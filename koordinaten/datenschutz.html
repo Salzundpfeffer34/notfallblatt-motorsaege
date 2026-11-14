@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Datenschutzerkl&auml;rung &middot; Koordinaten-Konverter</title>
 <meta name="robots" content="noindex">
@@ -14,6 +14,8 @@ body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans
 .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; }
 header h1 { font-size: 1.6rem; margin: 8px 0 4px; }
 header p { color: var(--muted); margin: 0 0 20px; }
+.langrow { display:flex; justify-content:flex-end; margin: 4px 0 0; }
+select { font: inherit; padding: 4px 8px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(16,24,40,.06); margin-bottom: 20px; }
 h2 { font-size: 1.1rem; margin: 0 0 10px; }
 h3 { font-size: 1rem; margin: 18px 0 6px; }
@@ -28,17 +30,25 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <body>
 <div class="wrap">
 <header>
-<h1>Datenschutzerkl&auml;rung</h1>
-<p>Koordinaten-Konverter &middot; Stand: <em>[Datum einsetzen]</em></p>
+<div class="langrow">
+<select id="sprache" aria-label="Sprache">
+<option value="de">Deutsch</option>
+<option value="en">English</option>
+<option value="fr">Fran&ccedil;ais</option>
+<option value="it">Italiano</option>
+</select>
+</div>
+<h1 data-i18n="h1">Datenschutzerkl&auml;rung</h1>
+<p data-i18n="stand">Koordinaten-Konverter &middot; Stand: <em>[Datum einsetzen]</em></p>
 </header>
 
-<div class="platzhalter">
+<div class="platzhalter" data-i18n="platz">
 <strong>Hinweis:</strong> Die rot markierten Platzhalter in eckigen Klammern m&uuml;ssen vor dem Ver&ouml;ffentlichen noch ausgef&uuml;llt werden (Name, Adresse, E-Mail, Datum).
 </div>
 
 <div class="card">
-<h2>1. Verantwortliche Stelle</h2>
-<p>Verantwortlich f&uuml;r die Datenbearbeitung auf dieser Website ist:</p>
+<h2 data-i18n="s1h2">1. Verantwortliche Stelle</h2>
+<p data-i18n="s1p">Verantwortlich f&uuml;r die Datenbearbeitung auf dieser Website ist:</p>
 <p>
 [Name / Firma]<br>
 [Strasse und Nummer]<br>
@@ -48,63 +58,263 @@ E-Mail: [E-Mail-Adresse]
 </div>
 
 <div class="card">
-<h2>2. Grundsatz: Berechnung im Browser</h2>
-<p>Der Koordinaten-Konverter rechnet <strong>komplett in Ihrem Browser</strong>. Die von Ihnen eingegebenen Koordinaten werden:</p>
+<h2 data-i18n="s2h2">2. Grundsatz: Berechnung im Browser</h2>
+<p data-i18n="s2p1">Der Koordinaten-Konverter rechnet <strong>komplett in Ihrem Browser</strong>. Die von Ihnen eingegebenen Koordinaten werden:</p>
 <ul>
-<li><strong>nicht</strong> auf einem Server gespeichert,</li>
-<li><strong>nicht</strong> an uns oder Dritte zur Berechnung &uuml;bermittelt,</li>
-<li><strong>nicht</strong> mit anderen Daten verkn&uuml;pft.</li>
+<li data-i18n="s2li1"><strong>nicht</strong> auf einem Server gespeichert,</li>
+<li data-i18n="s2li2"><strong>nicht</strong> an uns oder Dritte zur Berechnung &uuml;bermittelt,</li>
+<li data-i18n="s2li3"><strong>nicht</strong> mit anderen Daten verkn&uuml;pft.</li>
 </ul>
-<p>Es werden keine Cookies gesetzt, kein Tracking eingesetzt und keine Werbenetzwerke eingebunden.</p>
-<p><em>Besonderheit bei Betrieb mit PHP (eigener Hosting):</em> Wird die Seite &uuml;ber die PHP-Version auf eigenem Hosting (z.&nbsp;B. Hostpoint) genutzt, werden die Formulareingaben technisch bedingt an den eigenen Webserver &uuml;bertragen und k&ouml;nnen tempor&auml;r in Server-Protokollen (Access-Logs) erscheinen. Diese Logs werden vom Hosting-Anbieter nach dessen L&ouml;schfristen automatisch gel&ouml;scht.</p>
+<p data-i18n="s2p2">Es werden keine Cookies gesetzt, kein Tracking eingesetzt und keine Werbenetzwerke eingebunden.</p>
+<p data-i18n="s2p3"><em>Besonderheit bei Betrieb mit PHP (eigener Hosting):</em> Wird die Seite &uuml;ber die PHP-Version auf eigenem Hosting (z.&nbsp;B. Hostpoint) genutzt, werden die Formulareingaben technisch bedingt an den eigenen Webserver &uuml;bertragen und k&ouml;nnen tempor&auml;r in Server-Protokollen (Access-Logs) erscheinen. Diese Logs werden vom Hosting-Anbieter nach dessen L&ouml;schfristen automatisch gel&ouml;scht.</p>
 </div>
 
 <div class="card">
-<h2>3. Hosting</h2>
-<h3>GitHub Pages (aktuell)</h3>
-<p>Die statische Version dieser Seite wird &uuml;ber GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf der Seite werden technisch notwendige Daten (IP-Adresse, Zeitpunkt, angeforderte Seite) in Server-Logs bearbeitet. Rechtsgrundlage ist unser berechtigtes Interesse am sicheren und effizienten Betrieb der Website (Art. 6 Abs. 1 lit. f DSGVO bzw. Art. 31 DSG bzw. Art. 30 revDSG).</p>
-<h3>Eigenes Hosting (Hostpoint)</h3>
-<p>Bei Betrieb auf eigenem Hosting gilt: Hostpoint AG, Watergrasse 2, 8600 D&uuml;bendorf, Schweiz. Hostpoint bearbeitet Server-Logs (u.&nbsp;a. IP-Adresse, Zeitpunkt, aufgerufene Seite) zur Sicherstellung des Betriebs. Informationen dazu: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">Datenschutz Hostpoint</a>.</p>
+<h2 data-i18n="s3h2">3. Hosting</h2>
+<h3 data-i18n="s3gh">GitHub Pages (aktuell)</h3>
+<p data-i18n="s3pgh">Die statische Version dieser Seite wird &uuml;ber GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf der Seite werden technisch notwendige Daten (IP-Adresse, Zeitpunkt, angeforderte Seite) in Server-Logs bearbeitet. Rechtsgrundlage ist unser berechtigtes Interesse am sicheren und effizienten Betrieb der Website (Art. 6 Abs. 1 lit. f DSGVO bzw. Art. 31 DSG bzw. Art. 30 revDSG).</p>
+<h3 data-i18n="s3hp">Eigenes Hosting (Hostpoint)</h3>
+<p data-i18n="s3php">Bei Betrieb auf eigenem Hosting gilt: Hostpoint AG, Watergrasse 2, 8600 D&uuml;bendorf, Schweiz. Hostpoint bearbeitet Server-Logs (u.&nbsp;a. IP-Adresse, Zeitpunkt, aufgerufene Seite) zur Sicherstellung des Betriebs. Informationen dazu: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">Datenschutz Hostpoint</a>.</p>
 </div>
 
 <div class="card">
-<h2>4. Externe Dienste (werden nur bei Nutzung geladen)</h2>
-<p>Folgende Dienste werden erst dann angesprochen, wenn Sie die entsprechende Funktion aktiv nutzen (insbesondere die Karte einschalten oder eine Suche starten):</p>
+<h2 data-i18n="s4h2">4. Externe Dienste (werden nur bei Nutzung geladen)</h2>
+<p data-i18n="s4p1">Folgende Dienste werden erst dann angesprochen, wenn Sie die entsprechende Funktion aktiv nutzen (insbesondere die Karte einschalten oder eine Suche starten):</p>
 <ul>
-<li><strong>OpenStreetMap-Karte (openstreetmap.org):</strong> Beim Einschalten der Karte wird eine Karte von OpenStreetMap in einem separaten Fenster (iframe) geladen. Dabei werden Ihre IP-Adresse und die angezeigten Kartenausschnitte an OpenStreetMap Foundation (St John&rsquo;s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Vereinigtes K&ouml;nigreich) &uuml;bermittelt. <em>Die Karte ist standardm&auml;ssig aktiviert; &uuml;ber die Checkbox &laquo;Karte anzeigen&raquo; k&ouml;nnen Sie sie dauerhaft abschalten &ndash; dann wird OpenStreetMap gar nicht erst geladen.</em></li>
-<li><strong>Leaflet-Kartenbibliothek (unpkg.com):</strong> Das JavaScript-Framework f&uuml;r die Karte wird vom CDN unpkg.com geladen (abgesichert per Subresource Integrity). Dabei wird Ihre IP-Adresse an unpkg.com &uuml;bermittelt.</li>
-<li><strong>Ortssuche (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org):</strong> Wenn Sie eine Orts- oder Koordinatensuche starten, wird der Suchbegriff bzw. die Koordinate an diese Dienste &uuml;bermittelt, um Ortsnamen zu Koordinaten zu finden. Dasselbe gilt, wenn beim GPX-Download in der Stapel-Umrechnung der Dateiname automatisch nach dem Ort der ersten Koordinate benannt wird (Checkbox; es wird nur die erste Koordinate übermittelt).</li>
-<li><strong>Wetterdaten (Open-Meteo, open-meteo.com):</strong> Beim Wetter-Check werden die Koordinaten des Einsatzortes an Open-Meteo &uuml;bermittelt.</li>
-<li><strong>Umgebungssuche (Overpass API, overpass-api.de):</strong> Bei der Suche nach Spitälern/Ärzten in der Nähe werden die Koordinaten an die Overpass API &uuml;bermittelt.</li>
+<li data-i18n="s4li1"><strong>OpenStreetMap-Karte (openstreetmap.org):</strong> Beim Einschalten der Karte wird eine Karte von OpenStreetMap in einem separaten Fenster (iframe) geladen. Dabei werden Ihre IP-Adresse und die angezeigten Kartenausschnitte an OpenStreetMap Foundation (St John&rsquo;s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Vereinigtes K&ouml;nigreich) &uuml;bermittelt. <em>Die Karte ist standardm&auml;ssig aktiviert; &uuml;ber die Checkbox &laquo;Karte anzeigen&raquo; k&ouml;nnen Sie sie dauerhaft abschalten &ndash; dann wird OpenStreetMap gar nicht erst geladen.</em></li>
+<li data-i18n="s4li2"><strong>Leaflet-Kartenbibliothek (unpkg.com):</strong> Das JavaScript-Framework f&uuml;r die Karte wird vom CDN unpkg.com geladen (abgesichert per Subresource Integrity). Dabei wird Ihre IP-Adresse an unpkg.com &uuml;bermittelt.</li>
+<li data-i18n="s4li3"><strong>Ortssuche (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org):</strong> Wenn Sie eine Orts- oder Koordinatensuche starten, wird der Suchbegriff bzw. die Koordinate an diese Dienste &uuml;bermittelt, um Ortsnamen zu Koordinaten zu finden. Dasselbe gilt, wenn beim GPX-Download in der Stapel-Umrechnung der Dateiname automatisch nach dem Ort der ersten Koordinate benannt wird (Checkbox; es wird nur die erste Koordinate &uuml;bermittelt).</li>
+<li data-i18n="s4li4"><strong>Wetterdaten (Open-Meteo, open-meteo.com):</strong> Beim Wetter-Check werden die Koordinaten des Einsatzortes an Open-Meteo &uuml;bermittelt.</li>
+<li data-i18n="s4li5"><strong>Umgebungssuche (Overpass API, overpass-api.de):</strong> Bei der Suche nach Spit&auml;lern/&Auml;rzten in der N&auml;he werden die Koordinaten an die Overpass API &uuml;bermittelt.</li>
 </ul>
-<p>An diese Dienste werden ausschliesslich die f&uuml;r die jeweilige Funktion notwendigen Daten (Koordinaten bzw. Suchbegriff und Ihre IP-Adresse) &uuml;bermittelt. Es findet keine Speicherung Ihrer Eingaben auf dieser Website statt.</p>
-<p><strong>Externe Links:</strong> Links zu Google Maps, map.geo.admin.ch und openstreetmap.org werden erst beim Anklicken aktiv; ab diesem Zeitpunkt gelten die Datenschutzbestimmungen des jeweiligen Anbieters.</p>
+<p data-i18n="s4p2">An diese Dienste werden ausschliesslich die f&uuml;r die jeweilige Funktion notwendigen Daten (Koordinaten bzw. Suchbegriff und Ihre IP-Adresse) &uuml;bermittelt. Es findet keine Speicherung Ihrer Eingaben auf dieser Website statt.</p>
+<p data-i18n="s4p3"><strong>Externe Links:</strong> Links zu Google Maps, map.geo.admin.ch und openstreetmap.org werden erst beim Anklicken aktiv; ab diesem Zeitpunkt gelten die Datenschutzbestimmungen des jeweiligen Anbieters.</p>
 </div>
 
 <div class="card">
-<h2>5. Lokale Speicherung (localStorage)</h2>
-<p>Diese Website speichert Einstellungen ausschliesslich lokal in Ihrem Browser (localStorage). Diese Daten verlassen Ihr Ger&auml;t nicht und k&ouml;nnen Sie jederzeit &uuml;ber die Browsereinstellungen l&ouml;schen:</p>
+<h2 data-i18n="s5h2">5. Lokale Speicherung (localStorage)</h2>
+<p data-i18n="s5p1">Diese Website speichert Einstellungen ausschliesslich lokal in Ihrem Browser (localStorage). Diese Daten verlassen Ihr Ger&auml;t nicht und k&ouml;nnen Sie jederzeit &uuml;ber die Browsereinstellungen l&ouml;schen:</p>
 <ul>
-<li><code>konverter-autoclear</code> &ndash; Einstellung &laquo;Feld beim Klicken automatisch leeren&raquo;</li>
-<li><code>konverter-karte</code> &ndash; Einstellung &laquo;Karte anzeigen&raquo;</li>
-<li><code>notfallblatt.sprache</code> &ndash; gew&auml;hlte Sprache</li>
-<li>Beim Notfallblatt ausserdem Ihre Einsatzdaten (werden nur lokal im Browser gespeichert, nie &uuml;bertragen)</li>
+<li data-i18n="s5li1"><code>konverter-*</code> &ndash; Einstellungen des Koordinaten-Konverters (z. B. Live-Umrechnung, Karte, Schriftgr&ouml;sse, Sprache, GPX-Optionen)</li>
+<li data-i18n="s5li2"><code>notfallblatt.sprache</code> &ndash; gew&auml;hlte Sprache</li>
+<li data-i18n="s5li3">Beim Notfallblatt ausserdem Ihre Einsatzdaten (werden nur lokal im Browser gespeichert, nie &uuml;bertragen)</li>
 </ul>
 </div>
 
 <div class="card">
-<h2>6. Ihre Rechte</h2>
-<p>Sie haben im Rahmen des schweizerischen Datenschutzgesetzes (DSG) sowie &ndash; soweit anwendbar &ndash; der DSGVO das Recht auf Auskunft, Berichtigung, L&ouml;schung und Einschr&auml;nkung der Bearbeitung Ihrer Personendaten. Da diese Website keine Personendaten auf Servern speichert, betrifft dies im Wesentlichen die Server-Logs des Hosting-Anbieters.</p>
-<p>F&uuml;r Fragen, Auskunft oder L&ouml;schung wenden Sie sich an: [E-Mail-Adresse]</p>
-<p>Zust&auml;ndige Aufsichtsbeh&ouml;rde in der Schweiz: Eidgen&ouml;ssischer Datenschutz- und &Ouml;ffentlichkeitsbeauftragter (ED&Ouml;B), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a></p>
+<h2 data-i18n="s6h2">6. Ihre Rechte</h2>
+<p data-i18n="s6p1">Sie haben im Rahmen des schweizerischen Datenschutzgesetzes (DSG) sowie &ndash; soweit anwendbar &ndash; der DSGVO das Recht auf Auskunft, Berichtigung, L&ouml;schung und Einschr&auml;nkung der Bearbeitung Ihrer Personendaten. Da diese Website keine Personendaten auf Servern speichert, betrifft dies im Wesentlichen die Server-Logs des Hosting-Anbieters.</p>
+<p data-i18n="s6p2">F&uuml;r Fragen, Auskunft oder L&ouml;schung wenden Sie sich an: [E-Mail-Adresse]</p>
+<p data-i18n="s6p3">Zust&auml;ndige Aufsichtsbeh&ouml;rde in der Schweiz: Eidgen&ouml;ssischer Datenschutz- und &Ouml;ffentlichkeitsbeauftragter (ED&Ouml;B), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a></p>
 </div>
 
 <div class="card">
-<h2>7. &Auml;nderungen</h2>
-<p>Diese Datenschutzerkl&auml;rung kann bei &Auml;nderungen der Website oder der eingesetzten Dienste angepasst werden. Massgeblich ist die jeweils auf dieser Seite ver&ouml;ffentlichte Version.</p>
+<h2 data-i18n="s7h2">7. &Auml;nderungen</h2>
+<p data-i18n="s7p">Diese Datenschutzerkl&auml;rung kann bei &Auml;nderungen der Website oder der eingesetzten Dienste angepasst werden. Massgeblich ist die jeweils auf dieser Seite ver&ouml;ffentlichte Version.</p>
 </div>
 
-<footer><a href="index.html">&larr; Zur&uuml;ck zum Koordinaten-Konverter</a></footer>
+<footer><a href="index.html" data-i18n="back">&larr; Zur&uuml;ck zum Koordinaten-Konverter</a></footer>
 </div>
+
+<script>
+var TEXTE = {
+  de: {
+    docTitle: 'Datenschutzerkl&auml;rung &middot; Koordinaten-Konverter',
+    langAria: 'Sprache',
+    h1: 'Datenschutzerkl&auml;rung',
+    stand: 'Koordinaten-Konverter &middot; Stand: <em>[Datum einsetzen]</em>',
+    platz: '<strong>Hinweis:</strong> Die rot markierten Platzhalter in eckigen Klammern m&uuml;ssen vor dem Ver&ouml;ffentlichen noch ausgef&uuml;llt werden (Name, Adresse, E-Mail, Datum).',
+    s1h2: '1. Verantwortliche Stelle',
+    s1p: 'Verantwortlich f&uuml;r die Datenbearbeitung auf dieser Website ist:',
+    s2h2: '2. Grundsatz: Berechnung im Browser',
+    s2p1: 'Der Koordinaten-Konverter rechnet <strong>komplett in Ihrem Browser</strong>. Die von Ihnen eingegebenen Koordinaten werden:',
+    s2li1: '<strong>nicht</strong> auf einem Server gespeichert,',
+    s2li2: '<strong>nicht</strong> an uns oder Dritte zur Berechnung &uuml;bermittelt,',
+    s2li3: '<strong>nicht</strong> mit anderen Daten verkn&uuml;pft.',
+    s2p2: 'Es werden keine Cookies gesetzt, kein Tracking eingesetzt und keine Werbenetzwerke eingebunden.',
+    s2p3: '<em>Besonderheit bei Betrieb mit PHP (eigener Hosting):</em> Wird die Seite &uuml;ber die PHP-Version auf eigenem Hosting (z.&nbsp;B. Hostpoint) genutzt, werden die Formulareingaben technisch bedingt an den eigenen Webserver &uuml;bertragen und k&ouml;nnen tempor&auml;r in Server-Protokollen (Access-Logs) erscheinen. Diese Logs werden vom Hosting-Anbieter nach dessen L&ouml;schfristen automatisch gel&ouml;scht.',
+    s3h2: '3. Hosting',
+    s3gh: 'GitHub Pages (aktuell)',
+    s3pgh: 'Die statische Version dieser Seite wird &uuml;ber GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, USA) ausgeliefert. Beim Aufruf der Seite werden technisch notwendige Daten (IP-Adresse, Zeitpunkt, angeforderte Seite) in Server-Logs bearbeitet. Rechtsgrundlage ist unser berechtigtes Interesse am sicheren und effizienten Betrieb der Website (Art. 6 Abs. 1 lit. f DSGVO bzw. Art. 31 DSG bzw. Art. 30 revDSG).',
+    s3hp: 'Eigenes Hosting (Hostpoint)',
+    s3php: 'Bei Betrieb auf eigenem Hosting gilt: Hostpoint AG, Watergrasse 2, 8600 D&uuml;bendorf, Schweiz. Hostpoint bearbeitet Server-Logs (u.&nbsp;a. IP-Adresse, Zeitpunkt, aufgerufene Seite) zur Sicherstellung des Betriebs. Informationen dazu: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">Datenschutz Hostpoint</a>.',
+    s4h2: '4. Externe Dienste (werden nur bei Nutzung geladen)',
+    s4p1: 'Folgende Dienste werden erst dann angesprochen, wenn Sie die entsprechende Funktion aktiv nutzen (insbesondere die Karte einschalten oder eine Suche starten):',
+    s4li1: '<strong>OpenStreetMap-Karte (openstreetmap.org):</strong> Beim Einschalten der Karte wird eine Karte von OpenStreetMap in einem separaten Fenster (iframe) geladen. Dabei werden Ihre IP-Adresse und die angezeigten Kartenausschnitte an OpenStreetMap Foundation (St John&rsquo;s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Vereinigtes K&ouml;nigreich) &uuml;bermittelt. <em>Die Karte ist standardm&auml;ssig aktiviert; &uuml;ber die Checkbox &laquo;Karte anzeigen&raquo; k&ouml;nnen Sie sie dauerhaft abschalten &ndash; dann wird OpenStreetMap gar nicht erst geladen.</em>',
+    s4li2: '<strong>Leaflet-Kartenbibliothek (unpkg.com):</strong> Das JavaScript-Framework f&uuml;r die Karte wird vom CDN unpkg.com geladen (abgesichert per Subresource Integrity). Dabei wird Ihre IP-Adresse an unpkg.com &uuml;bermittelt.',
+    s4li3: '<strong>Ortssuche (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org):</strong> Wenn Sie eine Orts- oder Koordinatensuche starten, wird der Suchbegriff bzw. die Koordinate an diese Dienste &uuml;bermittelt, um Ortsnamen zu Koordinaten zu finden. Dasselbe gilt, wenn beim GPX-Download in der Stapel-Umrechnung der Dateiname automatisch nach dem Ort der ersten Koordinate benannt wird (Checkbox; es wird nur die erste Koordinate &uuml;bermittelt).',
+    s4li4: '<strong>Wetterdaten (Open-Meteo, open-meteo.com):</strong> Beim Wetter-Check werden die Koordinaten des Einsatzortes an Open-Meteo &uuml;bermittelt.',
+    s4li5: '<strong>Umgebungssuche (Overpass API, overpass-api.de):</strong> Bei der Suche nach Spit&auml;lern/&Auml;rzten in der N&auml;he werden die Koordinaten an die Overpass API &uuml;bermittelt.',
+    s4p2: 'An diese Dienste werden ausschliesslich die f&uuml;r die jeweilige Funktion notwendigen Daten (Koordinaten bzw. Suchbegriff und Ihre IP-Adresse) &uuml;bermittelt. Es findet keine Speicherung Ihrer Eingaben auf dieser Website statt.',
+    s4p3: '<strong>Externe Links:</strong> Links zu Google Maps, map.geo.admin.ch und openstreetmap.org werden erst beim Anklicken aktiv; ab diesem Zeitpunkt gelten die Datenschutzbestimmungen des jeweiligen Anbieters.',
+    s5h2: '5. Lokale Speicherung (localStorage)',
+    s5p1: 'Diese Website speichert Einstellungen ausschliesslich lokal in Ihrem Browser (localStorage). Diese Daten verlassen Ihr Ger&auml;t nicht und k&ouml;nnen Sie jederzeit &uuml;ber die Browsereinstellungen l&ouml;schen:',
+    s5li1: '<code>konverter-*</code> &ndash; Einstellungen des Koordinaten-Konverters (z. B. Live-Umrechnung, Karte, Schriftgr&ouml;sse, Sprache, GPX-Optionen)',
+    s5li2: '<code>notfallblatt.sprache</code> &ndash; gew&auml;hlte Sprache',
+    s5li3: 'Beim Notfallblatt ausserdem Ihre Einsatzdaten (werden nur lokal im Browser gespeichert, nie &uuml;bertragen)',
+    s6h2: '6. Ihre Rechte',
+    s6p1: 'Sie haben im Rahmen des schweizerischen Datenschutzgesetzes (DSG) sowie &ndash; soweit anwendbar &ndash; der DSGVO das Recht auf Auskunft, Berichtigung, L&ouml;schung und Einschr&auml;nkung der Bearbeitung Ihrer Personendaten. Da diese Website keine Personendaten auf Servern speichert, betrifft dies im Wesentlichen die Server-Logs des Hosting-Anbieters.',
+    s6p2: 'F&uuml;r Fragen, Auskunft oder L&ouml;schung wenden Sie sich an: [E-Mail-Adresse]',
+    s6p3: 'Zust&auml;ndige Aufsichtsbeh&ouml;rde in der Schweiz: Eidgen&ouml;ssischer Datenschutz- und &Ouml;ffentlichkeitsbeauftragter (ED&Ouml;B), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a>',
+    s7h2: '7. &Auml;nderungen',
+    s7p: 'Diese Datenschutzerkl&auml;rung kann bei &Auml;nderungen der Website oder der eingesetzten Dienste angepasst werden. Massgeblich ist die jeweils auf dieser Seite ver&ouml;ffentlichte Version.',
+    back: '&larr; Zur&uuml;ck zum Koordinaten-Konverter'
+  },
+  en: {
+    docTitle: 'Privacy Policy &middot; Coordinate Converter',
+    langAria: 'Language',
+    h1: 'Privacy Policy',
+    stand: 'Coordinate Converter &middot; Last updated: <em>[insert date]</em>',
+    platz: '<strong>Note:</strong> The red placeholders in square brackets must be filled in before publishing (name, address, email, date).',
+    s1h2: '1. Data controller',
+    s1p: 'The controller for data processing on this website is:',
+    s2h2: '2. Principle: calculation in the browser',
+    s2p1: 'The coordinate converter calculates <strong>entirely in your browser</strong>. The coordinates you enter are:',
+    s2li1: '<strong>not</strong> stored on a server,',
+    s2li2: '<strong>not</strong> transmitted to us or to third parties for calculation,',
+    s2li3: '<strong>not</strong> combined with other data.',
+    s2p2: 'No cookies are set, no tracking is used and no advertising networks are included.',
+    s2p3: '<em>Special case when running with PHP (own hosting):</em> If the site is used via the PHP version on your own hosting (e.g.&nbsp;Hostpoint), form entries are technically transmitted to your own web server and may temporarily appear in server logs (access logs). These logs are automatically deleted by the hosting provider according to its retention periods.',
+    s3h2: '3. Hosting',
+    s3gh: 'GitHub Pages (current)',
+    s3pgh: 'The static version of this page is delivered via GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, USA). When the page is accessed, technically necessary data (IP address, time, requested page) is processed in server logs. The legal basis is our legitimate interest in the secure and efficient operation of the website (Art. 6 (1) (f) GDPR or Art. 31 FADP or Art. 30 revFADP).',
+    s3hp: 'Own hosting (Hostpoint)',
+    s3php: 'When operated on your own hosting, the following applies: Hostpoint AG, Watergrasse 2, 8600 D&uuml;bendorf, Switzerland. Hostpoint processes server logs (including IP address, time, page accessed) to ensure operation. For more information: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">Hostpoint privacy</a>.',
+    s4h2: '4. External services (loaded only when used)',
+    s4p1: 'The following services are only contacted when you actively use the corresponding function (in particular switching on the map or starting a search):',
+    s4li1: '<strong>OpenStreetMap map (openstreetmap.org):</strong> When you switch on the map, a map from OpenStreetMap is loaded in a separate window (iframe). Your IP address and the displayed map sections are transmitted to the OpenStreetMap Foundation (St John&rsquo;s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, United Kingdom). <em>The map is enabled by default; you can switch it off permanently via the &ldquo;Show map&rdquo; checkbox &ndash; then OpenStreetMap is not loaded at all.</em>',
+    s4li2: '<strong>Leaflet map library (unpkg.com):</strong> The JavaScript framework for the map is loaded from the unpkg.com CDN (secured via Subresource Integrity). Your IP address is transmitted to unpkg.com.',
+    s4li3: '<strong>Place search (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org):</strong> When you start a place or coordinate search, the search term or coordinate is transmitted to these services to find place names for coordinates. The same applies when, during the GPX download in the batch conversion, the file name is automatically named after the place of the first coordinate (checkbox; only the first coordinate is transmitted).',
+    s4li4: '<strong>Weather data (Open-Meteo, open-meteo.com):</strong> During the weather check, the coordinates of the location are transmitted to Open-Meteo.',
+    s4li5: '<strong>Nearby search (Overpass API, overpass-api.de):</strong> When searching for hospitals/doctors nearby, the coordinates are transmitted to the Overpass API.',
+    s4p2: 'Only the data necessary for the respective function (coordinates or search term and your IP address) are transmitted to these services. Your entries are not stored on this website.',
+    s4p3: '<strong>External links:</strong> Links to Google Maps, map.geo.admin.ch and openstreetmap.org only become active when clicked; from that point the privacy policies of the respective providers apply.',
+    s5h2: '5. Local storage (localStorage)',
+    s5p1: 'This website stores settings exclusively locally in your browser (localStorage). This data never leaves your device and you can delete it at any time via the browser settings:',
+    s5li1: '<code>konverter-*</code> &ndash; settings of the coordinate converter (e.g. live conversion, map, font size, language, GPX options)',
+    s5li2: '<code>notfallblatt.sprache</code> &ndash; selected language',
+    s5li3: 'For the emergency sheet, also your operational data (stored only locally in the browser, never transmitted)',
+    s6h2: '6. Your rights',
+    s6p1: 'Under the Swiss Federal Act on Data Protection (FADP) and &ndash; where applicable &ndash; the GDPR, you have the right to information, rectification, deletion and restriction of the processing of your personal data. Since this website does not store personal data on servers, this mainly concerns the server logs of the hosting provider.',
+    s6p2: 'For questions, information or deletion, contact: [email address]',
+    s6p3: 'Supervisory authority in Switzerland: Federal Data Protection and Information Commissioner (FDPIC), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a>',
+    s7h2: '7. Changes',
+    s7p: 'This privacy policy may be adapted if the website or the services used change. The version published on this page is authoritative.',
+    back: '&larr; Back to the coordinate converter'
+  },
+  fr: {
+    docTitle: 'Politique de confidentialit&eacute; &middot; Convertisseur de coordonn&eacute;es',
+    langAria: 'Langue',
+    h1: 'Politique de confidentialit&eacute;',
+    stand: 'Convertisseur de coordonn&eacute;es &middot; &Eacute;tat&nbsp;: <em>[ins&eacute;rer la date]</em>',
+    platz: '<strong>Remarque&nbsp;:</strong> Les espaces r&eacute;serv&eacute;s rouges entre crochets doivent &ecirc;tre remplis avant la publication (nom, adresse, e-mail, date).',
+    s1h2: '1. Responsable du traitement',
+    s1p: 'Responsable du traitement des donn&eacute;es sur ce site&nbsp;:',
+    s2h2: '2. Principe&nbsp;: calcul dans le navigateur',
+    s2p1: 'Le convertisseur de coordonn&eacute;es calcule <strong>entièrement dans votre navigateur</strong>. Les coordonn&eacute;es que vous saisissez&nbsp;:',
+    s2li1: '<strong>ne sont pas</strong> stock&eacute;es sur un serveur,',
+    s2li2: '<strong>ne sont pas</strong> transmises &agrave; nous ou &agrave; des tiers pour le calcul,',
+    s2li3: '<strong>ne sont pas</strong> associ&eacute;es &agrave; d&rsquo;autres donn&eacute;es.',
+    s2p2: 'Aucun cookie n&rsquo;est d&eacute;pos&eacute;, aucun suivi n&rsquo;est utilis&eacute; et aucun r&eacute;seau publicitaire n&rsquo;est int&eacute;gr&eacute;.',
+    s2p3: '<em>Particularit&eacute; en cas d&rsquo;utilisation avec PHP (h&eacute;bergement propre)&nbsp;:</em> si le site est utilis&eacute; via la version PHP sur votre propre h&eacute;bergement (p.&nbsp;ex. Hostpoint), les saisies de formulaire sont techniquement transmises &agrave; votre propre serveur web et peuvent appara&icirc;tre temporairement dans les journaux du serveur (access logs). Ces journaux sont automatiquement supprim&eacute;s par l&rsquo;h&eacute;bergeur selon ses d&eacute;lais de conservation.',
+    s3h2: '3. H&eacute;bergement',
+    s3gh: 'GitHub Pages (actuel)',
+    s3pgh: 'La version statique de cette page est fournie via GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, &Eacute;tats-Unis). Lors de la consultation, des donn&eacute;es techniquement n&eacute;cessaires (adresse IP, heure, page demand&eacute;e) sont trait&eacute;es dans des journaux serveur. La base l&eacute;gale est notre int&eacute;r&ecirc;t l&eacute;gitime &agrave; l&rsquo;exploitation s&ucirc;re et efficace du site (art. 6 al. 1 let. f RGPD / art. 31 LPD / art. 30 nLPD).',
+    s3hp: 'H&eacute;bergement propre (Hostpoint)',
+    s3php: 'En cas d&rsquo;exploitation sur votre propre h&eacute;bergement s&rsquo;applique&nbsp;: Hostpoint AG, Watergrasse 2, 8600 D&uuml;bendorf, Suisse. Hostpoint traite les journaux serveur (notamment adresse IP, heure, page consult&eacute;e) afin d&rsquo;assurer l&rsquo;exploitation. Informations&nbsp;: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">confidentialit&eacute; Hostpoint</a>.',
+    s4h2: '4. Services externes (charg&eacute;s uniquement en cas d&rsquo;utilisation)',
+    s4p1: 'Les services suivants ne sont sollicit&eacute;s que lorsque vous utilisez activement la fonction correspondante (en particulier activer la carte ou lancer une recherche)&nbsp;:',
+    s4li1: '<strong>Carte OpenStreetMap (openstreetmap.org)&nbsp;:</strong> lorsque vous activez la carte, une carte d&rsquo;OpenStreetMap est charg&eacute;e dans une fen&ecirc;tre s&eacute;par&eacute;e (iframe). Votre adresse IP et les extraits de carte affich&eacute;s sont transmis &agrave; l&rsquo;OpenStreetMap Foundation (St John&rsquo;s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Royaume-Uni). <em>La carte est activ&eacute;e par d&eacute;faut&nbsp;; vous pouvez la d&eacute;sactiver durablement via la case &laquo;&nbsp;Afficher la carte&nbsp;&raquo; &ndash; OpenStreetMap n&rsquo;est alors pas charg&eacute;e du tout.</em>',
+    s4li2: '<strong>Biblioth&egrave;que cartographique Leaflet (unpkg.com)&nbsp;:</strong> le framework JavaScript de la carte est charg&eacute; depuis le CDN unpkg.com (s&eacute;curis&eacute; par Subresource Integrity). Votre adresse IP est transmise &agrave; unpkg.com.',
+    s4li3: '<strong>Recherche de lieu (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org)&nbsp;:</strong> lorsque vous lancez une recherche de lieu ou de coordonn&eacute;es, le terme recherch&eacute; ou la coordonn&eacute;e est transmis &agrave; ces services afin de trouver des noms de lieux &agrave; partir de coordonn&eacute;es. Il en va de m&ecirc;me lorsque, lors du t&eacute;l&eacute;chargement GPX de la conversion par lot, le nom du fichier est automatiquement attribu&eacute; d&rsquo;apr&egrave;s le lieu de la premi&egrave;re coordonn&eacute;e (case&nbsp;; seule la premi&egrave;re coordonn&eacute;e est transmise).',
+    s4li4: '<strong>Donn&eacute;es m&eacute;t&eacute;o (Open-Meteo, open-meteo.com)&nbsp;:</strong> lors du contr&ocirc;le m&eacute;t&eacute;o, les coordonn&eacute;es du lieu d&rsquo;intervention sont transmises &agrave; Open-Meteo.',
+    s4li5: '<strong>Recherche des environs (Overpass API, overpass-api.de)&nbsp;:</strong> lors de la recherche d&rsquo;h&ocirc;pitaux/m&eacute;decins &agrave; proximit&eacute;, les coordonn&eacute;es sont transmises &agrave; l&rsquo;API Overpass.',
+    s4p2: 'Seules les donn&eacute;es n&eacute;cessaires &agrave; la fonction concern&eacute;e (coordonn&eacute;es ou terme recherch&eacute; et votre adresse IP) sont transmises &agrave; ces services. Vos saisies ne sont pas stock&eacute;es sur ce site.',
+    s4p3: '<strong>Liens externes&nbsp;:</strong> les liens vers Google Maps, map.geo.admin.ch et openstreetmap.org ne deviennent actifs qu&rsquo;au clic&nbsp;; &agrave; partir de ce moment, les politiques de confidentialit&eacute; des fournisseurs concern&eacute;s s&rsquo;appliquent.',
+    s5h2: '5. Stockage local (localStorage)',
+    s5p1: 'Ce site stocke les r&eacute;glages exclusivement localement dans votre navigateur (localStorage). Ces donn&eacute;es ne quittent pas votre appareil et vous pouvez les supprimer &agrave; tout moment via les r&eacute;glages du navigateur&nbsp;:',
+    s5li1: '<code>konverter-*</code> &ndash; r&eacute;glages du convertisseur de coordonn&eacute;es (p. ex. conversion en direct, carte, taille de police, langue, options GPX)',
+    s5li2: '<code>notfallblatt.sprache</code> &ndash; langue choisie',
+    s5li3: 'Pour la fiche d&rsquo;urgence, &eacute;galement vos donn&eacute;es d&rsquo;intervention (stock&eacute;es uniquement localement dans le navigateur, jamais transmises)',
+    s6h2: '6. Vos droits',
+    s6p1: 'Dans le cadre de la loi suisse sur la protection des donn&eacute;es (LPD) et &ndash; le cas &eacute;ch&eacute;ant &ndash; du RGPD, vous avez droit &agrave; l&rsquo;information, &agrave; la rectification, &agrave; la suppression et &agrave; la limitation du traitement de vos donn&eacute;es personnelles. Comme ce site ne stocke pas de donn&eacute;es personnelles sur des serveurs, cela concerne essentiellement les journaux serveur de l&rsquo;h&eacute;bergeur.',
+    s6p2: 'Pour toute question, information ou suppression, contactez&nbsp;: [adresse e-mail]',
+    s6p3: 'Autorit&eacute; de surveillance comp&eacute;tente en Suisse&nbsp;: Pr&eacute;pos&eacute; f&eacute;d&eacute;ral &agrave; la protection des donn&eacute;es et &agrave; la transparence (PFPDT), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a>',
+    s7h2: '7. Modifications',
+    s7p: 'Cette politique de confidentialit&eacute; peut &ecirc;tre adapt&eacute;e en cas de modification du site ou des services utilis&eacute;s. La version publi&eacute;e sur cette page fait foi.',
+    back: '&larr; Retour au convertisseur de coordonn&eacute;es'
+  },
+  it: {
+    docTitle: 'Informativa sulla privacy &middot; Convertitore di coordinate',
+    langAria: 'Lingua',
+    h1: 'Informativa sulla privacy',
+    stand: 'Convertitore di coordinate &middot; Aggiornamento: <em>[inserire la data]</em>',
+    platz: '<strong>Nota:</strong> I segnaposto rossi tra parentesi quadre devono essere compilati prima della pubblicazione (nome, indirizzo, e-mail, data).',
+    s1h2: '1. Titolare del trattamento',
+    s1p: 'Il titolare del trattamento dei dati su questo sito &egrave;:',
+    s2h2: '2. Principio: calcolo nel browser',
+    s2p1: 'Il convertitore di coordinate calcola <strong>interamente nel vostro browser</strong>. Le coordinate inserite:',
+    s2li1: '<strong>non</strong> vengono salvate su un server,',
+    s2li2: '<strong>non</strong> vengono trasmesse a noi o a terzi per il calcolo,',
+    s2li3: '<strong>non</strong> vengono collegate ad altri dati.',
+    s2p2: 'Non vengono impostati cookie, non viene usato tracciamento e non sono integrati network pubblicitari.',
+    s2p3: '<em>Particolarit&agrave; in caso di utilizzo con PHP (hosting proprio):</em> se il sito viene usato tramite la versione PHP sul proprio hosting (ad&nbsp;es. Hostpoint), i dati dei moduli vengono trasmessi tecnicamente al proprio server web e possono comparire temporaneamente nei log del server (access log). Questi log vengono eliminati automaticamente dal provider di hosting secondo i suoi termini di conservazione.',
+    s3h2: '3. Hosting',
+    s3gh: 'GitHub Pages (attuale)',
+    s3pgh: 'La versione statica di questa pagina &egrave; fornita tramite GitHub Pages (GitHub Inc., 88 Colin P Kelly Jr Street, San Francisco, CA 94107, USA). All&rsquo;accesso vengono elaborati nei log del server dati tecnicamente necessari (indirizzo IP, orario, pagina richiesta). La base giuridica &egrave; il nostro interesse legittimo alla gestione sicura ed efficiente del sito (art. 6 par. 1 lett. f GDPR / art. 31 LPD / art. 30 nLPD).',
+    s3hp: 'Hosting proprio (Hostpoint)',
+    s3php: 'In caso di gestione su hosting proprio vale: Hostpoint AG, Watergrasse 2, 8600 D&uuml;bendorf, Svizzera. Hostpoint elabora i log del server (tra cui indirizzo IP, orario, pagina richiesta) per garantire il funzionamento. Informazioni: <a href="https://www.hostpoint.ch/hostpoint/datenschutz" target="_blank" rel="noopener">privacy Hostpoint</a>.',
+    s4h2: '4. Servizi esterni (caricati solo se utilizzati)',
+    s4p1: 'I seguenti servizi vengono contattati solo quando si utilizza attivamente la funzione corrispondente (in particolare attivare la mappa o avviare una ricerca):',
+    s4li1: '<strong>Mappa OpenStreetMap (openstreetmap.org):</strong> attivando la mappa viene caricata una mappa di OpenStreetMap in una finestra separata (iframe). L&rsquo;indirizzo IP e le sezioni di mappa visualizzate vengono trasmessi all&rsquo;OpenStreetMap Foundation (St John&rsquo;s Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Regno Unito). <em>La mappa &egrave; attiva per impostazione predefinita; puoi disattivarla in modo permanente tramite la casella &laquo;Mostra mappa&raquo; &ndash; in tal caso OpenStreetMap non viene affatto caricata.</em>',
+    s4li2: '<strong>Libreria cartografica Leaflet (unpkg.com):</strong> il framework JavaScript per la mappa viene caricato dal CDN unpkg.com (protetto tramite Subresource Integrity). L&rsquo;indirizzo IP viene trasmesso a unpkg.com.',
+    s4li3: '<strong>Ricerca di luogo (Photon, photon.komoot.io / Nominatim, nominatim.openstreetmap.org):</strong> quando si avvia una ricerca di luogo o di coordinate, il termine di ricerca o la coordinata viene trasmesso a questi servizi per trovare nomi di luoghi a partire dalle coordinate. Lo stesso vale quando, durante il download GPX della conversione in blocco, il nome del file viene assegnato automaticamente in base al luogo della prima coordinata (casella; viene trasmessa solo la prima coordinata).',
+    s4li4: '<strong>Dati meteo (Open-Meteo, open-meteo.com):</strong> durante il controllo meteo le coordinate del luogo di impiego vengono trasmesse a Open-Meteo.',
+    s4li5: '<strong>Ricerca nelle vicinanze (Overpass API, overpass-api.de):</strong> durante la ricerca di ospedali/medici nelle vicinanze le coordinate vengono trasmesse all&rsquo;API Overpass.',
+    s4p2: 'A questi servizi vengono trasmessi esclusivamente i dati necessari alla rispettiva funzione (coordinate o termine di ricerca e il vostro indirizzo IP). I vostri input non vengono salvati su questo sito.',
+    s4p3: '<strong>Link esterni:</strong> i link verso Google Maps, map.geo.admin.ch e openstreetmap.org diventano attivi solo al clic; da quel momento valgono le informative sulla privacy dei rispettivi fornitori.',
+    s5h2: '5. Archiviazione locale (localStorage)',
+    s5p1: 'Questo sito memorizza le impostazioni esclusivamente localmente nel vostro browser (localStorage). Questi dati non lasciano il vostro dispositivo e potete cancellarli in qualsiasi momento tramite le impostazioni del browser:',
+    s5li1: '<code>konverter-*</code> &ndash; impostazioni del convertitore di coordinate (ad es. conversione live, mappa, dimensione del carattere, lingua, opzioni GPX)',
+    s5li2: '<code>notfallblatt.sprache</code> &ndash; lingua scelta',
+    s5li3: 'Per la scheda d&rsquo;emergenza inoltre i vostri dati di impiego (salvati solo localmente nel browser, mai trasmessi)',
+    s6h2: '6. I vostri diritti',
+    s6p1: 'Ai sensi della legge svizzera sulla protezione dei dati (LPD) e &ndash; ove applicabile &ndash; del GDPR, avete diritto all&rsquo;informazione, alla rettifica, alla cancellazione e alla limitazione del trattamento dei vostri dati personali. Poich&eacute; questo sito non memorizza dati personali su server, ci&ograve; riguarda essenzialmente i log del server del provider di hosting.',
+    s6p2: 'Per domande, informazioni o cancellazione, rivolgetevi a: [indirizzo e-mail]',
+    s6p3: 'Autorit&agrave; di vigilanza competente in Svizzera: Incaricato federale della protezione dei dati e della trasparenza (IFPDT), <a href="https://www.edoeb.admin.ch" target="_blank" rel="noopener">www.edoeb.admin.ch</a>',
+    s7h2: '7. Modifiche',
+    s7p: 'Questa informativa sulla privacy pu&ograve; essere adattata in caso di modifiche del sito o dei servizi utilizzati. Fa fede la versione pubblicata su questa pagina.',
+    back: '&larr; Torna al convertitore di coordinate'
+  }
+};
+
+function applyLang(l) {
+  var t = TEXTE[l] || TEXTE.de;
+  var els = document.querySelectorAll('[data-i18n]');
+  for (var i = 0; i < els.length; i++) {
+    var k = els[i].getAttribute('data-i18n');
+    if (t[k] !== undefined) { els[i].innerHTML = t[k]; }
+  }
+  document.title = t.docTitle;
+  document.documentElement.lang = l;
+  var sel = document.getElementById('sprache');
+  if (sel) { sel.setAttribute('aria-label', t.langAria); }
+}
+
+(function () {
+  var sel = document.getElementById('sprache');
+  var lang = 'de';
+  try {
+    var saved = localStorage.getItem('konverter-sprache');
+    if (saved && TEXTE[saved]) { lang = saved; }
+  } catch (e) {}
+  sel.value = lang;
+  applyLang(lang);
+  sel.addEventListener('change', function () {
+    applyLang(sel.value);
+    try { localStorage.setItem('konverter-sprache', sel.value); } catch (e) {}
+  });
+})();
+</script>
 </body>
 </html>

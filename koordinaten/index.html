@@ -40,6 +40,15 @@ button.go:hover { background:var(--accent2); }
 .chip:hover { border-color:var(--accent); color:var(--accent); }
 .bilddrop { margin-top:14px; border:2px dashed var(--line); border-radius:10px; padding:14px 16px; text-align:center; color:var(--muted); font-size:.92rem; cursor:pointer; background:#fafaf8; }
 .bilddrop:hover, .bilddrop.drag { border-color:var(--accent); color:var(--accent); }
+.bildbereich { margin-top:14px; border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:#f2f6fa; }
+.bildbereich .bilddrop { margin-top:0; }
+.bildbereich .note { margin-bottom:0; margin-top:10px; }
+.bildbereich .row { margin-top:10px; }
+.bildlabel { display:inline-flex; align-items:center; gap:10px; text-align:left; }
+.bildicon { flex:0 0 auto; }
+.bilddrop.snap { animation:bildsnap .3s ease-out; }
+@keyframes bildsnap { 0% { filter:brightness(1.7); } 100% { filter:brightness(1); } }
+@media (prefers-reduced-motion: reduce) { .bilddrop.snap { animation:none; } }
 .error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:14px 16px; margin-bottom:20px; }
 .note { background:#f7f7f5; border:1px solid var(--line); color:#444444; border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:.93rem; }
 .results { padding:0; overflow:hidden; }
@@ -136,9 +145,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="-8238310, 4970072" data-i18n="chipMercNy">Mercator · New York</button>
 </div>
 </div>
+<div class="bildbereich">
 <div class="bilddrop" id="bildDrop" tabindex="0" role="button" aria-label="Bild mit GPS-Daten auswählen" data-i18n-aria="ariaBild">
 <input type="file" id="bildFile" accept="image/jpeg,image/tiff,.dng,.cr2,.nef,.arw,.orf,.rw2" class="hidden">
-<span data-i18n="lblBild">Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken</span>
+<span class="bildlabel"><svg class="bildicon" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M4.5 7.5h3.1l1.3-2.2h6.2l1.3 2.2h3.1c.7 0 1.2.5 1.2 1.2v9.6c0 .7-.5 1.2-1.2 1.2H4.5c-.7 0-1.2-.5-1.2-1.2V8.7c0-.7.5-1.2 1.2-1.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.6" cy="10" r=".9" fill="currentColor"/></svg><span data-i18n="lblBild">Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken</span></span>
 </div>
 <div id="bildMsg" class="note hidden"></div>
 <div id="bildManuell" class="hidden">
@@ -153,6 +163,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div id="bildAktionen" class="row hidden" style="margin-top:10px">
 <button type="button" id="bildGpx" class="copy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="btnBildGpx">Zur Stapel-/GPX-Liste hinzufügen</button>
 <button type="button" id="bildReset" class="copy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="btnBildReset">Bild-GPS zurücksetzen</button>
+</div>
 </div>
 </div>
 </form>
@@ -1824,6 +1835,37 @@ function buildResults(lat, lon, forceLv95) {
     return 'bild-' + h.toString(36);
   }
   function bildShow(key) { bildMsgEl.textContent = t(key); bildMsgEl.classList.remove('hidden'); }
+  var bildAudio = null;
+  function bildKlick() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { return; }
+      if (!bildAudio) { bildAudio = new AC(); }
+      if (bildAudio.state === 'suspended') { bildAudio.resume(); }
+      var t0 = bildAudio.currentTime;
+      [0, 0.085].forEach(function (dt, i) {
+        var n = Math.floor(bildAudio.sampleRate * 0.03);
+        var buf = bildAudio.createBuffer(1, n, bildAudio.sampleRate);
+        var d = buf.getChannelData(0);
+        for (var j = 0; j < n; j++) { d[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / n, 2); }
+        var src = bildAudio.createBufferSource();
+        src.buffer = buf;
+        var f = bildAudio.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.value = i ? 1700 : 2800;
+        f.Q.value = 1.4;
+        var g = bildAudio.createGain();
+        g.gain.value = i ? 0.22 : 0.3;
+        src.connect(f); f.connect(g); g.connect(bildAudio.destination);
+        src.start(t0 + dt);
+      });
+    } catch (e) {}
+  }
+  function bildSnap() {
+    bildDropEl.classList.remove('snap');
+    void bildDropEl.offsetWidth;
+    bildDropEl.classList.add('snap');
+  }
   function bildAktionenZeigen(gpx) {
     bildGpxEl.classList.toggle('hidden', !gpx);
     bildAktionenEl.classList.remove('hidden');
@@ -1841,6 +1883,8 @@ function buildResults(lat, lon, forceLv95) {
   }
   function bildHandle(file) {
     if (!file) { return; }
+    bildKlick();
+    bildSnap();
     if (!file.size) { bildShow('errBildLesen'); bildAktionenZeigen(false); return; }
     if (!/\/(jpeg|tiff)$/i.test(file.type || '') && !/[-.](dng|cr2|nef|arw|orf|rw2)$/i.test(file.type || '') && !/\.(jpe?g|tiff?|dng|cr2|nef|arw|orf|rw2)$/i.test(file.name)) { bildShow('errBildTyp'); bildAktionenZeigen(false); return; }
     var reader = new FileReader();

@@ -1,6 +1,6 @@
 # Notfallblatt Motorsägearbeiten
 
-Digitales Formular für **Arbeitsauftrag und Notfallorganisation im Forst** (nach Suva-Formular 88216.d) mit dazugehöriger **Notfallkarte** (nach Suva 88217). Die Website ist eine einzelne statische Seite – kein Server, keine Registrierung, keine Daten verlassen das Gerät.
+Digitales Formular für **Arbeitsauftrag und Notfallorganisation im Forst** (nach Suva-Formular 88216.d) mit dazugehöriger **Notfallkarte** (nach Suva 88217). Die Website ist eine einzelne statische Seite – kein Server, keine Registrierung, beim reinen Öffnen der Datei verlassen keine Daten das Gerät (beim Hosting mit dem optionalen Besucherzähler siehe „Technik“).
 
 ## Starten
 
@@ -25,6 +25,7 @@ Einfach `index.html` im Browser öffnen (Doppelklick genügt). Für Handy: Datei
 ## Technik
 
 - Reines HTML/CSS/JavaScript, keine Build-Werkzeuge, keine Abhängigkeiten ausser Leaflet (CDN; ohne Internet bleibt das Formular voll nutzbar, nur Karte/Suche/Wetter sind offline nicht verfügbar).
+- **Optionaler Besucherzähler** (`counter.php`, PHP 7.2+): cookielos und ohne IP-Speicherung – pro Aufruf werden nur Datum/Uhrzeit, Ländercode (aus der Browser-Zeitzone abgeleitet), Browsersprache und Referrer-Host (ohne Pfad/Query) gespeichert, getrennt für `notfallblatt` und `koordinaten`. Lokal (file://) oder ohne PHP (GitHub Pages) wird nichts gezählt. Key in `counter.php` setzen (`COUNTER_KEY`), Statistik dann unter `counter.php?view=1&site=notfallblatt&key=...` bzw. `...&site=koordinaten&key=...`. Daten liegen in `counter-data/` (per `.htaccess` geschützt, automatische Löschung nach 400 Tagen). Details: [Datenschutz](koordinaten/datenschutz.html).
 - Koordinaten-Umrechnung WGS84 ↔ LV95/LV03 mit der Näherungslösung von swisstopo (Genauigkeit ca. 1 m), getestet gegen Referenzpunkte (Bern, Zimmerwald, Pfänder, Monte Generoso, Zürich).
 - Externe Dienste: Photon (Geocoding), Open-Meteo (Wetter), Overpass (Spital/Arzt-Suche), OpenStreetMap-Kacheln. Alle ohne API-Schlüssel.
 

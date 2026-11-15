@@ -1061,6 +1061,16 @@ document.querySelectorAll('.copy').forEach(function (b) {
   });
 });
 </script>
+<script>
+(function () {
+  try {
+    if (location.protocol !== 'http:' && location.protocol !== 'https:') { return; }
+    var d = { site: 'koordinaten', tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ''), lang: (navigator.language || ''), ref: (document.referrer || '') };
+    if (navigator.sendBeacon) { var fd = new FormData(); for (var k in d) { fd.append(k, d[k]); } navigator.sendBeacon('counter.php', fd); }
+    else { fetch('counter.php', { method: 'POST', keepalive: true, body: new URLSearchParams(d) }).catch(function () {}); }
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>
 <?php

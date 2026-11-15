@@ -44,6 +44,15 @@ php -S localhost:8000
   Näherungsformeln von swisstopo (Abweichung typischerweise < 0,2 m). Höhen werden nicht umgerechnet.
 - Die Umrechnungsformeln wurden gegen Referenzimplementierungen (pyproj/EPSG, mgrs) verifiziert.
 
+## Besucherzähler (optional, DSGVO-konform)
+
+`counter.php` (liegt in diesem Ordner und im Hauptverzeichnis) zählt Aufrufe getrennt pro Seite (`site=notfallblatt` bzw. `site=koordinaten`). Gespeichert wird pro Aufruf nur: Datum/Uhrzeit, Ländercode (aus der Browser-Zeitzone abgeleitet – die IP-Adresse wird nicht gespeichert), Browsersprache und Referrer-Host (ohne Pfad/Query, damit Koordinaten in Share-Links privat bleiben). Keine Cookies, kein Fingerprinting, keine Dritten.
+
+- **Key setzen:** `COUNTER_KEY` in `counter.php` auf einen eigenen geheimen Wert ändern (sonst ist die Statistik-Seite gesperrt).
+- **Abruf:** `counter.php?view=1&site=koordinaten&key=DEIN_KEY` (bzw. `site=notfallblatt` im Hauptverzeichnis).
+- **Daten:** `counter-data/hits-<site>.csv` (per `.htaccess` vor Zugriff geschützt); Einträge älter als 400 Tage werden automatisch gelöscht.
+- Lokal (file://) oder auf GitHub Pages (kein PHP) wird nichts gezählt – der Ping der Seite schlägt fehl und wird stillschweigend ignoriert.
+
 ## Lizenz Grafik
 
 Die Kompassrose (SVG, als Data-URI in `index.html` und `index.php` eingebettet) wurde

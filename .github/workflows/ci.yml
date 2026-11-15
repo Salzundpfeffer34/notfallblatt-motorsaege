@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: JS-Syntaxcheck
+        run: |
+          for f in js/*.js tests/*.js; do echo "check $f"; node --check "$f"; done
+      - name: Konverter-Tests (parseInput, exifGps, Roundtrips, Beispiel-Chips)
+        run: node tests/run-tests.js
+
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP bereitstellen (Runner haben PHP vorinstalliert, sonst php-cli)
+        run: |
+          if ! command -v php >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y php-cli
+          fi
+          php -v
+      - name: PHP-Lint
+        run: |
+          php -l counter.php
+          php -l koordinaten/counter.php
+          php -l koordinaten/index.php

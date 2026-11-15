@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /counter.php
+Disallow: /counter-data/

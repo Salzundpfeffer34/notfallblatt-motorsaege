@@ -50,7 +50,7 @@ php -S localhost:8000
 
 - **Key setzen:** `COUNTER_KEY` in `counter.php` auf einen eigenen geheimen Wert ändern (sonst ist die Statistik-Seite gesperrt).
 - **Abruf:** `counter.php?view=1&site=koordinaten&key=DEIN_KEY` (bzw. `site=notfallblatt` im Hauptverzeichnis).
-- **Daten:** `counter-data/hits-<site>.csv` (per `.htaccess` vor Zugriff geschützt); Einträge älter als 400 Tage werden automatisch gelöscht.
+- **Daten:** `counter-data/hits-<site>.php` (per `.htaccess` vor Zugriff geschützt **und** als `.php`-Datei mit `<?php exit;`-Kopf – auch ohne Apache sicher); Einträge älter als 400 Tage werden automatisch gelöscht. Beim Rate-Limit wird nur ein gesalzener IP-Hash max. 120 s vorgehalten.
 - Lokal (file://) oder auf GitHub Pages (kein PHP) wird nichts gezählt – der Ping der Seite schlägt fehl und wird stillschweigend ignoriert.
 
 ## Lizenz Grafik

@@ -4,15 +4,22 @@ declare(strict_types=1);
 /*
  * DSGVO-konformer Besucherzähler (self-hosted, "wie Google Analytics, aber datenschutzkonform").
  *
- * Was gespeichert wird (pro Aufruf, eine Zeile CSV in counter-data/hits-<site>.csv):
+ * Was gespeichert wird (pro Aufruf, eine Zeile CSV in counter-data/hits-<site>.php):
  *   - Datum/Uhrzeit (ISO 8601)
  *   - Ländercode, abgeleitet aus der Browser-Zeitzone (die IP-Adresse wird NICHT gespeichert)
  *   - Browsersprache (z. B. de-CH) – damit man sieht, welche Sprache als Nächstes sinnvoll wäre
  *   - Referrer-Host (nur die Domain, ohne Pfad/Query – Koordinaten in Share-Links bleiben privat)
  *
- * Was NICHT passiert: keine Cookies, keine IP-Speicherung, kein Fingerprinting, keine Weitergabe
- * an Dritte (der Zähler läuft auf dem eigenen Server). Bot-Aufrufe werden ignoriert.
- * Aufbewahrung: Einträge älter als COUNTER_RETENTION_DAYS Tage werden automatisch gelöscht.
+ * Was NICHT passiert: keine Cookies, kein Fingerprinting, keine Weitergabe an Dritte.
+ * Bot-Aufrufe werden ignoriert; Missbrauch wird per Rate-Limit gedrosselt (dafür wird nur ein
+ * mit COUNTER_KEY gesalzener Hash der IP kurzzeitig (max. 120 s) verglichen, nie die IP selbst).
+ *
+ * Härtung:
+ *   - Datenfiles heissen *.php und beginnen mit "<?php exit; ?>" – selbst wenn .htaccess
+ *     (Apache) mal nicht greift (z. B. nginx), liefert der Server keinen Inhalt aus.
+ *   - counter-data/ ist zusätzlich per .htaccess geschützt (Require all denied).
+ *   - Statistik-Abruf nur mit Key und mit X-Robots-Tag: noindex.
+ *   - Aufbewahrung: Einträge älter als COUNTER_RETENTION_DAYS Tage werden automatisch gelöscht.
  *
  * Einbindung: Die Seiten senden per navigator.sendBeacon/fetch ein POST an diese Datei.
  * Lokal (file://) oder ohne PHP (GitHub Pages) passiert nichts – der Request schlägt fehl und
@@ -29,10 +36,18 @@ declare(strict_types=1);
 
 const COUNTER_KEY = 'BITTE-EIGENEN-KEY-EINSETZEN';
 const COUNTER_RETENTION_DAYS = 400;
+const COUNTER_FILE_HEADER = "<?php exit; ?>\n";
+const COUNTER_THROTTLE_SECONDS = 10;
+const COUNTER_THROTTLE_MEMORY = 120;
 
 function counterDir(): string
 {
     return __DIR__ . '/counter-data';
+}
+
+function counterDataFile(string $site): string
+{
+    return counterDir() . '/hits-' . $site . '.php';
 }
 
 function counterSites(): array
@@ -87,6 +102,49 @@ function counterIsBot(): bool
             return true;
         }
     }
+    return false;
+}
+
+/*
+ * Rate-Limit: pro IP nur 1 Hit pro COUNTER_THROTTLE_SECONDS Sekunden.
+ * Gespeichert wird nur hash(sha256, COUNTER_KEY + IP) mit Zeitstempel;
+ * Einträge älter als COUNTER_THROTTLE_MEMORY Sekunden werden automatisch gelöscht.
+ * Die IP-Adresse selbst wird nirgends gespeichert.
+ */
+function counterThrottled(): bool
+{
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    if ($ip === '' || !function_exists('hash')) {
+        return false;
+    }
+    $h = hash('sha256', COUNTER_KEY . '|' . $ip);
+    $rf = counterDir() . '/rl.php';
+    $map = array();
+    if (is_file($rf)) {
+        $lines = file($rf, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (is_array($lines)) {
+            foreach ($lines as $l) {
+                if (strpos($l, '<?php') === 0) {
+                    continue;
+                }
+                $d = json_decode($l, true);
+                if (is_array($d)) {
+                    $map = $d;
+                }
+            }
+        }
+    }
+    $now = time();
+    foreach ($map as $k => $ts) {
+        if (!is_int($ts) || $now - $ts > COUNTER_THROTTLE_MEMORY) {
+            unset($map[$k]);
+        }
+    }
+    if (isset($map[$h]) && is_int($map[$h]) && $now - $map[$h] < COUNTER_THROTTLE_SECONDS) {
+        return true;
+    }
+    $map[$h] = $now;
+    @file_put_contents($rf, COUNTER_FILE_HEADER . json_encode($map) . "\n", LOCK_EX);
     return false;
 }
 
@@ -164,6 +222,9 @@ function counterHit(string $site, string $tz, string $lang, string $ref): void
         return;
     }
     counterEnsureDir();
+    if (counterThrottled()) {
+        return;
+    }
     $cc = counterCountry($tz);
     $lang = counterField($lang, 12);
     $refHost = '';
@@ -174,7 +235,8 @@ function counterHit(string $site, string $tz, string $lang, string $ref): void
         }
     }
     $line = date('c') . '|' . $cc . '|' . $lang . '|' . $refHost . "\n";
-    $f = counterDir() . '/hits-' . $site . '.csv';
+    $f = counterDataFile($site);
+    $legacy = counterDir() . '/hits-' . $site . '.csv';
     $fh = @fopen($f, 'c+');
     if (!$fh) {
         return;
@@ -184,15 +246,31 @@ function counterHit(string $site, string $tz, string $lang, string $ref): void
     $keep = array();
     rewind($fh);
     while (($l = fgets($fh)) !== false) {
+        if (strpos($l, '<?php') === 0) {
+            continue;
+        }
         $ts = strtotime(substr($l, 0, 25));
         if ($ts !== false && $ts >= $cutoff) {
             $keep[] = $l;
         }
     }
+    if (!$keep && is_file($legacy)) {
+        // Migration vom alten CSV-Format
+        $ll = file($legacy, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (is_array($ll)) {
+            foreach ($ll as $l) {
+                $ts = strtotime(substr($l, 0, 25));
+                if ($ts !== false && $ts >= $cutoff) {
+                    $keep[] = $l . "\n";
+                }
+            }
+        }
+        @unlink($legacy);
+    }
     $keep[] = $line;
     ftruncate($fh, 0);
     rewind($fh);
-    fwrite($fh, implode('', $keep));
+    fwrite($fh, COUNTER_FILE_HEADER . implode('', $keep));
     fflush($fh);
     flock($fh, LOCK_UN);
     fclose($fh);
@@ -200,12 +278,22 @@ function counterHit(string $site, string $tz, string $lang, string $ref): void
 
 function counterRead(string $site): array
 {
-    $f = counterDir() . '/hits-' . $site . '.csv';
+    $f = counterDataFile($site);
+    if (!is_file($f)) {
+        $f = counterDir() . '/hits-' . $site . '.csv';
+    }
     if (!is_file($f)) {
         return array();
     }
     $rows = array();
-    foreach (file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $l) {
+    $lines = file($f, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($lines)) {
+        return array();
+    }
+    foreach ($lines as $l) {
+        if (strpos($l, '<?php') === 0) {
+            continue;
+        }
         $p = explode('|', $l);
         if (count($p) < 4) {
             continue;
@@ -235,6 +323,7 @@ function counterView(string $site): void
         echo 'Forbidden';
         return;
     }
+    header('X-Robots-Tag: noindex, nofollow');
     $rows = counterRead($site);
     $total = count($rows);
     $byDate = array();
@@ -272,9 +361,10 @@ function counterView(string $site): void
         . '<p class="switcher">Ansicht: <a href="' . $self . '?view=1&amp;site=' . $siteH . '&amp;key=' . $keyQ . '"><strong>' . $siteH . '</strong></a>'
         . '<a href="' . $self . '?view=1&amp;site=' . counterH($other) . '&amp;key=' . $keyQ . '">' . counterH($other) . '</a></p>'
         . '<p><strong>Aufrufe gesamt:</strong> ' . $total . '</p>'
-        . '<p class="note">Cookielos. Keine IP-Adressen gespeichert – das Land wird aus der Browser-Zeitzone abgeleitet. '
+        . '<p class="note">Cookielos. Keine IP-Adressen gespeichert – das Land wird aus der Browser-Zeitzone abgeleitet; '
+        . 'zur Drosselung wird nur ein gesalzener Hash der IP max. ' . COUNTER_THROTTLE_MEMORY . ' s vorgehalten. '
         . 'Referrer nur als Host (ohne Pfad/Query). Einträge älter als ' . COUNTER_RETENTION_DAYS . ' Tage werden automatisch gelöscht. '
-        . 'Daten liegen in <code>counter-data/hits-' . $siteH . '.csv</code> (per .htaccess geschützt).</p>'
+        . 'Daten liegen in <code>counter-data/hits-' . $siteH . '.php</code> (per .htaccess geschützt, als .php mit exit-Kopf auch ohne Apache sicher).</p>'
         . '<h2>Pro Tag (letzte 31 Tage)</h2><table><tr><th>Tag</th><th class="num">Aufrufe</th></tr>';
     $days = array_slice($byDate, 0, 31, true);
     if (!$days) {

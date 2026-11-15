@@ -141,5 +141,16 @@ function jpegWrap(payload) {
   ok('exifGps JPEG ohne GPS -> null', F.exifGps(toAB(plain)) === null);
 }
 
+// --- 5. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --
+{
+  const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');
+  const c2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'counter.php'), 'utf8');
+  ok('counter.php Kopien identisch', c1 === c2);
+  for (const needle of ['function counterDayChart', 'function counterBarRow', 'X-Robots-Tag', 'COUNTER_FILE_HEADER', 'function counterThrottled', 'hash_equals', 'hits-\' . $site . \'.php']) {
+    ok('counter.php enthält ' + needle, c1.indexOf(needle) >= 0);
+  }
+  ok('robots.txt vorhanden', fs.existsSync(path.join(__dirname, '..', 'robots.txt')));
+}
+
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');
 process.exit(failures === 0 ? 0 : 1);

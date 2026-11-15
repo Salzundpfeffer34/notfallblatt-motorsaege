@@ -433,7 +433,7 @@ function classifyPair(float $a, float $b): ?array
     }
     if ($a >= 100000.0 && $a < 1000000.0 && $b >= 0.0 && $b <= 10000000.0) {
         return array('type' => 'utm', 'a' => $a, 'b' => $b,
-            'note' => 'Keine UTM-Zone angegeben – es wurde Zone 32 angenommen. Gib die Zone am besten mit an, z. B. «32T 465403 5247150».');
+            'note' => 'Keine UTM-Zone angegeben – es wurde Zone 32 angenommen. Gib die Zone am besten mit an, z. B. «30U 699316 5710164».');
     }
     if (abs($a) <= MERC_MAX && abs($b) <= MERC_MAX) {
         return array('type' => 'mercator', 'a' => $a, 'b' => $b, 'note' => '');
@@ -494,7 +494,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
 
     if ($mode === 'mgrs') {
         if ($letterCount > 3) {
-            throw new RuntimeException('Bei MGRS sind höchstens 3 Buchstaben erlaubt (z. B. 32TMT…).');
+            throw new RuntimeException('Bei MGRS sind höchstens 3 Buchstaben erlaubt (z. B. 54SUE…).');
         }
     } elseif ($mode === 'dms') {
         if ($letterCount > 2 || array_diff($letters, array('N', 'S', 'E', 'W'))) {
@@ -515,7 +515,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
     if ($mode === 'mgrs') {
         $ll = mgrsToLatLon($compact);
         if ($ll === null) {
-            throw new RuntimeException('Format unbekannt: MGRS nicht erkannt. Beispiel: 32TMT6540247150 oder 32T MT 65402 47150.');
+            throw new RuntimeException('Format unbekannt: MGRS nicht erkannt. Beispiel: 54SUE8843349290 oder 54SUE 88433 49290.');
         }
         return array('lat' => $ll['lat'], 'lon' => $ll['lon'], 'note' => 'MGRS erkannt.');
     }
@@ -526,7 +526,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
             $ll = parseDmmString($raw);
         }
         if ($ll === null) {
-            throw new RuntimeException('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 37° 42\' 10" N, 111° 23\' 16" W oder N37 09.729 W111 42.701');
+            throw new RuntimeException('Format unbekannt: Grad/Minuten/Sekunden nicht erkannt. Beispiel: 41° 54\' 10.1" N, 12° 29\' 47" E oder N40 42.767 W74 00.367');
         }
         if ($swap) {
             $t = $ll['lat'];
@@ -559,7 +559,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
 
     if ($mode === 'lv95') {
         if (count($nums) < 2) {
-            throw new RuntimeException('Bitte Ost und Nord angeben, z. B. 2\'683\'303, 1\'247\'925');
+            throw new RuntimeException('Bitte Ost und Nord angeben, z. B. 2\'624\'043, 1\'096\'620');
         }
         $ll = lv95ToLatLon($nums[0], $nums[1]);
         $ll['note'] = '';
@@ -589,7 +589,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
     if ($mode === 'utm') {
         $count = count($nums);
         if ($count < 2) {
-            throw new RuntimeException('Bitte Zone (optional), Ost und Nord angeben, z. B. 32T 465403 5247150');
+            throw new RuntimeException('Bitte Zone (optional), Ost und Nord angeben, z. B. 30U 699316 5710164');
         }
         $zone = 32.0;
         $idx = 0;
@@ -611,7 +611,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
         $ll = utmToLatLon($zone, $east, $north, $south);
         $note = '';
         if ($band === '' && $count === 2) {
-            $note = 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «32T 465403 5247150».';
+            $note = 'Keine Zone angegeben – Zone 32 angenommen. Beispiel mit Zone: «30U 699316 5710164».';
         }
         return array('lat' => $ll['lat'], 'lon' => $ll['lon'], 'note' => $note);
     }
@@ -620,7 +620,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
         $ll = parseDmmString($raw);
         if ($ll !== null) {
             $ll['lon'] = normalizeLon($ll['lon']);
-            $ll['note'] = 'Grad + Dezimalminuten erkannt (z. B. N37 09.729 W111 42.701).';
+            $ll['note'] = 'Grad + Dezimalminuten erkannt (z. B. N40 42.767 W74 00.367).';
             return $ll;
         }
     }
@@ -658,7 +658,7 @@ function parseInput(string $raw, string $mode, bool $swap): array
         }
     }
 
-    throw new RuntimeException('Format unbekannt. Beispiele: «47.376895, 8.541694» · «37° 42\' 10" N, 111° 23\' 16" W» · «2683303, 1247925» (LV95) · «32T 465403 5247150» (UTM) · «32TMT6540247150» (MGRS)');
+    throw new RuntimeException('Format unbekannt. Beispiele: «48.8566, 2.3522» · «41° 54\' 10.1" N, 12° 29\' 47" E» · «2624043, 1096620» (LV95) · «30U 699316 5710164» (UTM) · «54SUE8843349290» (MGRS)');
 }
 
 function formatNum(float $v, int $dec): string
@@ -803,7 +803,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="card">
 <label for="q">Koordinaten</label>
 <div class="row">
-<input type="text" id="q" name="q" value="<?php echo $qHtml; ?>" placeholder="z. B. 47.376895, 8.541694" autofocus autocomplete="off">
+<input type="text" id="q" name="q" value="<?php echo $qHtml; ?>" placeholder="z. B. 48.8566, 2.3522" autofocus autocomplete="off">
 <select name="f" aria-label="Format">
 <option value="auto"<?php echo $f === 'auto' ? ' selected' : ''; ?>>Automatisch erkennen</option>
 <option value="wgs84"<?php echo $f === 'wgs84' ? ' selected' : ''; ?>>WGS84 · Dezimalgrad</option>
@@ -838,7 +838,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="chip" data-q="41° 54' 10.1&quot; N, 12° 29' 47&quot; E">DMS · Rom</button>
 <button type="button" class="chip" data-q="40°42‘46‘‘N 74°00‘22‘‘W">DMS · New York</button>
 <button type="button" class="chip" data-q="N34 03.133 W118 14.622">Dezimalmin · Los Angeles</button>
-<button type="button" class="chip" data-q="2683303, 1247925">LV95 · Zürich</button>
+<button type="button" class="chip" data-q="2624043, 1096620">LV95 · Zermatt</button>
 <button type="button" class="chip" data-q="30U 699316 5710164">UTM · London</button>
 <button type="button" class="chip" data-q="54SUE8843349290">MGRS · Tokio</button>
 <button type="button" class="chip" data-q="-8238310, 4970072">Mercator · New York</button>
@@ -887,16 +887,16 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 
 <div class="card help">
 <h2>Erkannte Eingabeformate</h2>
-<p>Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2'683'303</code>) ebenfalls.</p>
-<p><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>32T</code> oder <code>E … N …</code>), bei MGRS drei (<code>32TMT…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
+<p>Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2'624'043</code>) ebenfalls.</p>
+<p><strong>Eingabebegrenzung:</strong> Ausser bei UTM/MGRS können nur Zahlen eingegeben werden. Bei UTM sind höchstens zwei Buchstaben erlaubt (z. B. <code>30U</code> oder <code>E … N …</code>), bei MGRS drei (<code>54SUE…</code>), bei Grad/Min/Sekunden nur N, S, E oder W. Das Eingabefeld filtert ungültige Zeichen sofort heraus.</p>
 <ul>
-<li><strong>WGS84 Dezimalgrad:</strong> <code>47.376895, 8.541694</code> (Breite zuerst; bei <code>8.541694, 47.376895</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
-<li><strong>Grad/Minuten/Sekunden:</strong> <code>37°42'10"N 111°23'16"W</code> oder <code>47° 22' 36.8" N, 8° 32' 30.1" E</code> (auch Dezimalminuten: <code>47° 22.615' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
-<li><strong>Grad + Dezimalminuten (GPS):</strong> <code>N37 09.729 W111 42.701</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)</li>
-<li><strong>LV95 / CH1903+:</strong> <code>2683303, 1247925</code> (Ost 2'4xx xxx–2'9xx xxx, Nord 1'0xx xxx–1'4xx xxx)</li>
+<li><strong>WGS84 Dezimalgrad:</strong> <code>48.8566, 2.3522</code> (Breite zuerst; bei <code>2.3522, 48.8566</code> Häkchen «Erste Zahl ist die Länge» setzen)</li>
+<li><strong>Grad/Minuten/Sekunden:</strong> <code>41°54'10.1"N 12°29'47"W</code> oder <code>41° 54' 10.1" N, 12° 29' 47" E</code> (auch Dezimalminuten: <code>48° 51.396' N</code>; auch typografische Zeichen ‘ ’ bzw. ‘‘ ’’ ” ´´ werden erkannt)</li>
+<li><strong>Grad + Dezimalminuten (GPS):</strong> <code>N40 42.767 W74 00.367</code> (ohne Gradzeichen; Himmelsrichtung N/S/E/W vor oder nach den Zahlen)</li>
+<li><strong>LV95 / CH1903+:</strong> <code>2624043, 1096620</code> (Ost 2'4xx xxx–2'9xx xxx, Nord 1'0xx xxx–1'4xx xxx)</li>
 <li><strong>NAD83 (Nordamerika):</strong> geografische Koordinaten; die Werte entsprechen WGS84 (Abweichung typischerweise &lt; 2 m, weil NAD83 fest mit der nordamerikanischen Platte verbunden ist)</li>
-<li><strong>UTM:</strong> <code>32T 465403 5247150</code> oder <code>465403, 5247150</code> (ohne Zone wird Zone 32 angenommen)</li>
-<li><strong>MGRS:</strong> <code>32TMT6540247150</code> oder <code>32T MT 65402 47150</code></li>
+<li><strong>UTM:</strong> <code>30U 699316 5710164</code> oder <code>699316, 5710164</code> (ohne Zone wird Zone 32 angenommen)</li>
+<li><strong>MGRS:</strong> <code>54SUE8843349290</code> oder <code>54SUE 88433 49290</code></li>
 <li><strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen</li>
 </ul>
 </div>

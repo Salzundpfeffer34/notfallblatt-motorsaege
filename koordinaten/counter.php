@@ -315,6 +315,51 @@ function counterH(string $s): string
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 
+function counterBarRow(string $label, int $c, int $max): string
+{
+    $pct = $max > 0 ? (int) round(100 * $c / $max) : 0;
+    return '<div class="brow"><span class="bl">' . $label . '</span>'
+        . '<span class="bbar"><span style="width:' . $pct . '%"></span></span>'
+        . '<span class="bc">' . $c . '</span></div>';
+}
+
+function counterDayChart(array $byDate, int $days = 31): string
+{
+    $keys = array_slice(array_keys($byDate), 0, $days);
+    $keys = array_reverse($keys);
+    $n = count($keys);
+    if ($n === 0) {
+        return '<p class="note">noch keine Daten</p>';
+    }
+    $max = 1;
+    foreach ($byDate as $c) {
+        if ($c > $max) {
+            $max = $c;
+        }
+    }
+    $w = 860; $h = 200; $pl = 36; $pb = 24; $pt = 14;
+    $bw = ($w - $pl - 8) / $n;
+    $s = '<svg viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-label="Aufrufe pro Tag" style="width:100%;height:auto;background:#fafaf8;border:1px solid #e5e5e0;border-radius:8px">';
+    foreach (array(0.0, 0.5, 1.0) as $f) {
+        $v = (int) round($max * $f);
+        $y = $h - $pb - ($h - $pt - $pb) * $f;
+        $s .= '<line x1="' . $pl . '" y1="' . $y . '" x2="' . ($w - 8) . '" y2="' . $y . '" stroke="#e5e5e0" stroke-width="1"/>'
+            . '<text x="' . ($pl - 6) . '" y="' . ($y + 4) . '" text-anchor="end" font-size="11" fill="#888">' . $v . '</text>';
+    }
+    foreach ($keys as $i => $d) {
+        $c = $byDate[$d];
+        $bh = ($h - $pt - $pb) * ($c / $max);
+        $x = $pl + $i * $bw + 1;
+        $y = $h - $pb - $bh;
+        $s .= '<rect x="' . round($x, 1) . '" y="' . round($y, 1) . '" width="' . max(1, round($bw - 2, 1)) . '" height="' . round($bh, 1) . '" fill="#3b6ea5" rx="2"><title>' . counterH($d) . ': ' . $c . ' Aufrufe</title></rect>';
+        if ($i % 5 === 0 || $i === $n - 1) {
+            $s .= '<text x="' . round($x + $bw / 2 - 1, 1) . '" y="' . ($h - 8) . '" text-anchor="middle" font-size="10" fill="#888">' . substr($d, 5) . '</text>';
+        }
+    }
+    $s .= '</svg>';
+    return $s;
+}
+
 function counterView(string $site): void
 {
     $key = isset($_GET['key']) ? (string) $_GET['key'] : '';
@@ -342,6 +387,18 @@ function counterView(string $site): void
     arsort($byCc);
     arsort($byLang);
     arsort($byRef);
+    $today = date('Y-m-d');
+    $month = date('Y-m');
+    $todayN = isset($byDate[$today]) ? $byDate[$today] : 0;
+    $monthN = 0;
+    foreach ($byDate as $d => $c) {
+        if (strpos($d, $month) === 0) {
+            $monthN += $c;
+        }
+    }
+    $maxCc = $byCc ? max($byCc) : 1;
+    $maxLang = $byLang ? max($byLang) : 1;
+    $maxRef = $byRef ? max($byRef) : 1;
     $other = counterDefaultSite() === $site ? 'koordinaten' : 'notfallblatt';
     $keyQ = counterH($key);
     $self = counterH(basename(__FILE__));
@@ -352,49 +409,55 @@ function counterView(string $site): void
         . '<meta name="viewport" content="width=device-width,initial-scale=1">'
         . '<meta name="robots" content="noindex,nofollow">'
         . '<title>Zähler · ' . $siteH . '</title>'
-        . '<style>body{font-family:system-ui,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#222}'
-        . 'h1{font-size:1.4rem}table{border-collapse:collapse;width:100%;margin:10px 0 24px}'
-        . 'td,th{border-bottom:1px solid #e5e5e0;padding:5px 8px;text-align:left;font-size:.92rem}'
-        . 'th{color:#666;font-weight:600}.num{text-align:right;font-variant-numeric:tabular-nums}'
-        . '.note{color:#666;font-size:.85rem}.switcher a{margin-right:12px}</style></head><body>'
+        . '<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#222}'
+        . 'h1{font-size:1.4rem}h2{font-size:1.05rem;margin:24px 0 8px}'
+        . '.note{color:#666;font-size:.85rem}.switcher a{margin-right:12px}'
+        . '.cards{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}'
+        . '.card2{flex:1;min-width:130px;border:1px solid #e5e5e0;border-radius:10px;padding:12px 14px;background:#fafaf8}'
+        . '.card2 .big{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}'
+        . '.card2 .cap{color:#666;font-size:.8rem}'
+        . '.brow{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.92rem}'
+        . '.bl{flex:0 0 190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+        . '.bbar{flex:1;background:#f0f0ec;border-radius:4px;height:14px;overflow:hidden}'
+        . '.bbar span{display:block;height:100%;background:#3b6ea5}'
+        . '.bc{flex:0 0 52px;text-align:right;font-variant-numeric:tabular-nums}</style></head><body>'
         . '<h1>Besucherzähler · ' . $siteH . '</h1>'
         . '<p class="switcher">Ansicht: <a href="' . $self . '?view=1&amp;site=' . $siteH . '&amp;key=' . $keyQ . '"><strong>' . $siteH . '</strong></a>'
         . '<a href="' . $self . '?view=1&amp;site=' . counterH($other) . '&amp;key=' . $keyQ . '">' . counterH($other) . '</a></p>'
-        . '<p><strong>Aufrufe gesamt:</strong> ' . $total . '</p>'
+        . '<div class="cards">'
+        . '<div class="card2"><div class="big">' . $total . '</div><div class="cap">Aufrufe gesamt</div></div>'
+        . '<div class="card2"><div class="big">' . $todayN . '</div><div class="cap">heute (' . $today . ')</div></div>'
+        . '<div class="card2"><div class="big">' . $monthN . '</div><div class="cap">diesen Monat (' . $month . ')</div></div>'
+        . '<div class="card2"><div class="big">' . count($byDate) . '</div><div class="cap">aktive Tage</div></div>'
+        . '<div class="card2"><div class="big">' . count($byCc) . '</div><div class="cap">Länder</div></div>'
+        . '</div>'
         . '<p class="note">Cookielos. Keine IP-Adressen gespeichert – das Land wird aus der Browser-Zeitzone abgeleitet; '
         . 'zur Drosselung wird nur ein gesalzener Hash der IP max. ' . COUNTER_THROTTLE_MEMORY . ' s vorgehalten. '
         . 'Referrer nur als Host (ohne Pfad/Query). Einträge älter als ' . COUNTER_RETENTION_DAYS . ' Tage werden automatisch gelöscht. '
         . 'Daten liegen in <code>counter-data/hits-' . $siteH . '.php</code> (per .htaccess geschützt, als .php mit exit-Kopf auch ohne Apache sicher).</p>'
-        . '<h2>Pro Tag (letzte 31 Tage)</h2><table><tr><th>Tag</th><th class="num">Aufrufe</th></tr>';
-    $days = array_slice($byDate, 0, 31, true);
-    if (!$days) {
-        echo '<tr><td colspan="2" class="note">noch keine Daten</td></tr>';
-    }
-    foreach ($days as $d => $c) {
-        echo '<tr><td>' . counterH($d) . '</td><td class="num">' . $c . '</td></tr>';
-    }
-    echo '</table><h2>Herkunft (Land)</h2><table><tr><th>Land</th><th>Code</th><th class="num">Aufrufe</th></tr>';
-    foreach ($byCc as $cc => $c) {
-        echo '<tr><td>' . counterFlag($cc) . '</td><td>' . counterH($cc) . '</td><td class="num">' . $c . '</td></tr>';
-    }
+        . '<h2>Aufrufe pro Tag (letzte 31 Tage)</h2>' . counterDayChart($byDate, 31)
+        . '<h2>Herkunft (Land)</h2>';
     if (!$byCc) {
-        echo '<tr><td colspan="3" class="note">noch keine Daten</td></tr>';
+        echo '<p class="note">noch keine Daten</p>';
     }
-    echo '</table><h2>Browsersprache</h2><table><tr><th>Sprache</th><th class="num">Aufrufe</th></tr>';
-    foreach ($byLang as $l => $c) {
-        echo '<tr><td>' . counterH($l === '' ? '(unbekannt)' : $l) . '</td><td class="num">' . $c . '</td></tr>';
+    foreach ($byCc as $cc => $c) {
+        echo counterBarRow(counterFlag($cc) . ' ' . counterH($cc), $c, $maxCc);
     }
+    echo '<h2>Browsersprache</h2>';
     if (!$byLang) {
-        echo '<tr><td colspan="2" class="note">noch keine Daten</td></tr>';
+        echo '<p class="note">noch keine Daten</p>';
     }
-    echo '</table><h2>Referrer (nur Host)</h2><table><tr><th>Host</th><th class="num">Aufrufe</th></tr>';
-    foreach ($byRef as $h => $c) {
-        echo '<tr><td>' . counterH($h) . '</td><td class="num">' . $c . '</td></tr>';
+    foreach ($byLang as $l => $c) {
+        echo counterBarRow(counterH($l === '' ? '(unbekannt)' : $l), $c, $maxLang);
     }
+    echo '<h2>Referrer (nur Host)</h2>';
     if (!$byRef) {
-        echo '<tr><td colspan="2" class="note">noch keine Daten (Direktaufrufe ohne Referrer werden nicht gelistet)</td></tr>';
+        echo '<p class="note">noch keine Daten (Direktaufrufe ohne Referrer werden nicht gelistet)</p>';
     }
-    echo '</table></body></html>';
+    foreach ($byRef as $h => $c) {
+        echo counterBarRow(counterH($h), $c, $maxRef);
+    }
+    echo '</body></html>';
 }
 
 if (PHP_SAPI !== 'cli') {

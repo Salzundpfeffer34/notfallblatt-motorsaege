@@ -11,13 +11,13 @@ Koordinaten in irgendeinem Format eingeben – alle anderen Formate werden autom
 
 | Format | Beispiel |
 |---|---|
-| WGS84 Dezimalgrad (Breite, Länge) | `47.376895, 8.541694` |
-| WGS84 Grad/Minuten/Sekunden (auch Dezimalminuten) | `47° 22' 36.8" N, 8° 32' 30.1" E` |
-| NAD83 (Nordamerika, geografisch) | `47.376895, 8.541694` – Werte wie WGS84 (Abweichung < 2 m) |
-| Schweiz LV95 / CH1903+ (Ost, Nord) | `2683303, 1247925` |
-| UTM (Zone/Band, Ost, Nord) | `32T 465403 5247150` |
-| MGRS | `32TMT6540247150` oder `32T MT 65402 47150` |
-| Web Mercator EPSG:3857 (Google Maps) | `-8237525, 4985977` |
+| WGS84 Dezimalgrad (Breite, Länge) | `48.8566, 2.3522` |
+| WGS84 Grad/Minuten/Sekunden (auch Dezimalminuten) | `41° 54' 10.1" N, 12° 29' 47" E` |
+| NAD83 (Nordamerika, geografisch) | `48.8566, 2.3522` – Werte wie WGS84 (Abweichung < 2 m) |
+| Schweiz LV95 / CH1903+ (Ost, Nord) | `2624043, 1096620` |
+| UTM (Zone/Band, Ost, Nord) | `30U 699316 5710164` |
+| MGRS | `54SUE8843349290` oder `54SUE 88433 49290` |
+| Web Mercator EPSG:3857 (Google Maps) | `-8238310, 4970072` |
 
 Zusätzlich ausgegeben: GeoJSON-Reihenfolge (Länge, Breite) sowie Direktlinks zu
 Google Maps, Swisstopo (geo.admin.ch) und OpenStreetMap + Kartenausschnitt.
@@ -35,8 +35,8 @@ php -S localhost:8000
 
 ## Hinweise
 
-- Trennzeichen: Komma, Semikolon, Leerzeichen oder `/`; Dezimalpunkt oder -komma; Schweizer Tausendertrennung mit Apostroph (`2'683'303`) wird erkannt.
-- Eingabebegrenzung: Ausser bei UTM/MGRS nur Zahlen. UTM: höchstens zwei Buchstaben (`32T` oder `E … N …`), MGRS: drei (`32TMT…`), Grad/Min/Sekunden: nur N/S/E/W. Das Feld filtert ungültige Zeichen sofort; PHP prüft zusätzlich serverseitig.
+- Trennzeichen: Komma, Semikolon, Leerzeichen oder `/`; Dezimalpunkt oder -komma; Schweizer Tausendertrennung mit Apostroph (`2'624'043`) wird erkannt.
+- Eingabebegrenzung: Ausser bei UTM/MGRS nur Zahlen. UTM: höchstens zwei Buchstaben (`30U` oder `E … N …`), MGRS: drei (`54SUE…`), Grad/Min/Sekunden: nur N/S/E/W. Das Feld filtert ungültige Zeichen sofort; PHP prüft zusätzlich serverseitig.
 - Standard-Reihenfolge ist **Breite, Länge**. Bei «Länge zuerst» das Häkchen «Erste Zahl ist die Länge» setzen.
 - UTM ohne Zone: es wird Zone 32 angenommen (Hinweis wird angezeigt). Besser Zone mit angeben.
 - Kleine Web-Mercator-Werte können mit UTM verwechselt werden – in dem Fall Format explizit wählen.

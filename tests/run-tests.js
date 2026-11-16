@@ -220,7 +220,8 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const gpxHtml = fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8');
   const m = gpxHtml.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('gpx-reduce.html hat Script-Block', !!m);
-  ok('Limit-Presets 100/200/250/1000 mit Default 250', ['value="100"', 'value="200"', 'value="250" selected', 'value="1000"'].every(o => gpxHtml.indexOf(o) >= 0));
+  ok('Limit-Presets 50/100/250/500 mit Default 250', ['value="50"', 'value="100"', 'value="250" selected', 'value="500"'].every(o => gpxHtml.indexOf(o) >= 0));
+  ok('alte Presets 200/1000 entfernt', gpxHtml.indexOf('value="200"') < 0 && gpxHtml.indexOf('value="1000"') < 0);
   ok('Zurück-Link zum Konverter vorhanden', gpxHtml.indexOf('href="koordinaten/index.html"') >= 0);
   const G = new Function(m[1] + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm };')();
   // synthetische Tour: 2000 Punkte auf gewellter Linie + benannte Punkte

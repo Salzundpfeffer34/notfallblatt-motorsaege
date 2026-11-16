@@ -5,75 +5,112 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GPX-Reduktion für Garmin · Gaia-Touren</title>
 <style>
-  :root { --line:#e5e5e0; --muted:#666; --accent:#3b6ea5; }
+  :root { --line:#e3e3dd; --muted:#6b6b64; --accent:#2f6db3; --accent2:#245a96; --bg:#f6f6f2; --card:#fff; --ink:#23231f; }
   * { box-sizing:border-box; }
-  body { font-family:system-ui,-apple-system,sans-serif; max-width:960px; margin:24px auto; padding:0 16px; color:#222; }
-  h1 { font-size:1.4rem; margin:0 0 4px; }
-  .sub { color:var(--muted); font-size:.9rem; margin-bottom:18px; }
-  .card { border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:14px; background:#fff; }
-  #drop { border:2px dashed var(--accent); border-radius:10px; padding:28px; text-align:center; background:#f6f9fc; cursor:pointer; }
-  #drop.drag { background:#e8f0fa; }
-  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
-  label { font-size:.82rem; color:var(--muted); display:block; margin-bottom:3px; }
-  input[type=number], select { padding:7px 9px; border:1px solid var(--line); border-radius:7px; font-size:.95rem; width:130px; }
-  input[type=checkbox] { margin-right:6px; }
-  .check { font-size:.9rem; margin:6px 0; }
-  button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 18px; font-size:.95rem; cursor:pointer; }
-  button.secondary { background:#eee; color:#222; }
-  button:disabled { opacity:.5; cursor:default; }
-  .stats { display:flex; gap:18px; flex-wrap:wrap; font-size:.92rem; margin-top:8px; }
-  .stats b { font-size:1.15rem; display:block; }
-  #preview { width:100%; height:auto; background:#fafaf8; border:1px solid var(--line); border-radius:8px; }
-  .hint { color:var(--muted); font-size:.82rem; margin-top:6px; }
-  #msg { margin-top:10px; font-size:.92rem; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; margin:0; padding:0 16px 40px; color:var(--ink); background:var(--bg); }
+  .wrap { max-width:920px; margin:0 auto; }
+  header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:22px 0 6px; }
+  h1 { font-size:1.45rem; margin:0; letter-spacing:-.01em; }
+  .sub { color:var(--muted); font-size:.92rem; margin:4px 0 0; }
+  a.back { font-size:.88rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); background:#fff; padding:8px 13px; border-radius:8px; white-space:nowrap; }
+  a.back:hover { border-color:var(--accent); }
+  .card { border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-top:16px; background:var(--card); box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  #drop { border:2px dashed var(--accent); border-radius:12px; padding:34px 20px; text-align:center; background:#eef4fb; cursor:pointer; transition:background .15s; }
+  #drop:hover, #drop.drag { background:#dfeafa; }
+  #drop .ic { font-size:2rem; }
+  #drop .t { font-weight:600; margin-top:6px; }
+  #drop .h { color:var(--muted); font-size:.85rem; margin-top:2px; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; align-items:end; }
+  .field label { font-size:.8rem; color:var(--muted); display:block; margin-bottom:4px; font-weight:600; }
+  select, input[type=number] { padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:.95rem; background:#fff; font-family:inherit; }
+  input[type=number] { width:96px; }
+  .check { font-size:.9rem; margin:7px 0; }
+  .check input { margin-right:7px; accent-color:var(--accent); }
+  button, a.btn { background:var(--accent); color:#fff; border:0; border-radius:9px; padding:11px 20px; font-size:.95rem; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; font-family:inherit; }
+  button:hover, a.btn:hover { background:var(--accent2); }
+  button.secondary { background:#fff; color:var(--ink); border:1px solid var(--line); }
+  button.secondary:hover { border-color:var(--accent); color:var(--accent); background:#fff; }
+  button:disabled { opacity:.45; cursor:default; }
+  .stats { display:flex; gap:14px; flex-wrap:wrap; margin-top:14px; }
+  .stat { flex:1; min-width:110px; background:#f6f6f2; border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .stat b { font-size:1.25rem; display:block; font-variant-numeric:tabular-nums; }
+  .stat span { color:var(--muted); font-size:.78rem; }
+  #msg { margin-top:12px; font-size:.92rem; min-height:1.2em; }
   .ok { color:#1a7f37; } .err { color:#b3261e; }
-  code { background:#f0f0ec; padding:1px 5px; border-radius:4px; }
-  table { border-collapse:collapse; font-size:.9rem; }
-  td, th { border-bottom:1px solid var(--line); padding:4px 10px 4px 0; text-align:left; }
+  .hint { color:var(--muted); font-size:.82rem; margin:10px 0 0; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; margin-top:4px; }
+  td, th { border-bottom:1px solid var(--line); padding:7px 10px 7px 0; text-align:left; }
+  th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
+  #preview { width:100%; height:auto; background:#fbfbf9; border:1px solid var(--line); border-radius:10px; margin-top:12px; }
+  .legend { display:flex; gap:16px; font-size:.82rem; color:var(--muted); margin-top:8px; }
+  .legend .sw { display:inline-block; width:18px; height:3px; border-radius:2px; vertical-align:middle; margin-right:6px; }
+  footer { margin-top:22px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; display:flex; gap:16px; flex-wrap:wrap; }
+  footer a { color:var(--accent); text-decoration:none; }
+  footer a:hover { text-decoration:underline; }
 </style>
 </head>
 <body>
-<h1>GPX-Reduktion für Garmin</h1>
-<p class="sub">Gaia-GPX mit zu vielen Punkten auf das Garmin-Limit reduzieren – intelligent per Douglas-Peucker. Start, Ziel und benannte Punkte bleiben immer erhalten. Alles lokal im Browser, keine Daten verlassen das Gerät.</p>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>🗺️ GPX-Reduktion für Garmin</h1>
+    <p class="sub">Gaia-GPX mit zu vielen Punkten auf das Garmin-Limit reduzieren – intelligent per Douglas-Peucker. Alles lokal im Browser, keine Daten verlassen das Gerät.</p>
+  </div>
+  <a class="back" href="koordinaten/index.html">← Koordinaten-Konverter</a>
+</header>
 
 <div class="card">
-  <div id="drop" tabindex="0" role="button">GPX-Datei hierher ziehen oder klicken zum Auswählen</div>
-  <input type="file" id="file" accept=".gpx,.xml" class="hidden" style="display:none">
+  <div id="drop" tabindex="0" role="button">
+    <div class="ic">📍</div>
+    <div class="t">GPX-Datei hierher ziehen</div>
+    <div class="h">oder klicken zum Auswählen</div>
+  </div>
+  <input type="file" id="file" accept=".gpx,.xml" style="display:none">
   <div id="msg"></div>
   <div id="stats" class="stats" style="display:none"></div>
 </div>
 
 <div class="card" id="settings" style="display:none">
   <div class="row">
-    <div><label for="limit">Max. Punkte (Garmin-Limit)</label>
+    <div class="field"><label for="limit">Max. Punkte (Garmin-Routen-Limit)</label>
       <select id="limit">
-        <option value="50">50</option>
         <option value="100">100</option>
-        <option value="250" selected>250</option>
-        <option value="500">500</option>
+        <option value="200">200</option>
+        <option value="250" selected>250 (Standard)</option>
         <option value="1000">1.000</option>
-        <option value="2000">2.000</option>
-        <option value="5000">5.000</option>
-        <option value="10000">10.000</option>
       </select>
-      <input type="number" id="limitCustom" min="2" max="100000" placeholder="eigen…" style="width:90px;margin-top:4px">
+      <div style="margin-top:5px"><input type="number" id="limitCustom" min="2" max="100000" placeholder="eigener Wert…"></div>
     </div>
-    <div><label for="eps">Start-Toleranz (m)</label><input type="number" id="eps" value="10" min="0" step="1"></div>
-    <div><label>&nbsp;</label><button id="run">Reduzieren &amp; anzeigen</button></div>
-    <div><label>&nbsp;</label><button id="dl" class="secondary" disabled>GPX herunterladen</button></div>
+    <div class="field"><label for="eps">Start-Toleranz (m)</label><input type="number" id="eps" value="10" min="0" step="1"></div>
+    <div class="field"><label>&nbsp;</label>
+      <button id="run">Reduzieren &amp; anzeigen</button>
+      <button id="dl" class="secondary" disabled style="margin-left:8px">GPX herunterladen</button>
+    </div>
   </div>
-  <div class="check"><input type="checkbox" id="keepEnds" checked>Start &amp; Ziel immer behalten (mit Namen, ggf. „Start“/„Ziel“ benennen)</div>
-  <div class="check"><input type="checkbox" id="keepNamed" checked>Benannte Punkte (Waypoints &amp; benannte Trackpunkte) immer behalten</div>
-  <div class="check"><input type="checkbox" id="asRoute" checked>Zusätzlich als Route (&lt;rte&gt;) exportieren – für die Garmin-Navigation</div>
-  <div class="check"><input type="checkbox" id="keepEle" checked>Höhe (&lt;ele&gt;) und Zeit (&lt;time&gt;) mitnehmen</div>
-  <p class="hint">Route-Limits je nach Gerät oft 50–250 Punkte, Tracks meist 2.000–10.000. Die Toleranz wird automatisch per Binärsuche so angepasst, dass das Limit genau eingehalten wird (nie mehr Punkte als nötig entfernen).</p>
+  <div style="margin-top:10px">
+    <div class="check"><input type="checkbox" id="keepEnds" checked>Start &amp; Ziel immer behalten (mit Namen, ggf. „Start“/„Ziel“ benennen)</div>
+    <div class="check"><input type="checkbox" id="keepNamed" checked>Benannte Punkte (Waypoints &amp; benannte Trackpunkte) immer behalten</div>
+    <div class="check"><input type="checkbox" id="asRoute" checked>Zusätzlich als Route (&lt;rte&gt;) exportieren – für die Garmin-Navigation</div>
+    <div class="check"><input type="checkbox" id="keepEle" checked>Höhe (&lt;ele&gt;) und Zeit (&lt;time&gt;) mitnehmen</div>
+  </div>
+  <p class="hint">Routen erlauben meist max. 250 Punkte (ältere Geräte teils nur 50), Tracks deutlich mehr (2.000–10.000). Die Toleranz wird per Binärsuche automatisch so angepasst, dass das Limit genau eingehalten wird – es wird nie mehr entfernt als nötig.</p>
 </div>
 
 <div class="card" id="result" style="display:none">
-  <h2 style="font-size:1.05rem;margin:0 0 8px">Ergebnis</h2>
+  <h2 style="font-size:1.05rem;margin:0 0 10px">Ergebnis</h2>
   <table id="cmp"></table>
   <svg id="preview" viewBox="0 0 600 260" role="img" aria-label="Vorschau vorher/nachher"></svg>
-  <p class="hint">Grau = Original, Blau = reduziert. Namen bleiben an Start/Ziel und allen benannten Punkten erhalten.</p>
+  <div class="legend">
+    <span><span class="sw" style="background:#c8c8c0"></span>Original</span>
+    <span><span class="sw" style="background:#2f6db3"></span>Reduziert (Punkte anklickbar für Name/Ort)</span>
+  </div>
+</div>
+
+<footer>
+  <span>← <a href="koordinaten/index.html">Koordinaten-Konverter</a></span>
+  <span><a href="index.html">Notfallblatt Motorsäge</a></span>
+  <span>Reine lokale HTML-Datei – keine Server, keine Cookies, keine externen Dienste.</span>
+</footer>
 </div>
 
 <script>
@@ -134,7 +171,7 @@ function reducePoints(points, limit, forced, epsStart) {
     var c = countKeep(keep);
     if (c <= limit) { bestKeep = keep; bestEps = mid; hi = mid; } else { lo = mid; }
   }
-  if (!bestKeep) { bestKeep = dpKeep(proj, hi); forced.forEach(function (i) { keep && (bestKeep[i] = 1); }); }
+  if (!bestKeep) { bestKeep = dpKeep(proj, hi); forced.forEach(function (i) { bestKeep[i] = 1; }); }
   var cnt = countKeep(bestKeep);
   if (cnt > limit) {
     // zu viele erzwungene Punkte: unbenannte gleichmaessig ausduennen
@@ -144,7 +181,10 @@ function reducePoints(points, limit, forced, epsStart) {
     var gone = {};
     for (var k = 0; k < drop; k++) { gone[Math.floor(k * step)] = 1; }
     var keep2 = new Uint8Array(n);
-    for (var m = 0; m < n; m++) { keep2[m] = bestKeep[m] && !(unforced.indexOf(m) >= 0 && gone[unforced.indexOf(m)]); }
+    for (var m = 0; m < n; m++) {
+      var ui = unforced.indexOf(m);
+      keep2[m] = bestKeep[m] && !(ui >= 0 && gone[ui]);
+    }
     forced.forEach(function (i) { keep2[i] = 1; });
     bestKeep = keep2;
   }
@@ -225,13 +265,14 @@ if (typeof document !== 'undefined') {
         document.getElementById('settings').style.display = '';
         document.getElementById('result').style.display = 'none';
         var named = gpx.trkpts.filter(function (p) { return p.name; }).length + gpx.wpts.length;
-        document.getElementById('stats').style.display = 'flex';
-        document.getElementById('stats').innerHTML =
-          '<div><b>' + gpx.trkpts.length + '</b>Trackpunkte</div>' +
-          '<div><b>' + gpx.wpts.length + '</b>Waypoints</div>' +
-          '<div><b>' + named + '</b>benannte Punkte</div>' +
-          '<div><b>' + trackKm(gpx.trkpts).toFixed(1) + ' km</b>Tourlänge</div>' +
-          '<div><b>' + esc(gpx.trkName || '–') + '</b>Tourname</div>';
+        var st = document.getElementById('stats');
+        st.style.display = 'flex';
+        st.innerHTML =
+          '<div class="stat"><b>' + gpx.trkpts.length + '</b><span>Trackpunkte</span></div>' +
+          '<div class="stat"><b>' + gpx.wpts.length + '</b><span>Waypoints</span></div>' +
+          '<div class="stat"><b>' + named + '</b><span>benannte Punkte</span></div>' +
+          '<div class="stat"><b>' + trackKm(gpx.trkpts).toFixed(1) + ' km</b><span>Tourlänge</span></div>' +
+          '<div class="stat"><b>' + esc(gpx.trkName || '–') + '</b><span>Tourname</span></div>';
         msg('GPX geladen: ' + f.name + ' – jetzt Limit wählen und „Reduzieren“ klicken.', 'ok');
       } catch (e) { msg('Fehler: ' + e.message, 'err'); }
     };
@@ -260,7 +301,7 @@ if (typeof document !== 'undefined') {
     document.getElementById('cmp').innerHTML =
       '<tr><th></th><th>Punkte</th><th>Länge</th></tr>' +
       '<tr><td>Original</td><td>' + gpx.trkpts.length + '</td><td>' + km0.toFixed(2) + ' km</td></tr>' +
-      '<tr><td>Reduziert</td><td>' + keptPts.length + ' (Limit ' + limit + ')</td><td>' + km1.toFixed(2) + ' km (' + (km0 ? (100 * (km1 - km0) / km0).toFixed(1) : '0') + ' %)</td></tr>' +
+      '<tr><td>Reduziert</td><td><b>' + keptPts.length + '</b> (Limit ' + limit + ')</td><td>' + km1.toFixed(2) + ' km (' + (km0 ? (100 * (km1 - km0) / km0).toFixed(1) : '0') + ' %)</td></tr>' +
       '<tr><td>Toleranz</td><td colspan="2">' + res.eps.toFixed(1) + ' m</td></tr>';
     drawPreview(gpx.trkpts, keptPts);
     document.getElementById('result').style.display = '';
@@ -279,11 +320,11 @@ if (typeof document !== 'undefined') {
       return x.toFixed(1) + ',' + y.toFixed(1);
     }
     var s = '';
-    s += '<polyline points="' + origPts.map(xy).join(' ') + '" fill="none" stroke="#c8c8c0" stroke-width="1"/>';
-    s += '<polyline points="' + keptPts.map(xy).join(' ') + '" fill="none" stroke="#3b6ea5" stroke-width="2"/>';
+    s += '<polyline points="' + origPts.map(xy).join(' ') + '" fill="none" stroke="#c8c8c0" stroke-width="1.4"/>';
+    s += '<polyline points="' + keptPts.map(xy).join(' ') + '" fill="none" stroke="#2f6db3" stroke-width="2.2"/>';
     keptPts.forEach(function (p) {
       var c = xy(p).split(',');
-      s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="2.6" fill="#3b6ea5"><title>' + esc(p.name || (p.lat + ', ' + p.lon)) + '</title></circle>';
+      s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="3" fill="#2f6db3"><title>' + esc(p.name || (p.lat + ', ' + p.lon)) + '</title></circle>';
     });
     svg.innerHTML = s;
   }

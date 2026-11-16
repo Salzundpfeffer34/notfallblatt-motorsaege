@@ -20,6 +20,7 @@ Einfach `index.html` im Browser öffnen (Doppelklick genügt). Für Handy: Datei
 - **Schlagskizze**: zeichnen mit Finger/Maus, Nordpfeil, Undo.
 - **Pro Einsatzort ein Blatt**: Einsätze anlegen, duplizieren (als Vorlage für den nächsten Ort), umbenennen, löschen, als JSON exportieren/importieren. Alles wird automatisch lokal gespeichert (localStorage).
 - **Drucken / PDF**: druckfertiges A4-Blatt im Layout des Originalformulars plus Seite mit **2× Notfallkarte** (85×54 mm) zum Ausschneiden – alle Werte werden automatisch übernommen.
+- **GPX-Reduktion für Garmin** (`gpx-reduce.html`, eigene Seite): Gaia-GPX mit zu vielen Punkten auf ein Garmin-Limit reduzieren – Douglas-Peucker mit automatischer Toleranz, Start/Ziel und benannte Punkte (inkl. Namen) bleiben immer erhalten, Export als Track und/oder Route mit Vorschau. Reine lokale HTML-Datei, keine Abhängigkeiten.
 - **Mehrsprachig**: Deutsch, Français, Italiano, Español, Português – über den Sprachwähler oben rechts. Die Auswahl wird gespeichert; auch Gefahren-Chips, Druckblatt und Notfallkarte erscheinen in der gewählten Sprache. Die Übersetzungen liegen in `js/texte-*.js` (eine Datei pro Sprache) und können leicht angepasst werden.
 
 ## Technik

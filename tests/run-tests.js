@@ -141,6 +141,66 @@ function jpegWrap(payload) {
   ok('exifGps JPEG ohne GPS -> null', F.exifGps(toAB(plain)) === null);
 }
 
+// --- 4b. RW2-Varianten: GPS im Exif-Sub-IFD, XMP (0x02BC), ASCII-Rationale ---
+function putIfd(b, off, entries) {
+  b.writeUInt16LE(entries.length, off);
+  entries.forEach((en, i) => {
+    const e = off + 2 + i * 12;
+    b.writeUInt16LE(en.tag, e); b.writeUInt16LE(en.type, e + 2); b.writeUInt32LE(en.count, e + 4);
+    if (en.inline !== undefined) { b.write(en.inline, e + 8, 'latin1'); } else { b.writeUInt32LE(en.off, e + 8); }
+  });
+  b.writeUInt32LE(0, off + 2 + entries.length * 12);
+}
+function putRationals(b, off, tri) {
+  tri.forEach((r, i) => { b.writeUInt32LE(r[0], off + i * 8); b.writeUInt32LE(r[1], off + i * 8 + 4); });
+}
+function rawHeader(b, magicLo, magicHi, ifd0) {
+  b.write('II', 0, 'ascii'); b.writeUInt8(magicLo, 2); b.writeUInt8(magicHi, 3); b.writeUInt32LE(ifd0, 4);
+}
+{
+  // RW2: GPS-Pointer (0x8825) sitzt im Exif-Sub-IFD (0x8769)
+  const b = Buffer.alloc(256);
+  rawHeader(b, 0x55, 0x00, 8);
+  putIfd(b, 8, [{ tag: 0x8769, type: 4, count: 1, off: 40 }]);          // IFD0 -> ExifIFD @40
+  putIfd(b, 40, [{ tag: 0x8825, type: 4, count: 1, off: 64 }]);         // ExifIFD -> GPS @64
+  putIfd(b, 64, [
+    { tag: 1, type: 2, count: 2, inline: 'N\0\0\0' },
+    { tag: 2, type: 5, count: 3, off: 128 },
+    { tag: 3, type: 2, count: 2, inline: 'E\0\0\0' },
+    { tag: 4, type: 5, count: 3, off: 152 },
+  ]);
+  putRationals(b, 128, [[47, 1], [22, 1], [368, 10]]);
+  putRationals(b, 152, [[8, 1], [32, 1], [301, 10]]);
+  const r = F.exifGps(toAB(b));
+  ok('exifGps RW2 GPS im Exif-Sub-IFD', r && near(r.lat, 47.3768889, 1e-4) && near(r.lon, 8.5416944, 1e-4));
+}
+{
+  // RW2: GPS nur als XMP in Tag 0x02BC (ApplicationNotes)
+  const xmp = '<?xpacket begin=""?><x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:exif="http://ns.adobe.com/exif/1.0/" exif:GPSLatitude="47.376895" exif:GPSLongitude="8.541694" exif:GPSLatitudeRef="N" exif:GPSLongitudeRef="E"/></rdf:RDF></x:xmpmeta>';
+  const b = Buffer.alloc(64 + xmp.length + 8);
+  rawHeader(b, 0x55, 0x00, 8);
+  putIfd(b, 8, [{ tag: 0x02BC, type: 7, count: xmp.length, off: 64 }]);
+  b.write(xmp, 64, 'utf8');
+  const r = F.exifGps(toAB(b));
+  ok('exifGps RW2 XMP (0x02BC)', r && near(r.lat, 47.376895, 1e-6) && near(r.lon, 8.541694, 1e-6));
+}
+{
+  // RW2: GPS-Koordinaten als ASCII-Rationale (Typ 2) "47/1,22/1,368/10"
+  const latS = '47/1,22/1,368/10', lonS = '8/1,32/1,301/10';
+  const b = Buffer.alloc(256);
+  rawHeader(b, 0x55, 0x00, 8);
+  putIfd(b, 8, [{ tag: 0x8825, type: 4, count: 1, off: 26 }]);
+  putIfd(b, 26, [
+    { tag: 1, type: 2, count: 2, inline: 'N\0\0\0' },
+    { tag: 2, type: 2, count: latS.length, off: 128 },
+    { tag: 3, type: 2, count: 2, inline: 'E\0\0\0' },
+    { tag: 4, type: 2, count: lonS.length, off: 160 },
+  ]);
+  b.write(latS, 128, 'ascii'); b.write(lonS, 160, 'ascii');
+  const r = F.exifGps(toAB(b));
+  ok('exifGps RW2 ASCII-Rationale', r && near(r.lat, 47.3768889, 1e-4) && near(r.lon, 8.5416944, 1e-4));
+}
+
 // --- 5. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --
 {
   const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');

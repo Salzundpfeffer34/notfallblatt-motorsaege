@@ -1279,12 +1279,31 @@ function exifGps(buf) {
   function u32(o) { return v.getUint32(tiff + o, le); }
   var magic = u16(2);
   if (magic !== 42 && magic !== 0x0055 && magic !== 0x5555 && magic !== 0x4F52 && magic !== 0x5352) { return exifGpsXmp(v, xmpRanges); }
+  function saneIfd(off) { return off > 0 && off + 2 <= v.byteLength - tiff && u16(off) >= 1 && u16(off) <= 500; }
   var ifd0 = u32(4);
-  var gpsPtr = -1, n = u16(ifd0), i, e;
-  for (i = 0; i < n; i++) {
-    e = ifd0 + 2 + i * 12;
-    if (e + 12 > v.byteLength - tiff) { break; }
-    if (u16(e) === 0x8825) { gpsPtr = u32(e + 8); break; }
+  if (!saneIfd(ifd0)) {
+    if (saneIfd(8)) { ifd0 = 8; } else if (saneIfd(16)) { ifd0 = 16; }
+  }
+  if (!saneIfd(ifd0)) { return exifGpsXmp(v, xmpRanges); }
+  var gpsPtr = -1, exifPtr = -1, xmpOff = -1, xmpCnt = 0;
+  function scanIfd(off) {
+    var n = u16(off), i, e;
+    for (i = 0; i < n; i++) {
+      e = off + 2 + i * 12;
+      if (e + 12 > v.byteLength - tiff) { break; }
+      var tag = u16(e), cnt = u32(e + 4);
+      if (tag === 0x8825 && gpsPtr < 0) { gpsPtr = u32(e + 8); }
+      else if (tag === 0x8769 && exifPtr < 0) { exifPtr = u32(e + 8); }
+      else if (tag === 0x02BC && xmpOff < 0) { xmpOff = u32(e + 8); xmpCnt = cnt; }
+    }
+  }
+  scanIfd(ifd0);
+  if (exifPtr > 0 && saneIfd(exifPtr)) { scanIfd(exifPtr); }
+  if (xmpOff > 0 && xmpCnt > 0) {
+    var xe = tiff + xmpOff, xen = Math.min(xe + xmpCnt, v.byteLength), txt = '', x;
+    for (x = xe; x < xen; x++) { txt += String.fromCharCode(v.getUint8(x)); }
+    var xr = xmpGps(txt);
+    if (xr) { return xr; }
   }
   if (gpsPtr < 0) { return exifGpsXmp(v, xmpRanges); }
   var latRef = '', lonRef = '', lat = null, lon = null, m = u16(gpsPtr);
@@ -1294,14 +1313,37 @@ function exifGps(buf) {
     for (k = 0; k < cnt; k++) { num = u32(valOff + k * 8); den = u32(valOff + k * 8 + 4); out.push(den ? num / den : 0); }
     return out;
   }
+  function gpsCoord(eo, typ, cnt) {
+    if (typ === 5 && (cnt === 2 || cnt === 3)) {
+      var a = rationals(eo, cnt);
+      if (a) { return a[0] + a[1] / 60 + (cnt === 3 ? a[2] / 3600 : 0); }
+      return null;
+    }
+    if (typ === 2 && cnt >= 2) {
+      var vo = cnt > 4 ? u32(eo + 8) : eo + 8;
+      if (vo < 0 || vo + cnt > v.byteLength - tiff) { return null; }
+      var s = '', k, parts, vals = [], p, pd, num, den;
+      for (k = 0; k < cnt; k++) { s += String.fromCharCode(v.getUint8(tiff + vo + k)); }
+      parts = s.replace(/\0[\s\S]*$/, '').split(',');
+      for (p = 0; p < parts.length && vals.length < 3; p++) {
+        pd = parts[p].split('/');
+        num = parseFloat(pd[0]); den = pd.length > 1 ? parseFloat(pd[1]) : 1;
+        if (!isFinite(num)) { return null; }
+        vals.push(den ? num / den : 0);
+      }
+      if (vals.length >= 2) { return vals[0] + vals[1] / 60 + (vals.length > 2 ? vals[2] / 3600 : 0); }
+    }
+    return null;
+  }
+  var i, e;
   for (i = 0; i < m; i++) {
     e = gpsPtr + 2 + i * 12;
     if (e + 12 > v.byteLength - tiff) { break; }
-    var tag = u16(e), cnt = u32(e + 4);
+    var tag = u16(e), typ = u16(e + 2), cnt = u32(e + 4);
     if (tag === 1) { latRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
-    else if (tag === 2 && (cnt === 2 || cnt === 3)) { var a = rationals(e, cnt); if (a) { lat = a[0] + a[1] / 60 + (cnt === 3 ? a[2] / 3600 : 0); } }
+    else if (tag === 2) { var a2 = gpsCoord(e, typ, cnt); if (a2 !== null) { lat = a2; } }
     else if (tag === 3) { lonRef = String.fromCharCode(v.getUint8(tiff + e + 8)); }
-    else if (tag === 4 && (cnt === 2 || cnt === 3)) { var b = rationals(e, cnt); if (b) { lon = b[0] + b[1] / 60 + (cnt === 3 ? b[2] / 3600 : 0); } }
+    else if (tag === 4) { var b2 = gpsCoord(e, typ, cnt); if (b2 !== null) { lon = b2; } }
   }
   if (lat !== null && lon !== null && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0)) {
     if (latRef === 'S') { lat = -lat; }

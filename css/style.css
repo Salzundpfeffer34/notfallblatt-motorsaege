@@ -37,7 +37,8 @@ html, body {
   justify-content: space-between;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-icon { font-size: 30px; }
+.brand-icon { display: flex; align-items: center; }
+.brand-icon img { width: 34px; height: 34px; display: block; }
 .brand h1 { font-size: 19px; margin: 0; }
 .brand p { margin: 0; font-size: 12px; color: var(--grau-dunkel); }
 .header-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }

@@ -215,7 +215,40 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('exifGps RW2 JpgFromRaw (0x002E) mit EXIF-GPS im Preview', r && near(r.lat, 46.0353611, 1e-4) && near(r.lon, 7.7534167, 1e-4));
 }
 
-// --- 5. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --
+// --- 5. gpx-reduce.html: Reduktion (Douglas-Peucker + Limit) & GPX-Output ---
+{
+  const gpxHtml = fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8');
+  const m = gpxHtml.match(/<script>\n([\s\S]*?)\n<\/script>/);
+  ok('gpx-reduce.html hat Script-Block', !!m);
+  const G = new Function(m[1] + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm };')();
+  // synthetische Tour: 2000 Punkte auf gewellter Linie + benannte Punkte
+  const pts = [];
+  for (let i = 0; i < 2000; i++) {
+    const t = i / 1999;
+    pts.push({ lat: 46.0 + t * 1.0 + Math.sin(t * 40) * 0.01, lon: 7.0 + t * 1.0, ele: String(500 + i % 100), time: '2026-11-15T10:00:00Z' });
+  }
+  pts[0].name = 'Parkplatz'; pts[1000].name = 'Hütte'; pts[1999].name = 'Gipfel';
+  const forced = [0, 1000, 1999];
+  const res = G.reducePoints(pts, 100, forced, 10);
+  ok('reducePoints: <= Limit', res.indices.length <= 100);
+  ok('reducePoints: Start/Ziel/benannt behalten', res.indices.indexOf(0) >= 0 && res.indices.indexOf(1999) >= 0 && res.indices.indexOf(1000) >= 0);
+  ok('reducePoints: sortiert & eindeutig', res.indices.every((v, i, a) => i === 0 || a[i - 1] < v));
+  const kept = res.indices.map(i => pts[i]);
+  const xml = G.buildGpx({ trkpts: pts, wpts: [{ lat: 46.0, lon: 7.0, name: 'Parkplatz' }], trkName: 'Testtour & Co' }, kept, { keepMeta: true, asRoute: true });
+  const nTrk = (xml.match(/<trkpt /g) || []).length;
+  ok('buildGpx: trkpt-Anzahl = reduziert (' + nTrk + ')', nTrk === kept.length);
+  ok('buildGpx: rte vorhanden', xml.indexOf('<rte>') >= 0 && (xml.match(/<rtept /g) || []).length === kept.length);
+  ok('buildGpx: wpt-Name erhalten', xml.indexOf('Parkplatz') >= 0);
+  ok('buildGpx: Namen in trkpts erhalten', xml.indexOf('Hütte') >= 0 && xml.indexOf('Gipfel') >= 0);
+  ok('buildGpx: XML escaped', xml.indexOf('Testtour &amp; Co') >= 0);
+  ok('buildGpx: Tags balanciert', /<gpx[\s>]/.test(xml) && xml.indexOf('</gpx>') > 0 && xml.indexOf('</trk>') > 0 && xml.indexOf('</rte>') > 0);
+  ok('trackKm positiv', G.trackKm(pts) > 100);
+  // Limit groesser als Anzahl -> keine Reduktion
+  const res2 = G.reducePoints(pts, 5000, forced, 10);
+  ok('reducePoints: Limit > Anzahl -> alles behalten', res2.indices.length === 2000);
+}
+
+// --- 6. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --
 {
   const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');
   const c2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'counter.php'), 'utf8');

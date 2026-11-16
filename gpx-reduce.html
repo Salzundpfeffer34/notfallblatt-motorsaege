@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPX-Reduktion für Garmin · Gaia-Touren</title>
+<style>
+  :root { --line:#e5e5e0; --muted:#666; --accent:#3b6ea5; }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,sans-serif; max-width:960px; margin:24px auto; padding:0 16px; color:#222; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:.9rem; margin-bottom:18px; }
+  .card { border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:14px; background:#fff; }
+  #drop { border:2px dashed var(--accent); border-radius:10px; padding:28px; text-align:center; background:#f6f9fc; cursor:pointer; }
+  #drop.drag { background:#e8f0fa; }
+  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+  label { font-size:.82rem; color:var(--muted); display:block; margin-bottom:3px; }
+  input[type=number], select { padding:7px 9px; border:1px solid var(--line); border-radius:7px; font-size:.95rem; width:130px; }
+  input[type=checkbox] { margin-right:6px; }
+  .check { font-size:.9rem; margin:6px 0; }
+  button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 18px; font-size:.95rem; cursor:pointer; }
+  button.secondary { background:#eee; color:#222; }
+  button:disabled { opacity:.5; cursor:default; }
+  .stats { display:flex; gap:18px; flex-wrap:wrap; font-size:.92rem; margin-top:8px; }
+  .stats b { font-size:1.15rem; display:block; }
+  #preview { width:100%; height:auto; background:#fafaf8; border:1px solid var(--line); border-radius:8px; }
+  .hint { color:var(--muted); font-size:.82rem; margin-top:6px; }
+  #msg { margin-top:10px; font-size:.92rem; }
+  .ok { color:#1a7f37; } .err { color:#b3261e; }
+  code { background:#f0f0ec; padding:1px 5px; border-radius:4px; }
+  table { border-collapse:collapse; font-size:.9rem; }
+  td, th { border-bottom:1px solid var(--line); padding:4px 10px 4px 0; text-align:left; }
+</style>
+</head>
+<body>
+<h1>GPX-Reduktion für Garmin</h1>
+<p class="sub">Gaia-GPX mit zu vielen Punkten auf das Garmin-Limit reduzieren – intelligent per Douglas-Peucker. Start, Ziel und benannte Punkte bleiben immer erhalten. Alles lokal im Browser, keine Daten verlassen das Gerät.</p>
+
+<div class="card">
+  <div id="drop" tabindex="0" role="button">GPX-Datei hierher ziehen oder klicken zum Auswählen</div>
+  <input type="file" id="file" accept=".gpx,.xml" class="hidden" style="display:none">
+  <div id="msg"></div>
+  <div id="stats" class="stats" style="display:none"></div>
+</div>
+
+<div class="card" id="settings" style="display:none">
+  <div class="row">
+    <div><label for="limit">Max. Punkte (Garmin-Limit)</label>
+      <select id="limit">
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="250" selected>250</option>
+        <option value="500">500</option>
+        <option value="1000">1.000</option>
+        <option value="2000">2.000</option>
+        <option value="5000">5.000</option>
+        <option value="10000">10.000</option>
+      </select>
+      <input type="number" id="limitCustom" min="2" max="100000" placeholder="eigen…" style="width:90px;margin-top:4px">
+    </div>
+    <div><label for="eps">Start-Toleranz (m)</label><input type="number" id="eps" value="10" min="0" step="1"></div>
+    <div><label>&nbsp;</label><button id="run">Reduzieren &amp; anzeigen</button></div>
+    <div><label>&nbsp;</label><button id="dl" class="secondary" disabled>GPX herunterladen</button></div>
+  </div>
+  <div class="check"><input type="checkbox" id="keepEnds" checked>Start &amp; Ziel immer behalten (mit Namen, ggf. „Start“/„Ziel“ benennen)</div>
+  <div class="check"><input type="checkbox" id="keepNamed" checked>Benannte Punkte (Waypoints &amp; benannte Trackpunkte) immer behalten</div>
+  <div class="check"><input type="checkbox" id="asRoute" checked>Zusätzlich als Route (&lt;rte&gt;) exportieren – für die Garmin-Navigation</div>
+  <div class="check"><input type="checkbox" id="keepEle" checked>Höhe (&lt;ele&gt;) und Zeit (&lt;time&gt;) mitnehmen</div>
+  <p class="hint">Route-Limits je nach Gerät oft 50–250 Punkte, Tracks meist 2.000–10.000. Die Toleranz wird automatisch per Binärsuche so angepasst, dass das Limit genau eingehalten wird (nie mehr Punkte als nötig entfernen).</p>
+</div>
+
+<div class="card" id="result" style="display:none">
+  <h2 style="font-size:1.05rem;margin:0 0 8px">Ergebnis</h2>
+  <table id="cmp"></table>
+  <svg id="preview" viewBox="0 0 600 260" role="img" aria-label="Vorschau vorher/nachher"></svg>
+  <p class="hint">Grau = Original, Blau = reduziert. Namen bleiben an Start/Ziel und allen benannten Punkten erhalten.</p>
+</div>
+
+<script>
+'use strict';
+/* ---------- Geometrie / Reduktion (rein, testbar) ---------- */
+var EARTH_R = 6371000;
+function haversineKm(a, b) {
+  var fx = Math.PI / 180, dLat = (b.lat - a.lat) * fx, dLon = (b.lon - a.lon) * fx;
+  var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * fx) * Math.cos(b.lat * fx) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * EARTH_R * Math.asin(Math.sqrt(h)) / 1000;
+}
+function trackKm(pts) { var s = 0; for (var i = 1; i < pts.length; i++) { s += haversineKm(pts[i - 1], pts[i]); } return s; }
+function project(pts) {
+  var lat0 = pts.reduce(function (m, p) { return Math.min(m, p.lat); }, 90);
+  var fx = Math.PI / 180, cos0 = Math.cos((pts[0].lat) * fx);
+  return pts.map(function (p) { return { x: (p.lon) * fx * EARTH_R * cos0, y: p.lat * fx * EARTH_R, i: 0 }; });
+}
+function distSegM(p, a, b) {
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var len2 = dx * dx + dy * dy;
+  var t = len2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  var px = a.x + t * dx, py = a.y + t * dy;
+  return Math.hypot(p.x - px, p.y - py);
+}
+function dpKeep(pts, eps) {
+  var n = pts.length, keep = new Uint8Array(n);
+  if (n < 3) { for (var i = 0; i < n; i++) { keep[i] = 1; } return keep; }
+  keep[0] = 1; keep[n - 1] = 1;
+  var stack = [[0, n - 1]];
+  while (stack.length) {
+    var ab = stack.pop(), a = ab[0], b = ab[1];
+    var maxD = 0, idx = -1;
+    for (var i = a + 1; i < b; i++) {
+      var d = distSegM(pts[i], pts[a], pts[b]);
+      if (d > maxD) { maxD = d; idx = i; }
+    }
+    if (maxD > eps && idx > 0) { keep[idx] = 1; stack.push([a, idx]); stack.push([idx, b]); }
+  }
+  return keep;
+}
+function countKeep(keep) { var c = 0; for (var i = 0; i < keep.length; i++) { c += keep[i]; } return c; }
+/* points: [{lat,lon,...}]; limit; forced: [indices]; epsStart -> {indices, eps} */
+function reducePoints(points, limit, forced, epsStart) {
+  var n = points.length;
+  if (n <= limit) { return { indices: points.map(function (_, i) { return i; }), eps: 0 }; }
+  var proj = project(points);
+  points.forEach(function (p, i) { proj[i].i = i; });
+  var maxSpan = Math.hypot(
+    Math.max.apply(null, proj.map(function (p) { return p.x; })) - Math.min.apply(null, proj.map(function (p) { return p.x; })),
+    Math.max.apply(null, proj.map(function (p) { return p.y; })) - Math.min.apply(null, proj.map(function (p) { return p.y; }))
+  ) || 1;
+  var lo = 0, hi = Math.max(maxSpan, epsStart || 0, 1), bestKeep = null, bestEps = hi;
+  for (var it = 0; it < 25; it++) {
+    var mid = (lo + hi) / 2;
+    var keep = dpKeep(proj, mid);
+    forced.forEach(function (i) { keep[i] = 1; });
+    var c = countKeep(keep);
+    if (c <= limit) { bestKeep = keep; bestEps = mid; hi = mid; } else { lo = mid; }
+  }
+  if (!bestKeep) { bestKeep = dpKeep(proj, hi); forced.forEach(function (i) { keep && (bestKeep[i] = 1); }); }
+  var cnt = countKeep(bestKeep);
+  if (cnt > limit) {
+    // zu viele erzwungene Punkte: unbenannte gleichmaessig ausduennen
+    var unforced = [];
+    for (var j = 0; j < n; j++) { if (!bestKeep[j]) { continue; } if (forced.indexOf(j) >= 0) { continue; } unforced.push(j); }
+    var drop = cnt - limit, step = unforced.length / Math.max(1, drop);
+    var gone = {};
+    for (var k = 0; k < drop; k++) { gone[Math.floor(k * step)] = 1; }
+    var keep2 = new Uint8Array(n);
+    for (var m = 0; m < n; m++) { keep2[m] = bestKeep[m] && !(unforced.indexOf(m) >= 0 && gone[unforced.indexOf(m)]); }
+    forced.forEach(function (i) { keep2[i] = 1; });
+    bestKeep = keep2;
+  }
+  var indices = [];
+  for (var q = 0; q < n; q++) { if (bestKeep[q]) { indices.push(q); } }
+  return { indices: indices, eps: bestEps };
+}
+/* ---------- GPX parse/serialize ---------- */
+function childText(el, tag) { var c = el.getElementsByTagName(tag); return c.length ? (c[0].textContent || '').trim() : ''; }
+function parseGpx(text) {
+  var doc = new DOMParser().parseFromString(text, 'application/gpx+xml');
+  if (doc.getElementsByTagName('parsererror').length) { throw new Error('kein gültiges GPX/XML'); }
+  var trkpts = [], tp = doc.getElementsByTagName('trkpt');
+  for (var i = 0; i < tp.length; i++) {
+    trkpts.push({
+      lat: parseFloat(tp[i].getAttribute('lat')), lon: parseFloat(tp[i].getAttribute('lon')),
+      ele: childText(tp[i], 'ele'), time: childText(tp[i], 'time'), name: childText(tp[i], 'name'), desc: childText(tp[i], 'desc'), sym: childText(tp[i], 'sym'), type: childText(tp[i], 'type')
+    });
+  }
+  var wpts = [], wp = doc.getElementsByTagName('wpt');
+  for (var j = 0; j < wp.length; j++) {
+    wpts.push({
+      lat: parseFloat(wp[j].getAttribute('lat')), lon: parseFloat(wp[j].getAttribute('lon')),
+      ele: childText(wp[j], 'ele'), time: childText(wp[j], 'time'), name: childText(wp[j], 'name'), desc: childText(wp[j], 'desc'), sym: childText(wp[j], 'sym'), type: childText(wp[j], 'type')
+    });
+  }
+  var trkName = '';
+  var trk = doc.getElementsByTagName('trk');
+  if (trk.length) { trkName = childText(trk[0], 'name'); }
+  if (!trkName) { var md = doc.getElementsByTagName('metadata'); if (md.length) { trkName = childText(md[0], 'name'); } }
+  return { trkpts: trkpts, wpts: wpts, trkName: trkName };
+}
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function ptXml(p, tag, keepMeta) {
+  var s = '<' + tag + ' lat="' + p.lat + '" lon="' + p.lon + '">';
+  if (keepMeta && p.ele) { s += '<ele>' + esc(p.ele) + '</ele>'; }
+  if (keepMeta && p.time) { s += '<time>' + esc(p.time) + '</time>'; }
+  if (p.name) { s += '<name>' + esc(p.name) + '</name>'; }
+  if (p.desc) { s += '<desc>' + esc(p.desc) + '</desc>'; }
+  if (p.sym) { s += '<sym>' + esc(p.sym) + '</sym>'; }
+  if (p.type) { s += '<type>' + esc(p.type) + '</type>'; }
+  return s + '</' + tag + '>';
+}
+function buildGpx(orig, keptPts, opts) {
+  var out = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  out += '<gpx version="1.1" creator="gpx-reduce.html" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n';
+  out += '<metadata><name>' + esc((orig.trkName || 'Tour') + ' (reduziert auf ' + keptPts.length + ' Punkte)') + '</name><time>' + new Date().toISOString() + '</time></metadata>\n';
+  orig.wpts.forEach(function (w) { out += ptXml(w, 'wpt', opts.keepMeta) + '\n'; });
+  out += '<trk><name>' + esc(orig.trkName || 'Tour') + '</name><trkseg>\n';
+  keptPts.forEach(function (p) { out += ptXml(p, 'trkpt', opts.keepMeta) + '\n'; });
+  out += '</trkseg></trk>\n';
+  if (opts.asRoute) {
+    out += '<rte><name>' + esc(orig.trkName || 'Tour') + '</name>\n';
+    keptPts.forEach(function (p) { out += ptXml(p, 'rtept', opts.keepMeta) + '\n'; });
+    out += '</rte>\n';
+  }
+  out += '</gpx>\n';
+  return out;
+}
+/* ---------- UI (nur im Browser) ---------- */
+if (typeof document !== 'undefined') {
+  var drop = document.getElementById('drop'), file = document.getElementById('file');
+  var gpx = null, reduced = null;
+  drop.addEventListener('click', function () { file.click(); });
+  drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
+  file.addEventListener('change', function () { if (file.files[0]) { loadFile(file.files[0]); } });
+  ['dragover', 'dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.toggle('drag', ev === 'dragover'); if (ev === 'drop' && e.dataTransfer.files[0]) { loadFile(e.dataTransfer.files[0]); } });
+  });
+  function msg(t, cls) { var m = document.getElementById('msg'); m.textContent = t; m.className = cls || ''; }
+  function loadFile(f) {
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        gpx = parseGpx(r.result);
+        if (!gpx.trkpts.length) { throw new Error('keine Trackpunkte gefunden'); }
+        reduced = null;
+        document.getElementById('settings').style.display = '';
+        document.getElementById('result').style.display = 'none';
+        var named = gpx.trkpts.filter(function (p) { return p.name; }).length + gpx.wpts.length;
+        document.getElementById('stats').style.display = 'flex';
+        document.getElementById('stats').innerHTML =
+          '<div><b>' + gpx.trkpts.length + '</b>Trackpunkte</div>' +
+          '<div><b>' + gpx.wpts.length + '</b>Waypoints</div>' +
+          '<div><b>' + named + '</b>benannte Punkte</div>' +
+          '<div><b>' + trackKm(gpx.trkpts).toFixed(1) + ' km</b>Tourlänge</div>' +
+          '<div><b>' + esc(gpx.trkName || '–') + '</b>Tourname</div>';
+        msg('GPX geladen: ' + f.name + ' – jetzt Limit wählen und „Reduzieren“ klicken.', 'ok');
+      } catch (e) { msg('Fehler: ' + e.message, 'err'); }
+    };
+    r.readAsText(f);
+  }
+  function limitVal() {
+    var c = parseInt(document.getElementById('limitCustom').value, 10);
+    return isFinite(c) && c >= 2 ? c : parseInt(document.getElementById('limit').value, 10);
+  }
+  document.getElementById('run').addEventListener('click', function () {
+    if (!gpx) { return; }
+    var limit = limitVal();
+    var keepEnds = document.getElementById('keepEnds').checked;
+    var keepNamed = document.getElementById('keepNamed').checked;
+    var forced = [];
+    if (keepEnds) { forced.push(0, gpx.trkpts.length - 1); }
+    if (keepNamed) { gpx.trkpts.forEach(function (p, i) { if (p.name) { forced.push(i); } }); }
+    var res = reducePoints(gpx.trkpts, limit, forced, parseFloat(document.getElementById('eps').value) || 0);
+    var keptPts = res.indices.map(function (i) { return gpx.trkpts[i]; });
+    if (keepEnds) {
+      if (!keptPts[0].name) { keptPts[0] = Object.assign({}, keptPts[0], { name: 'Start' }); }
+      if (!keptPts[keptPts.length - 1].name) { keptPts[keptPts.length - 1] = Object.assign({}, keptPts[keptPts.length - 1], { name: 'Ziel' }); }
+    }
+    reduced = { pts: keptPts, eps: res.eps, limit: limit };
+    var km0 = trackKm(gpx.trkpts), km1 = trackKm(keptPts);
+    document.getElementById('cmp').innerHTML =
+      '<tr><th></th><th>Punkte</th><th>Länge</th></tr>' +
+      '<tr><td>Original</td><td>' + gpx.trkpts.length + '</td><td>' + km0.toFixed(2) + ' km</td></tr>' +
+      '<tr><td>Reduziert</td><td>' + keptPts.length + ' (Limit ' + limit + ')</td><td>' + km1.toFixed(2) + ' km (' + (km0 ? (100 * (km1 - km0) / km0).toFixed(1) : '0') + ' %)</td></tr>' +
+      '<tr><td>Toleranz</td><td colspan="2">' + res.eps.toFixed(1) + ' m</td></tr>';
+    drawPreview(gpx.trkpts, keptPts);
+    document.getElementById('result').style.display = '';
+    document.getElementById('dl').disabled = false;
+    msg('Fertig: ' + gpx.trkpts.length + ' → ' + keptPts.length + ' Punkte.', 'ok');
+  });
+  function drawPreview(origPts, keptPts) {
+    var svg = document.getElementById('preview');
+    var all = origPts.concat(keptPts);
+    var minLat = Math.min.apply(null, all.map(function (p) { return p.lat; })), maxLat = Math.max.apply(null, all.map(function (p) { return p.lat; }));
+    var minLon = Math.min.apply(null, all.map(function (p) { return p.lon; })), maxLon = Math.max.apply(null, all.map(function (p) { return p.lon; }));
+    var W = 600, H = 260, pad = 16;
+    function xy(p) {
+      var x = pad + (maxLon === minLon ? W / 2 : (p.lon - minLon) / (maxLon - minLon) * (W - 2 * pad));
+      var y = H - pad - (maxLat === minLat ? H / 2 : (p.lat - minLat) / (maxLat - minLat) * (H - 2 * pad));
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }
+    var s = '';
+    s += '<polyline points="' + origPts.map(xy).join(' ') + '" fill="none" stroke="#c8c8c0" stroke-width="1"/>';
+    s += '<polyline points="' + keptPts.map(xy).join(' ') + '" fill="none" stroke="#3b6ea5" stroke-width="2"/>';
+    keptPts.forEach(function (p) {
+      var c = xy(p).split(',');
+      s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="2.6" fill="#3b6ea5"><title>' + esc(p.name || (p.lat + ', ' + p.lon)) + '</title></circle>';
+    });
+    svg.innerHTML = s;
+  }
+  document.getElementById('dl').addEventListener('click', function () {
+    if (!reduced || !gpx) { return; }
+    var opts = { keepMeta: document.getElementById('keepEle').checked, asRoute: document.getElementById('asRoute').checked };
+    var xml = buildGpx(gpx, reduced.pts, opts);
+    var name = (gpx.trkName || 'tour').replace(/[^\w\-]+/g, '-').replace(/^-+|-+$/g, '') || 'tour';
+    var blob = new Blob([xml], { type: 'application/gpx+xml' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '-garmin-' + reduced.pts.length + 'p.gpx';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+  });
+}
+</script>
+</body>
+</html>

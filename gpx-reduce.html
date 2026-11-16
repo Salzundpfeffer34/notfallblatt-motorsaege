@@ -195,7 +195,7 @@ function reducePoints(points, limit, forced, epsStart) {
 /* ---------- GPX parse/serialize ---------- */
 function childText(el, tag) { var c = el.getElementsByTagName(tag); return c.length ? (c[0].textContent || '').trim() : ''; }
 function parseGpx(text) {
-  var doc = new DOMParser().parseFromString(text, 'application/gpx+xml');
+  var doc = new DOMParser().parseFromString(text, 'text/xml');
   if (doc.getElementsByTagName('parsererror').length) { throw new Error('kein gültiges GPX/XML'); }
   var trkpts = [], tp = doc.getElementsByTagName('trkpt');
   for (var i = 0; i < tp.length; i++) {

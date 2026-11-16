@@ -70,7 +70,7 @@
   <div id="stats" class="stats" style="display:none"></div>
 </div>
 
-<div class="card" id="settings" style="display:none">
+<div class="card" id="settings">
   <div class="row">
     <div class="field"><label for="limit">Max. Punkte (Garmin-Routen-Limit)</label>
       <select id="limit">
@@ -262,7 +262,6 @@ if (typeof document !== 'undefined') {
         gpx = parseGpx(r.result);
         if (!gpx.trkpts.length) { throw new Error('keine Trackpunkte gefunden'); }
         reduced = null;
-        document.getElementById('settings').style.display = '';
         document.getElementById('result').style.display = 'none';
         var named = gpx.trkpts.filter(function (p) { return p.name; }).length + gpx.wpts.length;
         var st = document.getElementById('stats');
@@ -283,7 +282,7 @@ if (typeof document !== 'undefined') {
     return isFinite(c) && c >= 2 ? c : parseInt(document.getElementById('limit').value, 10);
   }
   document.getElementById('run').addEventListener('click', function () {
-    if (!gpx) { return; }
+    if (!gpx) { msg('Bitte zuerst eine GPX-Datei laden (Datei oben auf die Fläche ziehen oder anklicken).', 'err'); return; }
     var limit = limitVal();
     var keepEnds = document.getElementById('keepEnds').checked;
     var keepNamed = document.getElementById('keepNamed').checked;

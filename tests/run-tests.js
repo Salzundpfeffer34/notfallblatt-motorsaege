@@ -248,6 +248,13 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('reducePoints: Limit > Anzahl -> alles behalten', res2.indices.length === 2000);
 }
 
+// --- 5b. Verlinkung gpx-reduce.html im Koordinaten-Konverter ---
+{
+  const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+  ok('Konverter verlinkt ../gpx-reduce.html', konv.indexOf('href="../gpx-reduce.html"') >= 0);
+  ok('linkGpxReduce in allen 5 Sprachen', (konv.match(/linkGpxReduce:/g) || []).length === 5);
+}
+
 // --- 6. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --
 {
   const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');

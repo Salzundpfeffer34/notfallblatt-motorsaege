@@ -201,6 +201,20 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('exifGps RW2 ASCII-Rationale', r && near(r.lat, 47.3768889, 1e-4) && near(r.lon, 8.5416944, 1e-4));
 }
 
+// --- 4c. RW2 mit eingebettetem JpgFromRaw (0x002E), GPS im EXIF des Preview-JPEG ---
+{
+  const innerTiff = buildIfd(0x2A, 0x00, 46, 2, 7.3, 'N', 7, 45, 12.3, 'E');
+  const innerJpeg = jpegWrap(Buffer.concat([Buffer.from('Exif\0\0', 'binary'), innerTiff]));
+  // outer RW2: IFD0 with tag 0x002E (type 7, cnt=len, offset of inner jpeg)
+  const jpgOff = 256;
+  const b = Buffer.alloc(jpgOff + innerJpeg.length + 16);
+  rawHeader(b, 0x55, 0x00, 8);
+  putIfd(b, 8, [{ tag: 0x002E, type: 7, count: innerJpeg.length, off: jpgOff }]);
+  innerJpeg.copy(b, jpgOff);
+  const r = F.exifGps(toAB(b));
+  ok('exifGps RW2 JpgFromRaw (0x002E) mit EXIF-GPS im Preview', r && near(r.lat, 46.0353611, 1e-4) && near(r.lon, 7.7534167, 1e-4));
+}
+
 // --- 5. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --
 {
   const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');

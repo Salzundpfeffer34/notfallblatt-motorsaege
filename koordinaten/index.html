@@ -1305,7 +1305,27 @@ function exifGps(buf) {
     var xr = xmpGps(txt);
     if (xr) { return xr; }
   }
-  if (gpsPtr < 0) { return exifGpsXmp(v, xmpRanges); }
+  if (gpsPtr < 0 || gpsPtr + 2 > v.byteLength - tiff) {
+    if (tiff === 0) {
+      // Panasonic RW2/RWL: eingebettetes Vorschau-JPEG (JpgFromRaw 0x002E / JpgFromRaw2 0x0127)
+      // enthaelt ein eigenes vollstaendiges EXIF inkl. GPS-IFD
+      var n0 = u16(ifd0), i2, e2;
+      for (i2 = 0; i2 < n0; i2++) {
+        e2 = ifd0 + 2 + i2 * 12;
+        if (e2 + 12 > v.byteLength - tiff) { break; }
+        var tg = u16(e2), tp = u16(e2 + 2), cn = u32(e2 + 4);
+        if ((tg === 0x002E || tg === 0x0127) && tp === 7 && cn > 4) {
+          var poff = u32(e2 + 8);
+          if (poff > 0 && poff + 4 <= v.byteLength && v.getUint16(poff) === 0xFFD8) {
+            var plen = Math.min(cn, v.byteLength - poff);
+            var g = exifGps(buf.slice(poff, poff + plen));
+            if (g) { return g; }
+          }
+        }
+      }
+    }
+    return exifGpsXmp(v, xmpRanges);
+  }
   var latRef = '', lonRef = '', lat = null, lon = null, m = u16(gpsPtr);
   function rationals(eo, cnt) {
     var valOff = cnt * 8 > 4 ? u32(eo + 8) : eo + 8, out = [], k, num, den;

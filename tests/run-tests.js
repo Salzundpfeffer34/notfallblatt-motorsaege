@@ -256,6 +256,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('Konverter verlinkt ../gpx-reduce.html', konv.indexOf('href="../gpx-reduce.html"') >= 0);
   ok('Link ist als Button gestylt (class="btn")', konv.indexOf('class="btn" href="../gpx-reduce.html"') >= 0 && konv.indexOf('a.btn {') >= 0);
   ok('linkGpxReduce in allen 5 Sprachen', (konv.match(/linkGpxReduce:/g) || []).length === 5);
+  ok('Hinweistext getrennt vom Button (span linkGpxReduceHint)', konv.indexOf('<span data-i18n="linkGpxReduceHint">') >= 0);
+  ok('linkGpxReduceHint in allen 5 Sprachen', (konv.match(/linkGpxReduceHint:/g) || []).length === 5);
+  ok('Button-Text kurz (\u2192 Hier reduzieren)', konv.indexOf('data-i18n="linkGpxReduce">→ Hier reduzieren</a>') >= 0);
+  ok('alter Langtext nicht mehr im Markup', konv.indexOf('Hier reduzieren (gpx-reduce.html)</a>') < 0);
 }
 
 // --- 6. counter.php: beide Kopien identisch + Dashboard-Härtung vorhanden --

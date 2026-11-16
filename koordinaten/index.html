@@ -75,6 +75,7 @@ textarea:focus { outline:2px solid var(--accent); outline-offset:1px; border-col
 .help ul { margin:4px 0 8px; padding-left:18px; }
 .help li { margin:3px 0; }
 .batchhint { margin:8px 0 0; }
+.batchhint .btn { margin-left: 6px; }
 footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 .hidden { display:none; }
 </style>
@@ -211,7 +212,7 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="copyAll">Alle kopieren</button>
 <button type="button" class="copy" id="batchGpx" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="batchGpx">GPX herunterladen</button>
 </div>
-<p class="batchhint"><a class="btn" href="../gpx-reduce.html" data-i18n="linkGpxReduce">GPX hat zu viele Punkte für Garmin? → Hier reduzieren (gpx-reduce.html)</a></p>
+<p class="batchhint"><span data-i18n="linkGpxReduceHint">GPX hat zu viele Punkte für Garmin?</span> <a class="btn" href="../gpx-reduce.html" data-i18n="linkGpxReduce">→ Hier reduzieren</a></p>
 <div class="check" style="margin-top:10px">
 <input type="checkbox" id="gpxAsk" checked>
 <label for="gpxAsk" style="margin:0;font-weight:400" data-i18n="lblGpxAsk">Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)</label>
@@ -301,7 +302,8 @@ var TEXTE = {
     batchPlaceholder: 'z. B.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Stapel umrechnen',
     batchGpx: 'GPX herunterladen',
-    linkGpxReduce: 'GPX hat zu viele Punkte für Garmin? → Hier reduzieren (gpx-reduce.html)',
+    linkGpxReduceHint: 'GPX hat zu viele Punkte für Garmin?',
+    linkGpxReduce: '→ Hier reduzieren',
     lblGpxAsk: 'Beim Herunterladen nach dem Dateinamen fragen (sonst Standardname)',
     lblGpxGeo: 'Dateiname automatisch nach dem Ort der ersten Koordinate benennen (OpenStreetMap)',
     gpxGeoWait: 'Ort wird gesucht …',
@@ -421,7 +423,8 @@ var TEXTE = {
     batchPlaceholder: 'e.g.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Convert batch',
     batchGpx: 'Download GPX',
-    linkGpxReduce: 'Too many points in the GPX for Garmin? → Reduce here (gpx-reduce.html)',
+    linkGpxReduceHint: 'Too many points in the GPX for Garmin?',
+    linkGpxReduce: '→ Reduce here',
     lblGpxAsk: 'Ask for the file name when downloading (otherwise default name)',
     lblGpxGeo: 'Name the file automatically after the place of the first coordinate (OpenStreetMap)',
     gpxGeoWait: 'Looking up place …',
@@ -541,7 +544,8 @@ var TEXTE = {
     batchPlaceholder: 'p. ex.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Convertir le lot',
     batchGpx: 'Télécharger GPX',
-    linkGpxReduce: 'Trop de points dans le GPX pour Garmin ? → Réduire ici (gpx-reduce.html)',
+    linkGpxReduceHint: 'Trop de points dans le GPX pour Garmin ?',
+    linkGpxReduce: '→ Réduire ici',
     lblGpxAsk: 'Demander le nom du fichier au téléchargement (sinon nom par défaut)',
     lblGpxGeo: 'Nommer automatiquement le fichier d’après le lieu de la première coordonnée (OpenStreetMap)',
     gpxGeoWait: 'Recherche du lieu …',
@@ -661,7 +665,8 @@ var TEXTE = {
     batchPlaceholder: 'es.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Converti serie',
     batchGpx: 'Scarica GPX',
-    linkGpxReduce: 'Troppi punti nel GPX per Garmin? → Riduci qui (gpx-reduce.html)',
+    linkGpxReduceHint: 'Troppi punti nel GPX per Garmin?',
+    linkGpxReduce: '→ Riduci qui',
     lblGpxAsk: 'Chiedere il nome del file al download (altrimenti nome predefinito)',
     lblGpxGeo: 'Nomina automaticamente il file in base al luogo della prima coordinata (OpenStreetMap)',
     gpxGeoWait: 'Ricerca del luogo …',
@@ -781,7 +786,8 @@ var TEXTE = {
     batchPlaceholder: 'p. ej.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Convertir lote',
     batchGpx: 'Descargar GPX',
-    linkGpxReduce: '¿Demasiados puntos en el GPX para Garmin? → Reducir aquí (gpx-reduce.html)',
+    linkGpxReduceHint: '¿Demasiados puntos en el GPX para Garmin?',
+    linkGpxReduce: '→ Reducir aquí',
     lblGpxAsk: 'Preguntar el nombre del archivo al descargar (si no, nombre estándar)',
     lblGpxGeo: 'Nombrar automáticamente el archivo según el lugar de la primera coordenada (OpenStreetMap)',
     gpxGeoWait: 'Buscando el lugar …',

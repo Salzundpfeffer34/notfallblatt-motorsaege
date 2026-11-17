@@ -79,6 +79,8 @@
   td, th { border-bottom:1px solid var(--line); padding:7px 10px 7px 0; text-align:left; vertical-align:top; }
   th { color:var(--muted); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
   td.t { font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:600; }
+  #times tr.sec td { background:rgba(47,109,179,.10); color:var(--accent); font-weight:700; font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; padding-top:10px; }
+  #times tr.noon td { background:rgba(47,109,179,.18); font-weight:600; }
   .help { font-size:.9rem; color:var(--muted); }
   .help ul { margin:6px 0 0; padding-left:18px; }
   .help li { margin:4px 0; }
@@ -975,8 +977,11 @@ if (typeof document !== 'undefined') {
       return p.az.toFixed(0) + '° ' + compass(p.az);
     }
     var rows = [];
-    function row(label, timeText, altText, azText) {
-      rows.push('<tr><td>' + label + '</td><td class="t">' + timeText + '</td><td>' + altText + '</td><td>' + azText + '</td></tr>');
+    function row(label, timeText, altText, azText, cls) {
+      rows.push('<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td><td class="t">' + timeText + '</td><td>' + altText + '</td><td>' + azText + '</td></tr>');
+    }
+    function sec(title) {
+      rows.push('<tr class="sec"><td colspan="4">' + title + '</td></tr>');
     }
     function crossRow(altKey, suffix) {
       var e2 = ev.byAlt[altKey];
@@ -992,19 +997,23 @@ if (typeof document !== 'undefined') {
     if (ev.sunrise == null) {
       row('☀️ Hinweis', ev.noonAlt > 0 ? 'Polartag – die Sonne geht heute nicht unter' : 'Polarnacht – die Sonne geht heute nicht auf', ev.noonAlt.toFixed(1) + '° (Mittag)', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz));
     }
+    sec('🌃 Dämmerung');
     crossRow('-18', 'morgens'); crossRow('-18', 'abends');
     crossRow('-12', 'morgens'); crossRow('-12', 'abends');
     crossRow('-6', 'morgens'); crossRow('-6', 'abends');
+    row('☀️ Wahrer Mittag (Höchststand)', fmtHM(ev.solarNoon), ev.noonAlt.toFixed(1) + '°', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz), 'noon');
+    sec('🌅 Morgen');
     rangeRow('🌃 Blaue Stunde morgens', ev.byAlt['-6'].morning, ev.byAlt['-4'].morning, '−6° → −4°');
     if (ev.sunrise != null) { var c1 = posCell(ev.sunrise); row('🌅 Sonnenaufgang', fmtHM(ev.sunrise), c1.alt, c1.az); }
     else { row('🌅 Sonnenaufgang', '–', '–', '–'); }
     rangeRow('🌇 Goldene Stunde morgens', ev.byAlt['-4'].morning, ev.byAlt['6'].morning, '−4° → +6°');
-    row('☀️ Wahrer Mittag (Höchststand)', fmtHM(ev.solarNoon), ev.noonAlt.toFixed(1) + '°', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz));
+    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), azCell(ev.sunrise) + ' – ' + azCell(ev.sunset)); }
+    sec('🌇 Abend');
     rangeRow('🌇 Goldene Stunde abends', ev.byAlt['6'].evening, ev.byAlt['-4'].evening, '+6° → −4°');
     if (ev.sunset != null) { var c2 = posCell(ev.sunset); row('🌇 Sonnenuntergang', fmtHM(ev.sunset), c2.alt, c2.az); }
     else { row('🌇 Sonnenuntergang', '–', '–', '–'); }
     rangeRow('🌃 Blaue Stunde abends', ev.byAlt['-4'].evening, ev.byAlt['-6'].evening, '−4° → −6°');
-    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), azCell(ev.sunrise) + ' – ' + azCell(ev.sunset)); }
+    sec('🌙 Mond');
     var mEv = moonEventsInDay();
     var rise = null, set = null;
     mEv.forEach(function (me) { if (me.rise && !rise) { rise = me.t; } if (!me.rise && !set) { set = me.t; } });
@@ -1012,11 +1021,12 @@ if (typeof document !== 'undefined') {
     else { row('🌙 Mondaufgang', '– (heute keiner)', '–', '–'); }
     if (set != null) { var ms2 = moonPosition(state.lat, state.lon, set); row('🌙 Monduntergang', fmtHM(set), ms2.alt.toFixed(1) + '°', ms2.az.toFixed(0) + '° ' + compass(ms2.az)); }
     else { row('🌙 Monduntergang', '– (heute keiner)', '–', '–'); }
+    var ph = moonPhaseInfo(dayStart + 43200000);
+    row('🌕 Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
+    sec('🌌 Milchstrasse');
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
     row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict, '');
-    var ph = moonPhaseInfo(dayStart + 43200000);
-    row('🌕 Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
     $('times').innerHTML = '<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>' + rows.join('');
   }
   function renderStatus() {

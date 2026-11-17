@@ -410,6 +410,12 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
     return Math.abs(mw.alt - 13.69) < 0.3 && mw.verdict.indexOf('Eher nein') === 0 && mw.verdict.indexOf('hoch') >= 0 && mw.windowText.length > 0;
   })());
   ok('sonne-mond.html: Tabelle – Azimut bei Bereichen/Tageslicht, Mond-Höhe/Azimut, Milchstrasse-Zeilen, generische Spaltenköpfe', ['azCell(t1) + \' – \' + azCell(t2)', 'azCell(ev.sunrise) + \' – \' + azCell(ev.sunset)', 'moonPosition(state.lat, state.lon, rise)', 'moonPosition(state.lat, state.lon, set)', 'milkyWayInfo(state.lat, state.lon, dayStart, ev)', 'Milchstrasse', '<th>Höhe</th><th>Azimut</th>'].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html: Tabelle gruppiert – 5 sec()-Abschnitte, noon-Hervorhebung, Reihenfolge Dämmerung > Mittag > Morgen > Tageslicht > Abend > Mond > Milchstrasse', (function () {
+    if (['function sec(title)', '<tr class="sec"><td colspan="4">', "'noon'", '#times tr.sec td', '#times tr.noon td'].every(x => sm.indexOf(x) >= 0) === false) { return false; }
+    if ((sm.match(/sec\('/g) || []).length !== 5) { return false; }
+    var a = ["crossRow('-18', 'morgens')", "compass(ev.noonAz), 'noon')", "ev.byAlt['-6'].morning", 'fmtDur(ev.dayLength)', "ev.byAlt['-6'].evening", 'fmtHM(rise)', 'milkyWayInfo(state.lat, state.lon, dayStart, ev)'].map(function (x) { return sm.indexOf(x); });
+    return a.every(function (v) { return v >= 0; }) && a.every(function (v, i) { return i === 0 || v > a[i - 1]; });
+  })());
   ok('TIME_SOURCES: mind. 3 Quellen mit name/url/parse/mode', Array.isArray(S.TIME_SOURCES) && S.TIME_SOURCES.length >= 3 && S.TIME_SOURCES.every(s => typeof s.name === 'string' && typeof s.url === 'function' && typeof s.parse === 'function' && (s.mode === 'json' || s.mode === 'text' || s.mode === 'header')));
   ok('TIME_SOURCES: URLs zeigen auf erlaubte Hosts', S.TIME_SOURCES.every(s => /^https:\/\/(www\.cloudflare\.com|worldtimeapi\.org|api\.open-meteo\.com)\//.test(s.url())));
   ok('TIME_SOURCES: Auto-URLs parameterfrei (keine Zeitzone/Koordinaten in der URL)', S.TIME_SOURCES.every(s => { const u = s.url(); return u.indexOf('Europe/') < 0 && u.indexOf('timeZone=') < 0 && u.indexOf('latitude=47') < 0 && u.indexOf('longitude=8') < 0; }));

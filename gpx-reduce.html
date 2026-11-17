@@ -263,6 +263,10 @@ if (typeof document !== 'undefined') {
         if (!gpx.trkpts.length) { throw new Error('keine Trackpunkte gefunden'); }
         reduced = null;
         document.getElementById('result').style.display = 'none';
+        document.getElementById('run').style.display = '';
+        var dlBtn0 = document.getElementById('dl');
+        dlBtn0.disabled = true;
+        dlBtn0.classList.add('secondary');
         var named = gpx.trkpts.filter(function (p) { return p.name; }).length + gpx.wpts.length;
         var st = document.getElementById('stats');
         st.style.display = 'flex';
@@ -304,7 +308,10 @@ if (typeof document !== 'undefined') {
       '<tr><td>Toleranz</td><td colspan="2">' + res.eps.toFixed(1) + ' m</td></tr>';
     drawPreview(gpx.trkpts, keptPts);
     document.getElementById('result').style.display = '';
-    document.getElementById('dl').disabled = false;
+    document.getElementById('run').style.display = 'none';
+    var dlBtn = document.getElementById('dl');
+    dlBtn.disabled = false;
+    dlBtn.classList.remove('secondary');
     msg('Fertig: ' + gpx.trkpts.length + ' → ' + keptPts.length + ' Punkte.', 'ok');
   });
   function drawPreview(origPts, keptPts) {

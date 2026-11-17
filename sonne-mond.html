@@ -151,7 +151,7 @@
     </div>
   </div>
   <div id="ortResults"></div>
-  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us).</div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us). Europa/Länder: Land ans Ende anhängen (z. B. «Zermatt Schweiz», «Zermatt CH», «Paris Frankreich», «Lissabon Portugal») – die Suche wird automatisch auf dieses Land eingeschränkt (countrycodes=ch/fr/pt …); 2-Buchstaben-Codes bitte gross schreiben, sonst das Land voll ausschreiben («Berlin Deutschland»).</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -391,6 +391,81 @@ function usStateToken(q) {
   if (US_STATE_NAMES[last]) { return US_STATE_NAMES[last]; }
   return null;
 }
+var EU_COUNTRIES = {
+  'al': ['Albanien', 'Albania'],
+  'ad': ['Andorra'],
+  'at': ['Österreich', 'Oesterreich', 'Austria'],
+  'by': ['Weißrussland', 'Weissrussland', 'Belarus'],
+  'be': ['Belgien', 'Belgium', 'Belgique'],
+  'ba': ['Bosnien und Herzegowina', 'Bosnien', 'Bosnia and Herzegovina', 'Bosnia'],
+  'bg': ['Bulgarien', 'Bulgaria'],
+  'hr': ['Kroatien', 'Croatia', 'Hrvatska'],
+  'cy': ['Zypern', 'Cyprus'],
+  'cz': ['Tschechien', 'Czechia', 'Czech Republic'],
+  'dk': ['Dänemark', 'Daenemark', 'Denmark'],
+  'ee': ['Estland', 'Estonia'],
+  'fi': ['Finnland', 'Finland'],
+  'fr': ['Frankreich', 'France'],
+  'de': ['Deutschland', 'Germany'],
+  'gr': ['Griechenland', 'Greece'],
+  'hu': ['Ungarn', 'Hungary'],
+  'is': ['Island'],
+  'ie': ['Irland', 'Ireland'],
+  'it': ['Italien', 'Italy'],
+  'lv': ['Lettland', 'Latvia'],
+  'li': ['Liechtenstein'],
+  'lt': ['Litauen', 'Lithuania'],
+  'lu': ['Luxemburg', 'Luxembourg'],
+  'mt': ['Malta'],
+  'md': ['Moldawien', 'Moldova'],
+  'mc': ['Monaco'],
+  'me': ['Montenegro'],
+  'nl': ['Niederlande', 'Holland', 'Netherlands', 'Nederland'],
+  'mk': ['Nordmazedonien', 'Mazedonien', 'North Macedonia', 'Macedonia'],
+  'no': ['Norwegen', 'Norway', 'Norge'],
+  'pl': ['Polen', 'Poland'],
+  'pt': ['Portugal'],
+  'ro': ['Rumänien', 'Romania'],
+  'ru': ['Russland', 'Russia'],
+  'sm': ['San Marino'],
+  'rs': ['Serbien', 'Serbia'],
+  'sk': ['Slowakei', 'Slovakia'],
+  'si': ['Slowenien', 'Slovenia'],
+  'es': ['Spanien', 'Spain'],
+  'se': ['Schweden', 'Sweden', 'Sverige'],
+  'ch': ['Schweiz', 'Switzerland', 'Suisse', 'Svizzera'],
+  'ua': ['Ukraine'],
+  'gb': ['Grossbritannien', 'Vereinigtes Königreich', 'United Kingdom', 'UK', 'Great Britain', 'England', 'Schottland', 'Scotland', 'Wales'],
+  'va': ['Vatikan', 'Vatican'],
+  'xk': ['Kosovo'],
+  'tr': ['Türkei', 'Turkey'],
+  'us': ['USA', 'Vereinigte Staaten', 'United States', 'United States of America']
+};
+var COUNTRY_ALIASES = {};
+function addCountryAlias(code, names, overwrite) {
+  (names || []).forEach(function (nm) {
+    var key = normalizeQuery(nm);
+    if (key && (overwrite || !COUNTRY_ALIASES[key])) { COUNTRY_ALIASES[key] = code; }
+  });
+  var cc2 = String(code).toLowerCase();
+  if (cc2.length === 2 && (overwrite || !COUNTRY_ALIASES[cc2])) { COUNTRY_ALIASES[cc2] = code; }
+}
+Object.keys(EU_COUNTRIES).forEach(function (code) { addCountryAlias(code, EU_COUNTRIES[code], false); });
+Object.keys(US_STATES).forEach(function (code) {
+  addCountryAlias('us', [US_STATES[code]], false);
+  COUNTRY_ALIASES[code] = 'us';
+});
+function detectCountryToken(q) {
+  var raw = String(q || '').trim().split(/\s+/).filter(Boolean);
+  var parts = normalizeQuery(q).split(' ').filter(Boolean);
+  for (var len = Math.min(4, parts.length); len >= 1; len--) {
+    var key = parts.slice(parts.length - len).join(' ');
+    if (!COUNTRY_ALIASES[key]) { continue; }
+    if (len === 1 && key.length === 2 && !/[A-Z]/.test(raw[raw.length - 1] || '')) { continue; }
+    return COUNTRY_ALIASES[key];
+  }
+  return null;
+}
 function buildSearchUrls(q, lat, lon) {
   var has = isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
   var vb = '';
@@ -398,7 +473,8 @@ function buildSearchUrls(q, lat, lon) {
     var d = 2;
     vb = '&viewbox=' + [Math.max(-180, lon - d), Math.max(-90, lat - d), Math.min(180, lon + d), Math.min(90, lat + d)].join(',') + '&bounded=0';
   }
-  var cc = usStateToken(q) ? '&countrycodes=us' : '';
+  var cct = detectCountryToken(q);
+  var cc = cct ? '&countrycodes=' + cct : '';
   return [
     'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&accept-language=de&q=' + encodeURIComponent(q) + vb + cc,
     'https://photon.komoot.io/api/?limit=8&q=' + encodeURIComponent(q) + (has ? '&lat=' + lat + '&lon=' + lon : '')

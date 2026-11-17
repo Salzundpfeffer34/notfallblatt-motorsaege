@@ -320,6 +320,9 @@ function calendarGrid(year, month) {
   }
   return cells;
 }
+function stripLeadingWs(s) {
+  return String(s == null ? '' : s).trimStart();
+}
 function normalizeQuery(q) {
   return String(q || '')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -781,6 +784,12 @@ if (typeof document !== 'undefined') {
   }
   ['q', 'ort', 'datum'].forEach(function (id) {
     $(id).addEventListener('blur', function () { trimField($(id)); });
+  });
+  ['q', 'ort'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      var el = $(id), t = stripLeadingWs(el.value);
+      if (t !== el.value) { el.value = t; }
+    });
   });
   var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false };
   try {

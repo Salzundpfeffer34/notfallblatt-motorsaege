@@ -282,12 +282,12 @@ function compass(az) {
   return dirs[Math.round(norm360(az) / 45) % 8];
 }
 function localDayStart(dateStr) {
-  var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!p) { return null; }
   return new Date(+p[1], +p[2] - 1, +p[3], 0, 0, 0, 0).getTime();
 }
 function shiftDateStr(dateStr, days) {
-  var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!p) { return String(dateStr); }
   var d = new Date(+p[1], +p[2] - 1, +p[3], 12, 0, 0, 0);
   d.setDate(d.getDate() + days);
@@ -298,7 +298,7 @@ function todayStr() {
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 function fmtDateDE(dateStr) {
-  var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return p ? p[3] + '.' + p[2] + '.' + p[1] : String(dateStr);
 }
 
@@ -774,6 +774,14 @@ function fmtCoord(lat, lon) {
 
 if (typeof document !== 'undefined') {
   var $ = function (id) { return document.getElementById(id); };
+  function trimField(el) {
+    var v = el.value, t = v.trim();
+    if (t !== v) { el.value = t; }
+    return t;
+  }
+  ['q', 'ort', 'datum'].forEach(function (id) {
+    $(id).addEventListener('blur', function () { trimField($(id)); });
+  });
   var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false };
   try {
     var saved = JSON.parse(localStorage.getItem('sonneMond') || 'null');
@@ -1049,7 +1057,7 @@ if (typeof document !== 'undefined') {
   $('coordForm').addEventListener('submit', function (e) {
     e.preventDefault();
     try {
-      var r = parseCoordInput($('q').value);
+      var r = parseCoordInput(trimField($('q')));
       applyCoords(r.lat, r.lon, state.name);
       err(null);
     } catch (ex) {
@@ -1064,7 +1072,7 @@ if (typeof document !== 'undefined') {
     $('timeSlider').value = state.minutes;
     renderAll();
   }
-  $('datum').addEventListener('change', function () { applyDatum($('datum').value); });
+  $('datum').addEventListener('change', function () { applyDatum(trimField($('datum'))); });
   $('dayMinus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, -1)); });
   $('dayPlus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, 1)); });
   var calY = 0, calM = 0;
@@ -1145,6 +1153,7 @@ if (typeof document !== 'undefined') {
     }, { timeout: 10000 });
   });
   function searchOrt(q) {
+    q = String(q || '').trim();
     var box = $('ortResults');
     box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche …</div>';
     var run = function (lat, lon, devPos) {
@@ -1218,13 +1227,13 @@ if (typeof document !== 'undefined') {
     }
   }
   $('ortBtn').addEventListener('click', function () {
-    var q = $('ort').value.trim();
+    var q = trimField($('ort'));
     if (q) { searchOrt(q); }
   });
   $('ort').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      var q = $('ort').value.trim();
+      var q = trimField($('ort'));
       if (q) { searchOrt(q); }
     }
   });

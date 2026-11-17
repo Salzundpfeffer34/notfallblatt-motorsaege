@@ -151,7 +151,7 @@
     </div>
   </div>
   <div id="ortResults"></div>
-  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht.</div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us).</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -376,6 +376,21 @@ function rankOrtResults(list, q) {
     return { it: it, s: similarity(q, String(it.name || '') + ' ' + String(it.label || '')) };
   }).sort(function (a, b) { return b.s - a.s; }).map(function (x) { return x.it; });
 }
+var US_STATES = {
+  'al': 'Alabama', 'ak': 'Alaska', 'az': 'Arizona', 'ar': 'Arkansas', 'ca': 'Kalifornien', 'co': 'Colorado', 'ct': 'Connecticut', 'de': 'Delaware', 'fl': 'Florida', 'ga': 'Georgia', 'hi': 'Hawaii', 'id': 'Idaho', 'il': 'Illinois', 'in': 'Indiana', 'ia': 'Iowa', 'ks': 'Kansas', 'ky': 'Kentucky', 'la': 'Louisiana', 'me': 'Maine', 'md': 'Maryland', 'ma': 'Massachusetts', 'mi': 'Michigan', 'mn': 'Minnesota', 'ms': 'Mississippi', 'mo': 'Missouri', 'mt': 'Montana', 'ne': 'Nebraska', 'nv': 'Nevada', 'nh': 'New Hampshire', 'nj': 'New Jersey', 'nm': 'New Mexico', 'ny': 'New York', 'nc': 'North Carolina', 'nd': 'North Dakota', 'oh': 'Ohio', 'ok': 'Oklahoma', 'or': 'Oregon', 'pa': 'Pennsylvania', 'ri': 'Rhode Island', 'sc': 'South Carolina', 'sd': 'South Dakota', 'tn': 'Tennessee', 'tx': 'Texas', 'ut': 'Utah', 'vt': 'Vermont', 'va': 'Virginia', 'wa': 'Washington', 'wv': 'West Virginia', 'wi': 'Wisconsin', 'wy': 'Wyoming', 'dc': 'District of Columbia'
+};
+var US_STATE_NAMES = {};
+Object.keys(US_STATES).forEach(function (code) {
+  US_STATE_NAMES[US_STATES[code].toLowerCase()] = code;
+  US_STATE_NAMES[code] = code;
+});
+function usStateToken(q) {
+  var parts = normalizeQuery(q).split(' ').filter(Boolean);
+  if (!parts.length) { return null; }
+  var last = parts[parts.length - 1];
+  if (US_STATE_NAMES[last]) { return US_STATE_NAMES[last]; }
+  return null;
+}
 function buildSearchUrls(q, lat, lon) {
   var has = isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
   var vb = '';
@@ -383,8 +398,9 @@ function buildSearchUrls(q, lat, lon) {
     var d = 2;
     vb = '&viewbox=' + [Math.max(-180, lon - d), Math.max(-90, lat - d), Math.min(180, lon + d), Math.min(90, lat + d)].join(',') + '&bounded=0';
   }
+  var cc = usStateToken(q) ? '&countrycodes=us' : '';
   return [
-    'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&accept-language=de&q=' + encodeURIComponent(q) + vb,
+    'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&accept-language=de&q=' + encodeURIComponent(q) + vb + cc,
     'https://photon.komoot.io/api/?limit=8&q=' + encodeURIComponent(q) + (has ? '&lat=' + lat + '&lon=' + lon : '')
   ];
 }

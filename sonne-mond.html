@@ -671,6 +671,11 @@ function moonPhaseInfo(ms) {
   var ill = moonIllumination(ms);
   return { fraction: ill.fraction, phase: ill.phase, age: age, name: MOON_PHASE_NAMES[Math.round(ill.phase * 8) % 8], waxing: ill.phase < 0.5 };
 }
+var MOON_PHASE_EMOJI = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
+function moonPhaseEmoji(phase) {
+  var p = ((phase % 1) + 1) % 1;
+  return MOON_PHASE_EMOJI[Math.round(p * 8) % 8];
+}
 
 function moonEvents(lat, lon, centerMs, halfWindowMs) {
   var step = 15 * 60000;
@@ -1013,7 +1018,8 @@ if (typeof document !== 'undefined') {
     if (ev.sunset != null) { var c2 = posCell(ev.sunset); row('🌇 Sonnenuntergang', fmtHM(ev.sunset), c2.alt, c2.az); }
     else { row('🌇 Sonnenuntergang', '–', '–', '–'); }
     rangeRow('🌃 Blaue Stunde abends', ev.byAlt['-4'].evening, ev.byAlt['-6'].evening, '−4° → −6°');
-    sec('🌙 Mond');
+    var ph = moonPhaseInfo(dayStart + 43200000);
+    sec(moonPhaseEmoji(ph.phase) + ' Mond');
     var mEv = moonEventsInDay();
     var rise = null, set = null;
     mEv.forEach(function (me) { if (me.rise && !rise) { rise = me.t; } if (!me.rise && !set) { set = me.t; } });
@@ -1021,8 +1027,7 @@ if (typeof document !== 'undefined') {
     else { row('🌙 Mondaufgang', '– (heute keiner)', '–', '–'); }
     if (set != null) { var ms2 = moonPosition(state.lat, state.lon, set); row('🌙 Monduntergang', fmtHM(set), ms2.alt.toFixed(1) + '°', ms2.az.toFixed(0) + '° ' + compass(ms2.az)); }
     else { row('🌙 Monduntergang', '– (heute keiner)', '–', '–'); }
-    var ph = moonPhaseInfo(dayStart + 43200000);
-    row('🌕 Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
+    row(moonPhaseEmoji(ph.phase) + ' Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
     sec('🌌 Milchstrasse');
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
@@ -1040,7 +1045,7 @@ if (typeof document !== 'undefined') {
     $('stPhase').textContent = pi.l + (sp.alt >= -0.833 ? ' · Sonne über Horizont' : ' · Sonne unter Horizont');
     $('stMoon').textContent = mp.alt.toFixed(1) + '° Höhe · ' + mp.az.toFixed(0) + '° ' + compass(mp.az) + (mp.alt >= 0 ? ' · über Horizont' : ' · unter Horizont');
     var ph = moonPhaseInfo(t);
-    $('stMoonPhase').textContent = ph.name + ' · ' + Math.round(ph.fraction * 100) + ' % beleuchtet · ' + ph.age.toFixed(1) + ' Tage alt';
+    $('stMoonPhase').textContent = moonPhaseEmoji(ph.phase) + ' ' + ph.name + ' · ' + Math.round(ph.fraction * 100) + ' % beleuchtet · ' + ph.age.toFixed(1) + ' Tage alt';
     $('timeLabel').textContent = fmtHM(t);
     var nx = nextEvent(t);
     $('stNext').textContent = nx ? nx.label + ' um ' + fmtHM(nx.t) + ' (in ' + fmtDur(nx.t - t) + ')' : 'Heute keine weiteren Ereignisse';

@@ -446,6 +446,9 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
     ok('SVG gueltig mit viewBox 0 0 200 200 (wie motorsaeage.svg)', svg2.indexOf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">') === 0);
     ok('SVG enthaelt Sonne (Amber-Kreis + Strahlen) und Mond (Sichel)', svg2.indexOf('fill="#f5b942"') >= 0 && (svg2.match(/<line /g) || []).length >= 8 && svg2.indexOf('fill="#9db4d0"') >= 0 && svg2.indexOf('fill-rule="evenodd"') >= 0);
   }
+  ok('sonne-mond.html: animierter Hintergrund sky-bg mit bg-sun + bg-moon', ['class="sky-bg"', 'class="bg-sun"', 'class="bg-moon"', '@keyframes bgSunArc', '@keyframes bgMoonArc', 'aria-hidden="true"'].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html: Hintergrund-Sonne/Mond gegenlaeufig (Ebbe/Flut) + reduced-motion', sm.indexOf('animation-delay:-35s') >= 0 && /prefers-reduced-motion: reduce[\s\S]*?\.bg-sun \{ animation:none/.test(sm) && /prefers-reduced-motion: reduce[\s\S]*?\.bg-moon \{ animation:none/.test(sm));
+  ok('sonne-mond.html: Hintergrund hinter dem Inhalt (z-index) und klick-durchlaessig', sm.indexOf('.sky-bg { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }') >= 0 && sm.indexOf('position:relative; z-index:1;') >= 0);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

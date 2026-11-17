@@ -12,7 +12,25 @@
   :root { --line:#e3e3dd; --muted:#6b6b64; --accent:#2f6db3; --accent2:#245a96; --bg:#f6f6f2; --card:#fff; --ink:#23231f; }
   * { box-sizing:border-box; }
   body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; margin:0; padding:0 16px 40px; color:var(--ink); background:var(--bg); }
-  .wrap { max-width:920px; margin:0 auto; }
+  .wrap { max-width:920px; margin:0 auto; position:relative; z-index:1; }
+  .sky-bg { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .bg-sun, .bg-moon { position:absolute; top:0; left:0; width:90px; height:90px; opacity:.16; }
+  .bg-sun { animation:bgSunArc 70s linear infinite; }
+  .bg-moon { opacity:.13; animation:bgMoonArc 70s linear infinite; animation-delay:-35s; }
+  @keyframes bgSunArc {
+    0% { transform:translate(-12vw, 78vh) rotate(0deg); }
+    50% { transform:translate(50vw, -14vh) rotate(180deg); }
+    100% { transform:translate(112vw, 78vh) rotate(360deg); }
+  }
+  @keyframes bgMoonArc {
+    0% { transform:translate(112vw, 78vh) rotate(0deg); }
+    50% { transform:translate(50vw, -14vh) rotate(-180deg); }
+    100% { transform:translate(-12vw, 78vh) rotate(-360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-sun { animation:none; transform:translate(8vw, 12vh); }
+    .bg-moon { animation:none; transform:translate(84vw, 22vh); }
+  }
   header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:22px 0 6px; }
   h1 { font-size:1.45rem; margin:0; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
   .brand-icon { display:flex; align-items:center; }
@@ -83,6 +101,10 @@
 </style>
 </head>
 <body>
+<div class="sky-bg" aria-hidden="true">
+  <svg class="bg-sun" viewBox="0 0 200 200"><g stroke="#33362f" stroke-width="7" stroke-linecap="round"><line x1="120" y1="76" x2="134" y2="76"/><line x1="107.1" y1="107.1" x2="117.1" y2="117.1"/><line x1="76" y1="120" x2="76" y2="134"/><line x1="44.9" y1="107.1" x2="34.9" y2="117.1"/><line x1="32" y1="76" x2="18" y2="76"/><line x1="44.9" y1="44.9" x2="34.9" y2="34.9"/><line x1="76" y1="32" x2="76" y2="18"/><line x1="107.1" y1="44.9" x2="117.1" y2="34.9"/></g><circle cx="76" cy="76" r="32" fill="#f5b942" stroke="#33362f" stroke-width="7"/></svg>
+  <svg class="bg-moon" viewBox="0 0 200 200"><path fill-rule="evenodd" fill="#9db4d0" d="M134 96 a38 38 0 1 0 0.0001 0 Z M152 86 a32 32 0 1 0 0.0001 0 Z"/><circle cx="134" cy="134" r="38" fill="none" stroke="#33362f" stroke-width="7"/></svg>
+</div>
 <div class="wrap">
 <header class="top">
   <div>

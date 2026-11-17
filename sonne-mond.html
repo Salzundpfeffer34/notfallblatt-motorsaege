@@ -632,7 +632,7 @@ function sunEventsForDay(lat, lon, dayStartMs) {
   };
 }
 
-function moonPosition(lat, lon, ms) {
+function moonEcliptic(ms) {
   var jd = toJD(ms);
   var d = jd - 2451545.0;
   var L = norm360(218.316 + 13.176396 * d);
@@ -644,14 +644,19 @@ function moonPosition(lat, lon, ms) {
   var eps = 23.4397 * RAD;
   var ra = Math.atan2(Math.sin(l) * Math.cos(eps) - Math.tan(b) * Math.sin(eps), Math.cos(l));
   var dec = Math.asin(clamp(Math.sin(b) * Math.cos(eps) + Math.cos(b) * Math.sin(eps) * Math.sin(l), -1, 1));
+  return { ra: ra * DEG, dec: dec * DEG, b: b * DEG, dist: dist };
+}
+function moonPosition(lat, lon, ms) {
+  var e = moonEcliptic(ms);
+  var jd = toJD(ms);
   var gmst = norm360(280.46061837 + 360.98564736629 * (jd - 2451545));
-  var H = (norm360(gmst + lon) - ra * DEG) * RAD;
-  var latR = lat * RAD;
-  var sinAlt = Math.sin(latR) * Math.sin(dec) + Math.cos(latR) * Math.cos(dec) * Math.cos(H);
+  var H = (norm360(gmst + lon) - e.ra) * RAD;
+  var latR = lat * RAD, decR = e.dec * RAD;
+  var sinAlt = Math.sin(latR) * Math.sin(decR) + Math.cos(latR) * Math.cos(decR) * Math.cos(H);
   var alt = Math.asin(clamp(sinAlt, -1, 1));
-  alt -= Math.asin(6378.14 / dist) * Math.cos(alt);
-  var az = norm360(Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(latR) - Math.tan(dec) * Math.cos(latR)) * DEG + 180);
-  return { alt: alt * DEG, az: az, ra: ra * DEG, dec: dec, dist: dist };
+  alt -= Math.asin(6378.14 / e.dist) * Math.cos(alt);
+  var az = norm360(Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(latR) - Math.tan(decR) * Math.cos(latR)) * DEG + 180);
+  return { alt: alt * DEG, az: az, ra: e.ra, dec: e.dec * RAD, dist: e.dist };
 }
 
 function moonIllumination(ms) {
@@ -680,6 +685,85 @@ function moonPhaseEmoji(phase) {
   return MOON_PHASE_EMOJI[Math.round(p * 8) % 8];
 }
 
+function fullMoonsInMonth(y, mo) {
+  var out = [];
+  var start = Date.UTC(y, mo, 1), end = Date.UTC(y, mo + 1, 1), step = 3600000;
+  var prev = moonPhaseInfo(start).phase;
+  for (var t = start + step; t <= end; t += step) {
+    var p = moonPhaseInfo(t).phase;
+    if (prev < 0.5 && p >= 0.5) {
+      var lo = t - step, hi = t;
+      for (var i = 0; i < 40; i++) { var mid = (lo + hi) / 2; if (moonPhaseInfo(lo).phase < 0.5) { lo = mid; } else { hi = mid; } }
+      out.push((lo + hi) / 2);
+    }
+    prev = p;
+  }
+  return out;
+}
+function eclipseAt(fmMs) {
+  var best = fmMs, bf = -1;
+  for (var t = fmMs - 30 * 3600000; t <= fmMs + 30 * 3600000; t += 600000) {
+    var f = moonIllumination(t).fraction;
+    if (f > bf) { bf = f; best = t; }
+  }
+  var lo = best - 600000, hi = best + 600000;
+  for (var i = 0; i < 45; i++) { var mid2 = (lo + hi) / 2; if (moonIllumination(mid2).fraction > moonIllumination(lo).fraction) { lo = mid2; } else { hi = mid2; } }
+  var opp = (lo + hi) / 2;
+  var e = moonEcliptic(opp);
+  var u = 0.7424 * (385001 / e.dist) + 0.25;
+  var rm = Math.asin(1737.4 / e.dist) * DEG;
+  var ab = Math.abs(e.b);
+  var type = 'keine';
+  if (ab + rm < u) { type = 'total'; } else if (ab < u) { type = 'partiell'; } else if (ab < 1.45) { type = 'halbschatten'; }
+  return { opp: opp, type: type, umbral: type === 'total' || type === 'partiell', dist: e.dist };
+}
+function specialMoonInfo(dayStartMs) {
+  var out = [];
+  var d = new Date(dayStartMs);
+  var y = d.getFullYear(), mo = d.getMonth();
+  var fms = fullMoonsInMonth(y, mo);
+  var todayFm = null, todayIdx = -1;
+  fms.forEach(function (t, i) {
+    var ld = new Date(t);
+    if (ld.getFullYear() === y && ld.getMonth() === mo && ld.getDate() === d.getDate()) { todayFm = t; todayIdx = i; }
+  });
+  if (todayFm == null && fms.length) {
+    var mid = dayStartMs + 43200000, bd = Infinity;
+    fms.forEach(function (t, i) { var dd = Math.abs(t - mid); if (dd < bd) { bd = dd; todayFm = t; todayIdx = i; } });
+  }
+  if (todayFm != null) {
+    var ec = eclipseAt(todayFm);
+    if (ec.type === 'total') { out.push({ label: 'Blutmond', detail: 'totale Mondfinsternis, Maximum ca. ' + fmtHM(ec.opp) + ' – Mond kupferrot' }); }
+    else if (ec.type === 'partiell') { out.push({ label: 'Partielle Mondfinsternis', detail: 'Maximum ca. ' + fmtHM(ec.opp) }); }
+    else if (ec.type === 'halbschatten') { out.push({ label: 'Halbschatten-Mondfinsternis', detail: 'Maximum ca. ' + fmtHM(ec.opp) }); }
+    if (ec.dist < 360000) { out.push({ label: 'Supermond', detail: 'Vollmond nahe Perigäum · ' + Math.round(ec.dist) + ' km' }); }
+    else if (ec.dist > 405000) { out.push({ label: 'Mikromond', detail: 'Vollmond nahe Apogäum · ' + Math.round(ec.dist) + ' km' }); }
+    if (fms.length >= 2 && todayIdx === 1) { out.push({ label: 'Blauer Mond', detail: '2. Vollmond im ' + MONTH_NAMES_DE[mo] + ' ' + y }); }
+  }
+  return out;
+}
+function nextEclipse(fromMs) {
+  var d = new Date(fromMs);
+  for (var i = 0; i < 48; i++) {
+    var fms = fullMoonsInMonth(d.getUTCFullYear(), d.getUTCMonth());
+    for (var k = 0; k < fms.length; k++) {
+      if (fms[k] <= fromMs) { continue; }
+      var ec = eclipseAt(fms[k]);
+      if (ec.umbral || ec.type === 'halbschatten') { return { t: fms[k], opp: ec.opp, type: ec.type }; }
+    }
+    d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  }
+  return null;
+}
+function nextBlueMoon(fromMs) {
+  var d = new Date(fromMs);
+  for (var i = 0; i < 60; i++) {
+    var fms = fullMoonsInMonth(d.getUTCFullYear(), d.getUTCMonth());
+    if (fms.length >= 2 && fms[1] > fromMs) { return { t: fms[1], year: d.getUTCFullYear(), month: d.getUTCMonth() }; }
+    d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  }
+  return null;
+}
 function moonEvents(lat, lon, centerMs, halfWindowMs) {
   var step = 15 * 60000;
   var start = centerMs - halfWindowMs, end = centerMs + halfWindowMs;
@@ -1031,6 +1115,21 @@ if (typeof document !== 'undefined') {
     if (set != null) { var ms2 = moonPosition(state.lat, state.lon, set); row('🌙 Monduntergang', fmtHM(set), ms2.alt.toFixed(1) + '°', ms2.az.toFixed(0) + '° ' + compass(ms2.az)); }
     else { row('🌙 Monduntergang', '– (heute keiner)', '–', '–'); }
     row(moonPhaseEmoji(ph.phase) + ' Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
+    if (state.specDay !== dayStart) {
+      state.specDay = dayStart;
+      state.spec = specialMoonInfo(dayStart);
+      state.specNext = { eclipse: nextEclipse(dayStart), blueMoon: nextBlueMoon(dayStart) };
+    }
+    var specHtml = '<ul style="margin:4px 0 0;padding-left:18px">';
+    if (state.spec.length) {
+      state.spec.forEach(function (s) { specHtml += '<li><b>' + s.label + '</b> – ' + s.detail + '</li>'; });
+    } else {
+      specHtml += '<li>An diesem Tag keine besonderen Mond-Ereignisse (kein Blauer Mond, keine Finsternis, kein Super-/Mikromond).</li>';
+    }
+    if (state.specNext.eclipse) { specHtml += '<li>Nächste Mondfinsternis: ' + fmtDateDE(dateStrOf(state.specNext.eclipse.opp)) + ' – ' + (state.specNext.eclipse.type === 'total' ? 'total (Blutmond)' : state.specNext.eclipse.type === 'partiell' ? 'partiell' : 'Halbschatten') + ', Maximum ca. ' + fmtHM(state.specNext.eclipse.opp) + '</li>'; }
+    if (state.specNext.blueMoon) { specHtml += '<li>Nächster Blauer Mond: ' + MONTH_NAMES_DE[state.specNext.blueMoon.month] + ' ' + state.specNext.blueMoon.year + ' (2. Vollmond am ' + fmtDateDE(dateStrOf(state.specNext.blueMoon.t)) + ')</li>'; }
+    specHtml += '</ul>';
+    rows.push('<tr><td colspan="4"><details class="hint spec"><summary>⭐ Besondere Mond-Daten (Blauer Mond, Blutmond, Supermond …) – ausklappen</summary><div>' + specHtml + '</div></details></td></tr>');
     sec('🌌 Milchstrasse');
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));

@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -398,6 +398,18 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: CSP mit self + nominatim connect-src, keine externen Skripte', sm.indexOf("connect-src 'self' https://nominatim.openstreetmap.org") >= 0 && !/<script src="http/.test(sm));
   ok('sonne-mond.html: nutzt js/coords.js (LV95)', sm.indexOf('<script src="js/coords.js"></script>') >= 0);
   ok('sonne-mond.html: Slider + Sky-SVG + 24h-Balken + Tabelle', ['id="timeSlider"', 'id="sky"', 'id="bar"', 'id="times"'].every(x => sm.indexOf(x) >= 0));
+  ok('milkyWayInfo: galaktisches Zentrum – Kulmination (Aequator ~61° S, Teneriffa ~33° S, Transit im Tag)', (function () {
+    var ds = S.localDayStart('2026-03-20');
+    var mw0 = S.milkyWayInfo(0, 0, ds, S.sunEventsForDay(0, 0, ds));
+    var mwT = S.milkyWayInfo(28.1, -16.7, ds, S.sunEventsForDay(28.1, -16.7, ds));
+    return Math.abs(mw0.alt - 61.06) < 0.2 && Math.abs(mw0.az - 180) < 1 && Math.abs(mwT.alt - 32.96) < 0.3 && mwT.transit >= ds && mwT.transit <= ds + 86400000 && typeof mwT.verdict === 'string' && mwT.verdict.length > 2 && typeof mwT.windowText === 'string';
+  })());
+  ok('milkyWayInfo: Zuerich (47.4°N) Zentrum nur ~14° -> «Eher nein» mit Begründung', (function () {
+    var ds = S.localDayStart('2026-03-20');
+    var mw = S.milkyWayInfo(47.3779, 8.5403, ds, S.sunEventsForDay(47.3779, 8.5403, ds));
+    return Math.abs(mw.alt - 13.69) < 0.3 && mw.verdict.indexOf('Eher nein') === 0 && mw.verdict.indexOf('hoch') >= 0 && mw.windowText.length > 0;
+  })());
+  ok('sonne-mond.html: Tabelle – Azimut bei Bereichen/Tageslicht, Mond-Höhe/Azimut, Milchstrasse-Zeilen, generische Spaltenköpfe', ['azCell(t1) + \' – \' + azCell(t2)', 'azCell(ev.sunrise) + \' – \' + azCell(ev.sunset)', 'moonPosition(state.lat, state.lon, rise)', 'moonPosition(state.lat, state.lon, set)', 'milkyWayInfo(state.lat, state.lon, dayStart, ev)', 'Milchstrasse', '<th>Höhe</th><th>Azimut</th>'].every(x => sm.indexOf(x) >= 0));
   ok('TIME_SOURCES: mind. 3 Quellen mit name/url/parse/mode', Array.isArray(S.TIME_SOURCES) && S.TIME_SOURCES.length >= 3 && S.TIME_SOURCES.every(s => typeof s.name === 'string' && typeof s.url === 'function' && typeof s.parse === 'function' && (s.mode === 'json' || s.mode === 'text' || s.mode === 'header')));
   ok('TIME_SOURCES: URLs zeigen auf erlaubte Hosts', S.TIME_SOURCES.every(s => /^https:\/\/(www\.cloudflare\.com|worldtimeapi\.org|api\.open-meteo\.com)\//.test(s.url())));
   ok('TIME_SOURCES: Auto-URLs parameterfrei (keine Zeitzone/Koordinaten in der URL)', S.TIME_SOURCES.every(s => { const u = s.url(); return u.indexOf('Europe/') < 0 && u.indexOf('timeZone=') < 0 && u.indexOf('latitude=47') < 0 && u.indexOf('longitude=8') < 0; }));

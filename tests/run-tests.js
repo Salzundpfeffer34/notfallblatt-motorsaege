@@ -278,6 +278,9 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   for (const needle of ['function counterDayChart', 'function counterBarRow', 'X-Robots-Tag', 'COUNTER_FILE_HEADER', 'function counterThrottled', 'hash_equals', 'hits-\' . $site . \'.php']) {
     ok('counter.php enthält ' + needle, c1.indexOf(needle) >= 0);
   }
+  ok('counter.php: site sonne-mond in counterSites()', c1.indexOf("array('notfallblatt', 'koordinaten', 'sonne-mond')") >= 0);
+  ok('counter.php: View-URL site=sonne-mond im Kommentar', c1.indexOf('counter.php?view=1&site=sonne-mond&key=') >= 0);
+  ok('counter.php: Dashboard-Switcher iteriert ueber alle Sites (kein hartkodiertes $other mehr)', c1.indexOf('foreach (counterSites() as') >= 0 && c1.indexOf('$other =') < 0);
   ok('robots.txt vorhanden', fs.existsSync(path.join(__dirname, '..', 'robots.txt')));
 }
 
@@ -393,7 +396,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: internes Datum bleibt ISO (URL/localStorage/date input)', sm.indexOf("qs.get('datum')") >= 0 && sm.indexOf("$('datum').value = state.datum") >= 0);
   ok('sonne-mond.html: Begriffe Blaue Stunde / Goldene Stunde / Wahrer Mittag / Mondaufgang / Mondphase', ['Blaue Stunde', 'Goldene Stunde', 'Wahrer Mittag', 'Mondaufgang', 'Mondphase'].every(x => sm.indexOf(x) >= 0));
   ok('sonne-mond.html: Zurueck-Link + Footer-Links', sm.indexOf('href="koordinaten/index.html"') >= 0 && sm.indexOf('href="gpx-reduce.html"') >= 0 && sm.indexOf('href="index.html"') >= 0);
-  ok('sonne-mond.html: CSP mit nominatim connect-src, keine externen Skripte', sm.indexOf('connect-src https://nominatim.openstreetmap.org') >= 0 && !/<script src="http/.test(sm));
+  ok('sonne-mond.html: CSP mit self + nominatim connect-src, keine externen Skripte', sm.indexOf("connect-src 'self' https://nominatim.openstreetmap.org") >= 0 && !/<script src="http/.test(sm));
   ok('sonne-mond.html: nutzt js/coords.js (LV95)', sm.indexOf('<script src="js/coords.js"></script>') >= 0);
   ok('sonne-mond.html: Slider + Sky-SVG + 24h-Balken + Tabelle', ['id="timeSlider"', 'id="sky"', 'id="bar"', 'id="times"'].every(x => sm.indexOf(x) >= 0));
   ok('TIME_SOURCES: mind. 3 Quellen mit name/url/parse/mode', Array.isArray(S.TIME_SOURCES) && S.TIME_SOURCES.length >= 3 && S.TIME_SOURCES.every(s => typeof s.name === 'string' && typeof s.url === 'function' && typeof s.parse === 'function' && (s.mode === 'json' || s.mode === 'text' || s.mode === 'header')));
@@ -424,6 +427,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: Datenschutz-Hinweis (IP-Adresse, parameterfreie URLs, client_ip)', sm.indexOf('IP-Adresse') >= 0 && sm.indexOf('parameterfreie') >= 0 && sm.indexOf('client_ip') >= 0);
   ok('sonne-mond.html: Zeitabgleich abschaltbar (Checkbox zeitSync)', sm.indexOf('id="zeitSync"') >= 0 && sm.indexOf('Zeitabgleich deaktiviert') >= 0);
   ok('sonne-mond.html: fetchNetTime mit Header-Modus, Fallback Systemuhr', sm.indexOf("src.mode === 'header'") >= 0 && sm.indexOf('Systemuhr (keine Verbindung)') >= 0 && sm.indexOf('function nowMs()') >= 0);
+  ok('sonne-mond.html: Besucherzaehler-Beacon mit site sonne-mond (sendBeacon + fetch-Fallback)', sm.indexOf("site: 'sonne-mond'") >= 0 && sm.indexOf("sendBeacon('counter.php'") >= 0 && sm.indexOf("fetch('counter.php'") >= 0);
+  ok('sonne-mond.html: Beacon nur bei http/https (file:// sendet nichts)', sm.indexOf("location.protocol === 'http:' || location.protocol === 'https:'") >= 0);
+  ok('sonne-mond.html: CSP connect-src enthaelt self (counter.php)', (sm.match(/Content-Security-Policy"[^>]*/) || [''])[0].indexOf("connect-src 'self' https://nominatim.openstreetmap.org") >= 0);
+  ok('sonne-mond.html: Datenschutz-Link im Footer', sm.indexOf('href="koordinaten/datenschutz.html"') >= 0);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

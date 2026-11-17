@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://nominatim.openstreetmap.org https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
@@ -204,6 +204,7 @@
   <span>← <a href="koordinaten/index.html">Koordinaten-Konverter</a></span>
   <span><a href="gpx-reduce.html">GPX-Reduktion für Garmin</a></span>
   <span><a href="index.html">Notfallblatt Motorsäge</a></span>
+  <span><a href="koordinaten/datenschutz.html">Datenschutz</a></span>
   <span>Sonne nach NOAA-Formeln, Mond nach vereinfachter Mondtheorie – alles lokal im Browser. Nur mit Internet: Ortssuche (OpenStreetMap) und Zeitabgleich (worldtimeapi.org, timeapi.io, Open-Meteo, Cloudflare) – offline läuft alles über die Systemuhr.</span>
 </footer>
 </div>
@@ -898,6 +899,18 @@ if (typeof document !== 'undefined') {
     if (state.datum === dateStrOf(nowMs())) { drawBar(); }
   }, 30000);
   renderClockLine();
+  try {
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      var cd = { site: 'sonne-mond', tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || ''), lang: (navigator.language || ''), ref: (document.referrer || '') };
+      if (navigator.sendBeacon) {
+        var fd = new FormData();
+        for (var k in cd) { fd.append(k, cd[k]); }
+        navigator.sendBeacon('counter.php', fd);
+      } else {
+        fetch('counter.php', { method: 'POST', keepalive: true, body: new URLSearchParams(cd) }).catch(function () {});
+      }
+    }
+  } catch (e) {}
 }
 </script>
 </body>

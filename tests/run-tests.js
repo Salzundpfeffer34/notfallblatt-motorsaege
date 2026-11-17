@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, queryVariants, levenshtein, similarity, rankOrtResults, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -460,6 +460,13 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: Suche priorisiert lokal via biasGeo-Checkbox + Geraetestandort, Fallback gesetzte Koordinate', sm.indexOf("$('biasGeo').checked") >= 0 && sm.indexOf('run(pos.coords.latitude, pos.coords.longitude,') >= 0 && sm.indexOf('state.locKnown ? state.lat : NaN') >= 0 && sm.indexOf('{ timeout: 6000, maximumAge: 600000 }') >= 0);
   ok('sonne-mond.html: biasGeo-Checkbox im Markup (default an) + Geraetestandort als erster Treffer', sm.indexOf('id="biasGeo" checked') >= 0 && sm.indexOf('Mein Gerätestandort') >= 0);
   ok('sonne-mond.html: Tipp nennt Kanarische Inseln als Beispiel', sm.indexOf('Kanarische Inseln') >= 0);
+  ok('normalizeQuery: Akzente/Gross-Kleinschreibung/Zeichen raus', S.normalizeQuery('San Andrés') === 'san andres' && S.normalizeQuery('ZÜRICH!!') === 'zurich' && S.normalizeQuery('  Teneriffa  ') === 'teneriffa');
+  ok('queryVariants: Original + normiert + letztes Wort abgeschnitten (max 3)', (function () { const v = S.queryVariants('San Andres Tenerifa'); return v[0] === 'San Andres Tenerifa' && v.indexOf('san andres') >= 0 && v.length <= 3 && S.queryVariants('Bern').length === 1 && S.queryVariants('San Andrés').indexOf('san andres') >= 0; })());
+  ok('levenshtein', S.levenshtein('abc', 'abc') === 0 && S.levenshtein('abc', 'abd') === 1 && S.levenshtein('abc', 'abcd') === 1 && S.levenshtein('tenerifa', 'tenerife') === 1);
+  ok('similarity: case/akzent-tolerant, 0 bei fremd', S.similarity('san andres', 'San Andrés, Santa Cruz de Tenerife, Spanien') === 1 && S.similarity('Bern', 'Zürich HB') === 0);
+  ok('rankOrtResults: Treffer mit passendem Namen nach oben (stabil)', (function () { const r = S.rankOrtResults([{ name: 'Zürich', label: 'Zürich, Schweiz' }, { name: 'San Andrés', label: 'San Andrés, Santa Cruz de Tenerife, Spanien' }], 'San Andres'); return r[0].name === 'San Andrés' && r[1].name === 'Zürich'; })());
+  ok('sonne-mond.html: Suche nutzt queryVariants + rankOrtResults + dedupe mit normalizeQuery', ['queryVariants(q)', 'rankOrtResults(all, q)', 'normalizeQuery(it.name', 'all.length >= 5'].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html: Hinweistext erklaert Gross/Klein + Akzente + Tippfehler', sm.indexOf('Gross-/Kleinschreibung und Akzente sind egal') >= 0 && sm.indexOf('«san andres» findet «San Andrés»') >= 0);
   ok('sonne-mond.html: reverseGeocode nur bei bekannter Koordinate (kein falscher Ortsname bei Default)', sm.indexOf('if (!state.locKnown || state.name) { return; }') >= 0);
   ok('sonne-mond.html: Suche auch per Enter im Ortsfeld', sm.indexOf("$('ort').addEventListener('keydown'") >= 0 && sm.indexOf('searchOrt(q)') >= 0);
   ok('sonne-mond.html: Hinweistext erklaert Bias + Geraetestandort + weltweit ohne Bias', sm.indexOf('um deinen Gerätestandort (Geolokalisierung)') >= 0 && sm.indexOf('weltweit gesucht') >= 0);

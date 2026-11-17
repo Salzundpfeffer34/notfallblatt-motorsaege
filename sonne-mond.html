@@ -151,7 +151,7 @@
     </div>
   </div>
   <div id="ortResults"></div>
-  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); abgehakt ist zusätzlich «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht.</div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht.</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -320,6 +320,62 @@ function calendarGrid(year, month) {
   }
   return cells;
 }
+function normalizeQuery(q) {
+  return String(q || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function queryVariants(q) {
+  var orig = String(q || '').trim();
+  var n = normalizeQuery(orig);
+  var parts = n.split(' ').filter(Boolean);
+  var out = [orig];
+  if (n && n !== orig.toLowerCase()) { out.push(n); }
+  if (parts.length > 1) { out.push(parts.slice(0, parts.length - 1).join(' ')); }
+  var seen = {}, res = [];
+  out.forEach(function (s) {
+    var k = s.toLowerCase();
+    if (s && !seen[k]) { seen[k] = 1; res.push(s); }
+  });
+  return res.slice(0, 3);
+}
+function levenshtein(a, b) {
+  a = String(a); b = String(b);
+  var m = a.length, n = b.length;
+  if (!m) { return n; }
+  if (!n) { return m; }
+  var prev = [];
+  for (var j = 0; j <= n; j++) { prev[j] = j; }
+  for (var i = 1; i <= m; i++) {
+    var cur = [i];
+    for (var j2 = 1; j2 <= n; j2++) {
+      cur[j2] = Math.min(prev[j2] + 1, cur[j2 - 1] + 1, prev[j2 - 1] + (a.charCodeAt(i - 1) === b.charCodeAt(j2 - 1) ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+function similarity(a, b) {
+  var ta = normalizeQuery(a).split(' ').filter(Boolean);
+  var tb = normalizeQuery(b).split(' ').filter(Boolean);
+  if (!ta.length || !tb.length) { return 0; }
+  var hit = 0;
+  ta.forEach(function (t) {
+    var found = tb.some(function (u) {
+      return u === t || u.indexOf(t) === 0 || t.indexOf(u) === 0 || (t.length > 3 && u.length > 3 && levenshtein(t, u) <= 1);
+    });
+    if (found) { hit++; }
+  });
+  return hit / ta.length;
+}
+function rankOrtResults(list, q) {
+  return (list || []).map(function (it) {
+    return { it: it, s: similarity(q, String(it.name || '') + ' ' + String(it.label || '')) };
+  }).sort(function (a, b) { return b.s - a.s; }).map(function (x) { return x.it; });
+}
 function buildSearchUrls(q, lat, lon) {
   var has = isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
   var vb = '';
@@ -336,7 +392,7 @@ function dedupeOrtResults(list) {
   var seen = {}, out = [];
   (list || []).forEach(function (it) {
     if (!it || !isFinite(it.lat) || !isFinite(it.lon)) { return; }
-    var k = it.lat.toFixed(3) + ',' + it.lon.toFixed(3) + '|' + String(it.name || '').toLowerCase();
+    var k = it.lat.toFixed(3) + ',' + it.lon.toFixed(3) + '|' + normalizeQuery(it.name || '');
     if (!seen[k]) { seen[k] = 1; out.push(it); }
   });
   return out;
@@ -968,24 +1024,33 @@ if (typeof document !== 'undefined') {
     var box = $('ortResults');
     box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche …</div>';
     var run = function (lat, lon, devPos) {
-      var urls = buildSearchUrls(q, lat, lon);
-      var jobs = urls.map(function (u, i) {
-        return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
-          if (i === 0) {
-            return (j || []).map(function (f) {
-              return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), name: String(f.display_name).split(',')[0], label: f.display_name, sub: nominatimSub(f) };
+      var variants = queryVariants(q);
+      var all = [];
+      var vi = 0;
+      var step = function () {
+        if (vi >= variants.length || all.length >= 5) { return Promise.resolve(); }
+        var v = variants[vi++];
+        var jobs = buildSearchUrls(v, lat, lon).map(function (u, i) {
+          return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+            if (i === 0) {
+              return (j || []).map(function (f) {
+                return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), name: String(f.display_name).split(',')[0], label: f.display_name, sub: nominatimSub(f) };
+              });
+            }
+            return ((j && j.features) || []).map(function (f) {
+              var c = f.geometry.coordinates;
+              return { lat: parseFloat(c[1]), lon: parseFloat(c[0]), name: f.properties.name, label: photonLabel(f.properties), sub: (f.properties.state ? f.properties.state + ', ' : '') + (f.properties.country || '') };
             });
-          }
-          return ((j && j.features) || []).map(function (f) {
-            var c = f.geometry.coordinates;
-            return { lat: parseFloat(c[1]), lon: parseFloat(c[0]), name: f.properties.name, label: photonLabel(f.properties), sub: (f.properties.state ? f.properties.state + ', ' : '') + (f.properties.country || '') };
-          });
-        }).catch(function () { return []; });
-      });
-      Promise.all(jobs).then(function (lists) {
-        var all = [];
-        lists.forEach(function (l) { l.forEach(function (it) { all.push(it); }); });
-        var out = dedupeOrtResults(all);
+          }).catch(function () { return []; });
+        });
+        return Promise.all(jobs).then(function (lists) {
+          lists.forEach(function (l) { l.forEach(function (it) { all.push(it); }); });
+          all = dedupeOrtResults(all);
+          return step();
+        });
+      };
+      step().then(function () {
+        var out = rankOrtResults(all, q);
         box.innerHTML = '';
         if (devPos) {
           var b0 = document.createElement('button');
@@ -1000,7 +1065,7 @@ if (typeof document !== 'undefined') {
           box.appendChild(b0);
         }
         if (!out.length) {
-          box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer – Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») oder «📍 Meine Position» zuerst setzen. Offline: keine Suche möglich.</div>';
+          box.innerHTML += '<div style="color:var(--muted);font-size:.85rem">Keine Treffer – Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») oder «📍 Meine Position» zuerst setzen. Offline: keine Suche möglich.</div>';
           return;
         }
         out.forEach(function (it) {

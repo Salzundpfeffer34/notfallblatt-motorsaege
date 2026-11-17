@@ -457,10 +457,12 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: Ortssuche robust verdrahtet (buildSearchUrls + Bias + Dedupe + Adressdetails + Tipp)', ['buildSearchUrls(q, lat, lon)', 'viewbox=', 'bounded=0', 'addressdetails=1', 'photon.komoot.io/api/', 'dedupeOrtResults', 'San Andrés Teneriffa'].every(x => sm.indexOf(x) >= 0));
   ok('sonne-mond.html: CSP enthaelt photon.komoot.io', (sm.match(/Content-Security-Policy"[^>]*/) || [''])[0].indexOf('https://photon.komoot.io') >= 0);
   ok('sonne-mond.html: locKnown-Tracking (Default-Koordinate ohne Bias; saved/URL/applyCoords setzen true)', sm.indexOf('locKnown: false') >= 0 && (sm.match(/state\.locKnown = true/g) || []).length >= 3);
-  ok('sonne-mond.html: Suche nutzt Geraetestandort (Geolokalisierung) als Bias, wenn keine Koordinate gesetzt', sm.indexOf('if (state.locKnown) {') >= 0 && sm.indexOf('run(pos.coords.latitude, pos.coords.longitude)') >= 0 && sm.indexOf('{ timeout: 8000, maximumAge: 600000 }') >= 0);
+  ok('sonne-mond.html: Suche priorisiert lokal via biasGeo-Checkbox + Geraetestandort, Fallback gesetzte Koordinate', sm.indexOf("$('biasGeo').checked") >= 0 && sm.indexOf('run(pos.coords.latitude, pos.coords.longitude,') >= 0 && sm.indexOf('state.locKnown ? state.lat : NaN') >= 0 && sm.indexOf('{ timeout: 6000, maximumAge: 600000 }') >= 0);
+  ok('sonne-mond.html: biasGeo-Checkbox im Markup (default an) + Geraetestandort als erster Treffer', sm.indexOf('id="biasGeo" checked') >= 0 && sm.indexOf('Mein Gerätestandort') >= 0);
+  ok('sonne-mond.html: Tipp nennt Kanarische Inseln als Beispiel', sm.indexOf('Kanarische Inseln') >= 0);
   ok('sonne-mond.html: reverseGeocode nur bei bekannter Koordinate (kein falscher Ortsname bei Default)', sm.indexOf('if (!state.locKnown || state.name) { return; }') >= 0);
   ok('sonne-mond.html: Suche auch per Enter im Ortsfeld', sm.indexOf("$('ort').addEventListener('keydown'") >= 0 && sm.indexOf('searchOrt(q)') >= 0);
-  ok('sonne-mond.html: Hinweistext erklaert Bias + Geraetestandort', sm.indexOf('Gerätestandort (Geolokalisierung) als Bias') >= 0);
+  ok('sonne-mond.html: Hinweistext erklaert Bias + Geraetestandort + weltweit ohne Bias', sm.indexOf('um deinen Gerätestandort (Geolokalisierung)') >= 0 && sm.indexOf('weltweit gesucht') >= 0);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

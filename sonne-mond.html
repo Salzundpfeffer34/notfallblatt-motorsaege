@@ -146,9 +146,12 @@
     <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
       <button type="button" id="ortBtn" class="secondary">Suchen</button>
     </div>
+    <div class="field" style="flex:0 0 auto"><label for="biasGeo">📍 lokal priorisieren</label>
+      <input type="checkbox" id="biasGeo" checked style="accent-color:var(--accent);width:auto">
+    </div>
   </div>
   <div id="ortResults"></div>
-  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa»). Die Suche fragt Nominatim und Photon ab, bevorzugt Orte nahe der gesetzten Koordinate (viewbox-/lat-lon-Bias) und filtert Duplikate; ist noch keine Koordinate gesetzt, wird kurz der Gerätestandort (Geolokalisierung) als Bias verwendet.</div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); abgehakt ist zusätzlich «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht.</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -964,7 +967,7 @@ if (typeof document !== 'undefined') {
   function searchOrt(q) {
     var box = $('ortResults');
     box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche …</div>';
-    var run = function (lat, lon) {
+    var run = function (lat, lon, devPos) {
       var urls = buildSearchUrls(q, lat, lon);
       var jobs = urls.map(function (u, i) {
         return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
@@ -984,6 +987,18 @@ if (typeof document !== 'undefined') {
         lists.forEach(function (l) { l.forEach(function (it) { all.push(it); }); });
         var out = dedupeOrtResults(all);
         box.innerHTML = '';
+        if (devPos) {
+          var b0 = document.createElement('button');
+          b0.type = 'button';
+          b0.innerHTML = '<b>📍 Mein Gerätestandort</b><br><span style="color:var(--muted);font-size:.8rem"></span>';
+          b0.querySelector('span').textContent = devPos.lat.toFixed(4) + ', ' + devPos.lon.toFixed(4);
+          b0.addEventListener('click', function () {
+            applyCoords(devPos.lat, devPos.lon, '');
+            box.innerHTML = '';
+            $('ort').value = '';
+          });
+          box.appendChild(b0);
+        }
         if (!out.length) {
           box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer – Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») oder «📍 Meine Position» zuerst setzen. Offline: keine Suche möglich.</div>';
           return;
@@ -1003,16 +1018,14 @@ if (typeof document !== 'undefined') {
         });
       });
     };
-    if (state.locKnown) {
-      run(state.lat, state.lon);
-    } else if (navigator.geolocation) {
+    if ($('biasGeo').checked && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function (pos) {
-        run(pos.coords.latitude, pos.coords.longitude);
+        run(pos.coords.latitude, pos.coords.longitude, { lat: pos.coords.latitude, lon: pos.coords.longitude });
       }, function () {
-        run(NaN, NaN);
-      }, { timeout: 8000, maximumAge: 600000 });
+        run(state.locKnown ? state.lat : NaN, state.locKnown ? state.lon : NaN, null);
+      }, { timeout: 6000, maximumAge: 600000 });
     } else {
-      run(NaN, NaN);
+      run(state.locKnown ? state.lat : NaN, state.locKnown ? state.lon : NaN, null);
     }
   }
   $('ortBtn').addEventListener('click', function () {

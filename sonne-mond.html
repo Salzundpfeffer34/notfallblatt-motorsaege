@@ -220,6 +220,10 @@ function todayStr() {
   var d = new Date();
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
+function fmtDateDE(dateStr) {
+  var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return p ? p[3] + '.' + p[2] + '.' + p[1] : String(dateStr);
+}
 
 function sunParams(jd) {
   var T = (jd - 2451545.0) / 36525.0;
@@ -629,7 +633,7 @@ if (typeof document !== 'undefined') {
     var sp = sunPosition(state.lat, state.lon, t);
     var mp = moonPosition(state.lat, state.lon, t);
     var pi = phaseInfo(sp.alt);
-    $('stTime').textContent = state.datum + ' · ' + fmtHM(t);
+    $('stTime').textContent = fmtDateDE(state.datum) + ' · ' + fmtHM(t);
     $('stSun').textContent = sp.alt.toFixed(1) + '° Höhe · ' + sp.az.toFixed(0) + '° ' + compass(sp.az);
     $('stPhase').textContent = pi.l + (sp.alt >= -0.833 ? ' · Sonne über Horizont' : ' · Sonne unter Horizont');
     $('stMoon').textContent = mp.alt.toFixed(1) + '° Höhe · ' + mp.az.toFixed(0) + '° ' + compass(mp.az) + (mp.alt >= 0 ? ' · über Horizont' : ' · unter Horizont');
@@ -640,7 +644,7 @@ if (typeof document !== 'undefined') {
     $('stNext').textContent = nx ? nx.label + ' um ' + fmtHM(nx.t) + ' (in ' + fmtDur(nx.t - t) + ')' : 'Heute keine weiteren Ereignisse';
   }
   function renderCoordInfo() {
-    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? state.name.replace(/</g, '&lt;') : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + state.datum + '</b>';
+    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? state.name.replace(/</g, '&lt;') : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>';
   }
   function renderAll() {
     state.dayStart = localDayStart(state.datum);

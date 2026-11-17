@@ -313,7 +313,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, compass, localDayStart };')();
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, compass, localDayStart };')();
   const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
@@ -387,6 +387,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('phaseInfo: +3° = Goldene Stunde', S.phaseInfo(3).l.indexOf('Goldene Stunde') >= 0);
   ok('phaseInfo: +30° = Tageslicht', S.phaseInfo(30).l.indexOf('Tageslicht') >= 0);
   ok('localDayStart', S.localDayStart('2026-06-21') === new Date(2026, 5, 21).getTime() && S.localDayStart('xx') === null);
+  ok('fmtDateDE: ISO -> DD.MM.YYYY', S.fmtDateDE('2026-06-21') === '21.06.2026' && S.fmtDateDE('2026-01-05') === '05.01.2026');
+  ok('fmtDateDE: Fallback bei ungueltigem Format', S.fmtDateDE('xx') === 'xx');
+  ok('sonne-mond.html: Datum wird europaeisch angezeigt (fmtDateDE in stTime + coordInfo)', (sm.match(/fmtDateDE\(state\.datum\)/g) || []).length === 2);
+  ok('sonne-mond.html: internes Datum bleibt ISO (URL/localStorage/date input)', sm.indexOf("qs.get('datum')") >= 0 && sm.indexOf("$('datum').value = state.datum") >= 0);
   ok('sonne-mond.html: Begriffe Blaue Stunde / Goldene Stunde / Wahrer Mittag / Mondaufgang / Mondphase', ['Blaue Stunde', 'Goldene Stunde', 'Wahrer Mittag', 'Mondaufgang', 'Mondphase'].every(x => sm.indexOf(x) >= 0));
   ok('sonne-mond.html: Zurueck-Link + Footer-Links', sm.indexOf('href="koordinaten/index.html"') >= 0 && sm.indexOf('href="gpx-reduce.html"') >= 0 && sm.indexOf('href="index.html"') >= 0);
   ok('sonne-mond.html: CSP mit nominatim connect-src, keine externen Skripte', sm.indexOf('connect-src https://nominatim.openstreetmap.org') >= 0 && !/<script src="http/.test(sm));

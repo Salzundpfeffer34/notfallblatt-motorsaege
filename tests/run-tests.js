@@ -246,6 +246,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const nTrk = (xml.match(/<trkpt /g) || []).length;
   ok('buildGpx: trkpt-Anzahl = reduziert (' + nTrk + ')', nTrk === kept.length);
   ok('buildGpx: rte vorhanden', xml.indexOf('<rte>') >= 0 && (xml.match(/<rtept /g) || []).length === kept.length);
+  ok('buildGpx: Schema-Reihenfolge metadata<wpt<rte<trk (BaseCamp!)', xml.indexOf('<metadata>') < xml.indexOf('<trk>') && xml.indexOf('<rte>') < xml.indexOf('<trk>') && xml.indexOf('</rte>') < xml.indexOf('<trk>'));
   ok('buildGpx: wpt-Name erhalten', xml.indexOf('Parkplatz') >= 0);
   ok('buildGpx: Namen in trkpts erhalten', xml.indexOf('Hütte') >= 0 && xml.indexOf('Gipfel') >= 0);
   ok('buildGpx: XML escaped', xml.indexOf('Testtour &amp; Co') >= 0);

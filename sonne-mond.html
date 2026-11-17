@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="img/sonne-mond.svg">
 <meta name="description" content="Koordinate eingeben und Sonnenstand sehen: Sonnenauf-/untergang, Blaue Stunde, Goldene Stunde, Wahrer Mittag (Höchststand), Tageslänge sowie Mondauf-/untergang, Mondphase und Beleuchtung – für Fotografen. Alles wird lokal im Browser berechnet.">
 <style>
   :root { --line:#e3e3dd; --muted:#6b6b64; --accent:#2f6db3; --accent2:#245a96; --bg:#f6f6f2; --card:#fff; --ink:#23231f; }
@@ -14,7 +14,9 @@
   body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; margin:0; padding:0 16px 40px; color:var(--ink); background:var(--bg); }
   .wrap { max-width:920px; margin:0 auto; }
   header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:22px 0 6px; }
-  h1 { font-size:1.45rem; margin:0; letter-spacing:-.01em; }
+  h1 { font-size:1.45rem; margin:0; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
+  .brand-icon { display:flex; align-items:center; }
+  .brand-icon img { width:34px; height:34px; display:block; }
   .sub { color:var(--muted); font-size:.92rem; margin:4px 0 0; max-width:60ch; }
   a.back { font-size:.88rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); background:#fff; padding:8px 13px; border-radius:8px; white-space:nowrap; }
   a.back:hover { border-color:var(--accent); }
@@ -84,7 +86,7 @@
 <div class="wrap">
 <header class="top">
   <div>
-    <h1>☀️ Sonne &amp; Mond für Fotografen</h1>
+    <h1><span class="brand-icon"><img src="img/sonne-mond.svg" alt="Sonne und Mond" width="34" height="34"></span> Sonne &amp; Mond für Fotografen</h1>
     <p class="sub">Koordinate eingeben – und du siehst Sonnenauf-/untergang, Blaue Stunde, Goldene Stunde, Wahren Mittag (Höchststand) und den Mond. Alles lokal im Browser berechnet, auch offline nutzbar.</p>
   </div>
   <a class="back" href="koordinaten/index.html">← Koordinaten-Konverter</a>

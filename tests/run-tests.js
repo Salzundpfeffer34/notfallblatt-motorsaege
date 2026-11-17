@@ -435,7 +435,18 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('calendarGrid: Juni 2026 (1.6. ist Montag) – 42 Zellen, 30 im Monat, Start/Ende korrekt', (function () { const g = S.calendarGrid(2026, 5); return g.length === 42 && g[0].date === '2026-06-01' && g[0].inMonth === true && g.filter(c => c.inMonth).length === 30 && g[41].date === '2026-07-12'; })());
   ok('calendarGrid: Februar 2026 = 28 Tage, Februar 2024 (Schaltjahr) = 29 Tage', S.calendarGrid(2026, 1).filter(c => c.inMonth).length === 28 && S.calendarGrid(2024, 1).filter(c => c.inMonth).length === 29);
   ok('monthLabel deutsch', S.monthLabel(2026, 10) === 'November 2026' && S.monthLabel(2026, 0) === 'Januar 2026');
-  ok('sonne-mond.html: Maus-Kalender vorhanden und verdrahtet (calBtn/calPop/Monat-Navigation/Tag-Klick via applyDatum)', ['id="calBtn"', 'id="calPop"', 'cal-day', 'id="calPrev"', 'id="calNext"', 'calendarGrid(calY, calM)', "applyDatum(b.getAttribute('data-date'))"].every(x => sm.indexOf(x) >= 0));}
+  ok('sonne-mond.html: Maus-Kalender vorhanden und verdrahtet (calBtn/calPop/Monat-Navigation/Tag-Klick via applyDatum)', ['id="calBtn"', 'id="calPop"', 'cal-day', 'id="calPrev"', 'id="calNext"', 'calendarGrid(calY, calM)', "applyDatum(b.getAttribute('data-date'))"].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html verlinkt SVG-Favicon img/sonne-mond.svg', sm.indexOf('<link rel="icon" type="image/svg+xml" href="img/sonne-mond.svg">') >= 0);
+  ok('sonne-mond.html: Header nutzt brand-icon img statt Emoji', sm.indexOf('<span class="brand-icon"><img src="img/sonne-mond.svg"') >= 0 && sm.indexOf('brand-icon">☀') < 0);
+  ok('sonne-mond.html: CSS sizing fuer .brand-icon img', sm.indexOf('.brand-icon img {') >= 0);
+  {
+    const svgF = path.join(__dirname, '..', 'img', 'sonne-mond.svg');
+    ok('Icon-Datei vorhanden: img/sonne-mond.svg', fs.existsSync(svgF));
+    const svg2 = fs.readFileSync(svgF, 'utf8');
+    ok('SVG gueltig mit viewBox 0 0 200 200 (wie motorsaeage.svg)', svg2.indexOf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">') === 0);
+    ok('SVG enthaelt Sonne (Amber-Kreis + Strahlen) und Mond (Sichel)', svg2.indexOf('fill="#f5b942"') >= 0 && (svg2.match(/<line /g) || []).length >= 8 && svg2.indexOf('fill="#9db4d0"') >= 0 && svg2.indexOf('fill-rule="evenodd"') >= 0);
+  }
+}
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');
 process.exit(failures === 0 ? 0 : 1);

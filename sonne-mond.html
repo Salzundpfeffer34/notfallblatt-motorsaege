@@ -66,6 +66,17 @@
   footer { margin-top:22px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; display:flex; gap:16px; flex-wrap:wrap; }
   footer a { color:var(--accent); text-decoration:none; }
   footer a:hover { text-decoration:underline; }
+  .calpop { position:absolute; top:100%; left:0; margin-top:6px; z-index:20; background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px; box-shadow:0 4px 16px rgba(0,0,0,.14); }
+  .cal-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; min-width:236px; }
+  .cal-head button { padding:4px 10px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,32px); gap:2px; }
+  .cal-dow { margin-bottom:2px; }
+  .cal-dow span { font-size:.68rem; color:var(--muted); text-align:center; line-height:1.6; }
+  .cal-day { background:#fff; color:var(--ink); border:1px solid transparent; border-radius:6px; padding:4px 0; font-size:.82rem; font-weight:400; cursor:pointer; font-family:inherit; white-space:normal; }
+  .cal-day:hover { border-color:var(--accent); color:var(--accent); background:#fff; }
+  .cal-day.out { color:#b8b8b0; }
+  .cal-day.sel { background:var(--accent); color:#fff; font-weight:700; }
+  .cal-day.today { border-color:var(--accent); }
   .hidden { display:none; }
 </style>
 </head>
@@ -86,8 +97,12 @@
     <div class="field" style="flex:2 1 300px"><label for="q">Koordinaten (WGS84 Dezimal, Grad/Min/Sek oder LV95)</label>
       <input type="text" id="q" placeholder="z. B. 46.5225, 6.6325 oder 46°31'21&quot;N 6°37'57&quot;E oder 2624043, 1096620" autocomplete="off" spellcheck="false">
     </div>
-    <div class="field" style="flex:0 0 auto"><label for="datum">Datum</label>
-      <input type="date" id="datum">
+    <div class="field" style="flex:0 0 auto;position:relative"><label for="datum">Datum</label>
+      <div style="display:flex;gap:6px">
+        <input type="date" id="datum">
+        <button type="button" id="calBtn" class="secondary" title="Kalender öffnen – Datum mit der Maus wählen" aria-label="Kalender öffnen">📅</button>
+      </div>
+      <div id="calPop" class="calpop hidden" role="dialog" aria-label="Datum mit der Maus wählen"></div>
     </div>
     <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
       <div style="display:flex;gap:6px">
@@ -262,6 +277,20 @@ function fmtDateDE(dateStr) {
 function dateStrOf(ms) {
   var d = new Date(ms);
   return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+var MONTH_NAMES_DE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+var DOW_NAMES_DE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+function monthLabel(year, month) { return MONTH_NAMES_DE[month] + ' ' + year; }
+function calendarGrid(year, month) {
+  var first = new Date(year, month, 1, 12, 0, 0, 0);
+  var startDow = (first.getDay() + 6) % 7;
+  var start = new Date(year, month, 1 - startDow, 12, 0, 0, 0);
+  var cells = [];
+  for (var i = 0; i < 42; i++) {
+    var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 12, 0, 0, 0);
+    cells.push({ date: dateStrOf(d.getTime()), day: d.getDate(), inMonth: d.getMonth() === month });
+  }
+  return cells;
 }
 function tzName() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; }
@@ -801,6 +830,43 @@ if (typeof document !== 'undefined') {
   $('datum').addEventListener('change', function () { applyDatum($('datum').value); });
   $('dayMinus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, -1)); });
   $('dayPlus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, 1)); });
+  var calY = 0, calM = 0;
+  function renderCal() {
+    var pop = $('calPop');
+    var today = dateStrOf(nowMs());
+    var s = '<div class="cal-head"><button type="button" id="calPrev" class="secondary" aria-label="Vorheriger Monat">◀</button><b>' + monthLabel(calY, calM) + '</b><button type="button" id="calNext" class="secondary" aria-label="Nächster Monat">▶</button></div>';
+    s += '<div class="cal-grid cal-dow">' + DOW_NAMES_DE.map(function (d) { return '<span>' + d + '</span>'; }).join('') + '</div><div class="cal-grid">';
+    calendarGrid(calY, calM).forEach(function (c) {
+      var cls = 'cal-day' + (c.inMonth ? '' : ' out') + (c.date === state.datum ? ' sel' : '') + (c.date === today ? ' today' : '');
+      s += '<button type="button" class="' + cls + '" data-date="' + c.date + '">' + c.day + '</button>';
+    });
+    s += '</div>';
+    pop.innerHTML = s;
+    $('calPrev').addEventListener('click', function () { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); });
+    $('calNext').addEventListener('click', function () { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); });
+    Array.prototype.forEach.call(pop.querySelectorAll('.cal-day'), function (b) {
+      b.addEventListener('click', function () { applyDatum(b.getAttribute('data-date')); $('calPop').classList.add('hidden'); });
+    });
+  }
+  $('calBtn').addEventListener('click', function () {
+    var pop = $('calPop');
+    if (pop.classList.contains('hidden')) {
+      var p = String(state.datum).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      var now0 = new Date(nowMs());
+      calY = p ? +p[1] : now0.getFullYear();
+      calM = p ? +p[2] - 1 : now0.getMonth();
+      renderCal();
+      pop.classList.remove('hidden');
+    } else {
+      pop.classList.add('hidden');
+    }
+  });
+  document.addEventListener('click', function (e) {
+    var pop = $('calPop');
+    if (pop.classList.contains('hidden')) { return; }
+    if (pop.contains(e.target) || $('calBtn').contains(e.target)) { return; }
+    pop.classList.add('hidden');
+  });
   $('timeSlider').addEventListener('input', function () {
     state.minutes = parseInt($('timeSlider').value, 10) || 0;
     renderStatus();

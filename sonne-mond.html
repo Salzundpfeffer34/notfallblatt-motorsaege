@@ -84,6 +84,13 @@
   .hint { margin-top:6px; font-size:.8rem; color:var(--muted); }
   .hint summary { cursor:pointer; color:var(--accent); font-weight:600; }
   .hint > div { margin-top:4px; }
+  .hint.spec b.spec-blue { color:#2f6db3; }
+  .hint.spec b.spec-red { color:#c0392b; }
+  .hint.spec b.spec-orange { color:#d97706; }
+  .hint.spec b.spec-micro { color:#6b7280; }
+  @keyframes specPulse { 0%,100% { font-size:1em; } 50% { font-size:1.3em; } }
+  .hint.spec b.spec-super { color:#b45309; display:inline-block; animation:specPulse 1.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .hint.spec b.spec-super { animation:none; font-size:1.15em; } }
   .help { font-size:.9rem; color:var(--muted); }
   .help ul { margin:6px 0 0; padding-left:18px; }
   .help li { margin:4px 0; }
@@ -779,6 +786,15 @@ function eclipseAt(fmMs) {
   if (ab < u - rm) { type = 'total'; } else if (ab < u + rm) { type = 'partiell'; } else if (ab < pen + rm) { type = 'halbschatten'; }
   return { opp: opp, type: type, umbral: type === 'total' || type === 'partiell', dist: e.dist };
 }
+function specMoonClass(label) {
+  var s = String(label);
+  if (/blau/i.test(s)) { return 'spec-blue'; }
+  if (/blutmond/i.test(s)) { return 'spec-red'; }
+  if (/finsternis/i.test(s)) { return 'spec-orange'; }
+  if (/supermond/i.test(s)) { return 'spec-super'; }
+  if (/mikromond/i.test(s)) { return 'spec-micro'; }
+  return '';
+}
 function specialMoonInfo(dayStartMs) {
   var out = [];
   var d = new Date(dayStartMs);
@@ -1184,7 +1200,7 @@ if (typeof document !== 'undefined') {
     }
     var specHtml = '<ul style="margin:4px 0 0;padding-left:18px">';
     if (state.spec.length) {
-      state.spec.forEach(function (s) { specHtml += '<li><b>' + s.label + '</b> – ' + s.detail + '</li>'; });
+      state.spec.forEach(function (s) { specHtml += '<li><b class="' + specMoonClass(s.label) + '">' + s.label + '</b> – ' + s.detail + '</li>'; });
     } else {
       specHtml += '<li>An diesem Tag keine besonderen Mond-Ereignisse (kein Blauer Mond, keine Finsternis, kein Super-/Mikromond).</li>';
     }

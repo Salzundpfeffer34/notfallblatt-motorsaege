@@ -541,14 +541,14 @@ function tzName() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; }
 }
 var TIME_SOURCES = [
-  { name: 'www.cloudflare.com/cdn-cgi/trace', mode: 'text', url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (s) { var m = String(s).match(/^ts=(\d+(?:\.\d+)?)\s*$/m); return m ? parseFloat(m[1]) * 1000 : NaN; } },
-  { name: 'worldtimeapi.org/api/ip', mode: 'json', url: function () { return 'https://worldtimeapi.org/api/ip'; }, parse: function (j) { return j && isFinite(j.unixtime) ? j.unixtime * 1000 : NaN; } },
-  { name: 'api.open-meteo.com (UTC, ohne Standort)', mode: 'json', url: function () { return 'https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m&timezone=UTC'; }, parse: function (j) {
+  { name: 'www.cloudflare.com/cdn-cgi/trace', label: 'Cloudflare', mode: 'text', url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (s) { var m = String(s).match(/^ts=(\d+(?:\.\d+)?)\s*$/m); return m ? parseFloat(m[1]) * 1000 : NaN; } },
+  { name: 'worldtimeapi.org/api/ip', label: 'worldtimeapi.org', mode: 'json', url: function () { return 'https://worldtimeapi.org/api/ip'; }, parse: function (j) { return j && isFinite(j.unixtime) ? j.unixtime * 1000 : NaN; } },
+  { name: 'api.open-meteo.com (UTC, ohne Standort)', label: 'Open-Meteo', mode: 'json', url: function () { return 'https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m&timezone=UTC'; }, parse: function (j) {
       if (!j || !j.current || !j.current.time) { return NaN; }
       var off = j.utc_offset_seconds || 0, sg = off < 0 ? '-' : '+', a = Math.abs(off);
       return Date.parse(j.current.time + ':00' + sg + pad2(Math.floor(a / 3600)) + ':' + pad2(Math.floor((a % 3600) / 60)));
     } },
-  { name: 'HTTP-Date-Header (HEAD www.cloudflare.com)', mode: 'header', header: 'date', method: 'HEAD', url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (h) { return h ? Date.parse(h) : NaN; } }
+  { name: 'HTTP-Date-Header (HEAD www.cloudflare.com)', label: 'HTTP-Date (Cloudflare)', mode: 'header', header: 'date', method: 'HEAD', url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (h) { return h ? Date.parse(h) : NaN; } }
 ];
 function sunParams(jd) {
   var T = (jd - 2451545.0) / 36525.0;
@@ -1235,7 +1235,7 @@ if (typeof document !== 'undefined') {
         .then(function (body) {
           var ms = src.parse(body);
           if (!isFinite(ms) || Math.abs(ms - Date.now()) > 366 * 86400000) { throw new Error('unplausibel'); }
-          return { ms: ms, source: src.name };
+          return { ms: ms, source: src.label || src.name };
         })
         .catch(function () { return null; })
         .then(function (res) { if (to) { clearTimeout(to); } return res || attempt(); });

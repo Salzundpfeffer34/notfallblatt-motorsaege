@@ -233,14 +233,14 @@ function buildGpx(orig, keptPts, opts) {
   out += '<gpx version="1.1" creator="gpx-reduce.html" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n';
   out += '<metadata><name>' + esc((orig.trkName || 'Tour') + ' (reduziert auf ' + keptPts.length + ' Punkte)') + '</name><time>' + new Date().toISOString() + '</time></metadata>\n';
   orig.wpts.forEach(function (w) { out += ptXml(w, 'wpt', opts.keepMeta) + '\n'; });
-  out += '<trk><name>' + esc(orig.trkName || 'Tour') + '</name><trkseg>\n';
-  keptPts.forEach(function (p) { out += ptXml(p, 'trkpt', opts.keepMeta) + '\n'; });
-  out += '</trkseg></trk>\n';
   if (opts.asRoute) {
     out += '<rte><name>' + esc(orig.trkName || 'Tour') + '</name>\n';
     keptPts.forEach(function (p) { out += ptXml(p, 'rtept', opts.keepMeta) + '\n'; });
     out += '</rte>\n';
   }
+  out += '<trk><name>' + esc(orig.trkName || 'Tour') + '</name><trkseg>\n';
+  keptPts.forEach(function (p) { out += ptXml(p, 'trkpt', opts.keepMeta) + '\n'; });
+  out += '</trkseg></trk>\n';
   out += '</gpx>\n';
   return out;
 }

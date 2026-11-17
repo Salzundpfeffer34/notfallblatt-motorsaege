@@ -90,6 +90,12 @@
       <input type="date" id="datum">
     </div>
     <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
+      <div style="display:flex;gap:6px">
+        <button type="button" id="dayMinus" class="secondary" title="Ein Tag zurück">◀ −1 Tag</button>
+        <button type="button" id="dayPlus" class="secondary" title="Ein Tag vor">+1 Tag ▶</button>
+      </div>
+    </div>
+    <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
       <button type="submit" id="goBtn">Anzeigen</button>
     </div>
   </div>
@@ -236,6 +242,13 @@ function localDayStart(dateStr) {
   var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!p) { return null; }
   return new Date(+p[1], +p[2] - 1, +p[3], 0, 0, 0, 0).getTime();
+}
+function shiftDateStr(dateStr, days) {
+  var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!p) { return String(dateStr); }
+  var d = new Date(+p[1], +p[2] - 1, +p[3], 12, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return dateStrOf(d.getTime());
 }
 function todayStr() {
   var d = new Date();
@@ -777,14 +790,17 @@ if (typeof document !== 'undefined') {
       err(ex.message);
     }
   });
-  $('datum').addEventListener('change', function () {
-    if (localDayStart($('datum').value) == null) { return; }
-    state.datum = $('datum').value;
-    var nd = new Date(nowMs());
-    state.minutes = state.datum === dateStrOf(nowMs()) ? (nd.getHours() * 60 + nd.getMinutes()) : 720;
+  function applyDatum(nd) {
+    if (localDayStart(nd) == null) { return; }
+    state.datum = nd;
+    var now = new Date(nowMs());
+    state.minutes = state.datum === dateStrOf(nowMs()) ? (now.getHours() * 60 + now.getMinutes()) : 720;
     $('timeSlider').value = state.minutes;
     renderAll();
-  });
+  }
+  $('datum').addEventListener('change', function () { applyDatum($('datum').value); });
+  $('dayMinus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, -1)); });
+  $('dayPlus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, 1)); });
   $('timeSlider').addEventListener('input', function () {
     state.minutes = parseInt($('timeSlider').value, 10) || 0;
     renderStatus();

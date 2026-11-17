@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, tzName, TIME_SOURCES, compass, localDayStart };')();
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, tzName, TIME_SOURCES, compass, localDayStart };')();
   const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
@@ -431,6 +431,8 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: Beacon nur bei http/https (file:// sendet nichts)', sm.indexOf("location.protocol === 'http:' || location.protocol === 'https:'") >= 0);
   ok('sonne-mond.html: CSP connect-src enthaelt self (counter.php)', (sm.match(/Content-Security-Policy"[^>]*/) || [''])[0].indexOf("connect-src 'self' https://nominatim.openstreetmap.org") >= 0);
   ok('sonne-mond.html: Datenschutz-Link im Footer', sm.indexOf('href="koordinaten/datenschutz.html"') >= 0);
+  ok('shiftDateStr: +1/-1 Tag, Monats-/Jahreswechsel, Schaltjahr', S.shiftDateStr('2026-06-21', 1) === '2026-06-22' && S.shiftDateStr('2026-06-21', -1) === '2026-06-20' && S.shiftDateStr('2026-03-01', -1) === '2026-02-28' && S.shiftDateStr('2024-02-28', 1) === '2024-02-29' && S.shiftDateStr('2026-12-31', 1) === '2027-01-01' && S.shiftDateStr('2026-01-01', -1) === '2025-12-31' && S.shiftDateStr('xx', 1) === 'xx');
+  ok('sonne-mond.html: Tag-Schalter dayMinus/dayPlus vorhanden und verdrahtet', sm.indexOf('id="dayMinus"') >= 0 && sm.indexOf('id="dayPlus"') >= 0 && sm.indexOf('shiftDateStr(state.datum, -1)') >= 0 && sm.indexOf('shiftDateStr(state.datum, 1)') >= 0);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

@@ -28,6 +28,7 @@ declare(strict_types=1);
  * Abruf der Statistik (nur mit Key):
  *   counter.php?view=1&site=notfallblatt&key=DEIN_KEY
  *   counter.php?view=1&site=koordinaten&key=DEIN_KEY
+ *   counter.php?view=1&site=sonne-mond&key=DEIN_KEY
  * Vor der produktiven Nutzung COUNTER_KEY unten auf einen eigenen geheimen Wert ändern!
  *
  * Rechtsgrundlage: berechtigtes Interesse am Betrieb/Reichweitenmessung der Website
@@ -52,7 +53,7 @@ function counterDataFile(string $site): string
 
 function counterSites(): array
 {
-    return array('notfallblatt', 'koordinaten');
+    return array('notfallblatt', 'koordinaten', 'sonne-mond');
 }
 
 function counterDefaultSite(): string
@@ -399,10 +400,18 @@ function counterView(string $site): void
     $maxCc = $byCc ? max($byCc) : 1;
     $maxLang = $byLang ? max($byLang) : 1;
     $maxRef = $byRef ? max($byRef) : 1;
-    $other = counterDefaultSite() === $site ? 'koordinaten' : 'notfallblatt';
     $keyQ = counterH($key);
     $self = counterH(basename(__FILE__));
     $siteH = counterH($site);
+    $switcher = '';
+    foreach (counterSites() as $s2) {
+        $s2h = counterH($s2);
+        if ($s2 === $site) {
+            $switcher .= '<a href="' . $self . '?view=1&amp;site=' . $s2h . '&amp;key=' . $keyQ . '"><strong>' . $s2h . '</strong></a>';
+        } else {
+            $switcher .= '<a href="' . $self . '?view=1&amp;site=' . $s2h . '&amp;key=' . $keyQ . '">' . $s2h . '</a>';
+        }
+    }
 
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
@@ -422,8 +431,7 @@ function counterView(string $site): void
         . '.bbar span{display:block;height:100%;background:#3b6ea5}'
         . '.bc{flex:0 0 52px;text-align:right;font-variant-numeric:tabular-nums}</style></head><body>'
         . '<h1>Besucherzähler · ' . $siteH . '</h1>'
-        . '<p class="switcher">Ansicht: <a href="' . $self . '?view=1&amp;site=' . $siteH . '&amp;key=' . $keyQ . '"><strong>' . $siteH . '</strong></a>'
-        . '<a href="' . $self . '?view=1&amp;site=' . counterH($other) . '&amp;key=' . $keyQ . '">' . counterH($other) . '</a></p>'
+        . '<p class="switcher">Ansicht: ' . $switcher . '</p>'
         . '<div class="cards">'
         . '<div class="card2"><div class="big">' . $total . '</div><div class="cap">Aufrufe gesamt</div></div>'
         . '<div class="card2"><div class="big">' . $todayN . '</div><div class="cap">heute (' . $today . ')</div></div>'

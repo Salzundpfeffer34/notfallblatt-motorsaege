@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, tzName, TIME_SOURCES, compass, localDayStart };')();
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, calendarGrid, monthLabel, tzName, TIME_SOURCES, compass, localDayStart };')();
   const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
@@ -431,6 +431,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: Beacon nur bei http/https (file:// sendet nichts)', sm.indexOf("location.protocol === 'http:' || location.protocol === 'https:'") >= 0);
   ok('sonne-mond.html: CSP connect-src enthaelt self (counter.php)', (sm.match(/Content-Security-Policy"[^>]*/) || [''])[0].indexOf("connect-src 'self' https://nominatim.openstreetmap.org") >= 0);
   ok('sonne-mond.html: Datenschutz-Link im Footer', sm.indexOf('href="koordinaten/datenschutz.html"') >= 0);
+  ok('calendarGrid: Juni 2026 (1.6. ist Montag) – 42 Zellen, 30 im Monat, Start/Ende korrekt', (function () { const g = S.calendarGrid(2026, 5); return g.length === 42 && g[0].date === '2026-06-01' && g[0].inMonth === true && g.filter(c => c.inMonth).length === 30 && g[41].date === '2026-07-12'; })());
+  ok('calendarGrid: Februar 2026 = 28 Tage, Februar 2024 (Schaltjahr) = 29 Tage', S.calendarGrid(2026, 1).filter(c => c.inMonth).length === 28 && S.calendarGrid(2024, 1).filter(c => c.inMonth).length === 29);
+  ok('monthLabel deutsch', S.monthLabel(2026, 10) === 'November 2026' && S.monthLabel(2026, 0) === 'Januar 2026');
+  ok('sonne-mond.html: Maus-Kalender vorhanden und verdrahtet (calBtn/calPop/Monat-Navigation/Tag-Klick)', ['id="calBtn"', 'id="calPop"', 'cal-day', 'id="calPrev"', 'id="calNext"', 'calendarGrid(calY, calM)', 'pickDate('].every(x => sm.indexOf(x) >= 0));
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

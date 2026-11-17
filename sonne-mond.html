@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://nominatim.openstreetmap.org https://worldtimeapi.org https://timeapi.io https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://nominatim.openstreetmap.org https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
@@ -171,15 +171,22 @@
 
 <div class="card help">
   <h2 style="font-size:1rem;margin:0 0 6px;color:var(--ink)">Zeitquellen für die aktuelle Uhrzeit</h2>
-  <p style="margin:0 0 6px">Die Seite fragt diese Quellen der Reihe nach ab (je 6 s Timeout) und nutzt die Zeit für «Jetzt», die rote Linie im 24h-Balken und die Abweichungsanzeige. Ohne Internetverbindung fällt sie automatisch auf die <strong>Systemuhr</strong> (<code>Date.now()</code>) zurück.</p>
+  <p style="margin:0 0 6px">Die Seite fragt beim Laden und alle 30 s diese Quellen <strong>der Reihe nach</strong> ab (je 6 s Timeout) und nutzt die Zeit für «Jetzt», die rote Linie im 24h-Balken und die Abweichungsanzeige. Ohne Internetverbindung (oder abgeschaltetem Abgleich) gilt automatisch die <strong>Systemuhr</strong> (<code>Date.now()</code>).</p>
+  <p style="margin:0 0 6px"><strong>Automatisch werden nur parameterfreie URLs abgefragt</strong> – keine Koordinaten, keine Zeitzone, kein Datum in der URL:</p>
   <ul>
-    <li><a href="https://worldtimeapi.org/api/timezone/Europe/Zurich" target="_blank" rel="noopener">worldtimeapi.org</a> – JSON mit <code>unixtime</code>, <code>datetime</code>, <code>utc_offset</code>; kostenlos, ohne API-Key, CORS offen</li>
-    <li><a href="https://timeapi.io/api/time/current/zone?timeZone=Europe/Zurich" target="_blank" rel="noopener">timeapi.io</a> – JSON mit <code>dateTime</code>; kostenlos, ohne API-Key</li>
-    <li><a href="https://api.open-meteo.com/v1/forecast?latitude=47.3779&amp;longitude=8.5403&amp;current=temperature_2m&amp;timezone=Europe/Zurich" target="_blank" rel="noopener">api.open-meteo.com</a> – JSON mit <code>current.time</code> + <code>utc_offset_seconds</code>; derselbe Dienst wie die Wetter-Abfrage auf dem Notfallblatt</li>
     <li><a href="https://www.cloudflare.com/cdn-cgi/trace" target="_blank" rel="noopener">cloudflare.com/cdn-cgi/trace</a> – Klartext mit <code>ts=…</code> (Unix-Sekunden)</li>
-    <li>HTTP-<code>Date</code>-Header beliebiger HTTPS-Seiten (z. B. google.com) – im Browser nur lesbar, wenn der Server den Header per CORS freigibt</li>
-    <li>Fallback offline: Systemuhr des Geräts (<code>Date.now()</code>)</li>
+    <li><a href="https://worldtimeapi.org/api/ip" target="_blank" rel="noopener">worldtimeapi.org/api/ip</a> – JSON mit <code>unixtime</code>; kostenlos, ohne API-Key, CORS offen</li>
+    <li><a href="https://api.open-meteo.com/v1/forecast?latitude=0&amp;longitude=0&amp;current=temperature_2m&amp;timezone=UTC" target="_blank" rel="noopener">api.open-meteo.com</a> mit <code>latitude=0&amp;longitude=0&amp;timezone=UTC</code> – JSON mit <code>current.time</code> + <code>utc_offset_seconds</code>; derselbe Dienst wie die Wetter-Abfrage auf dem Notfallblatt</li>
+    <li>HTTP-<code>Date</code>-Header (HEAD-Anfrage, z. B. an www.cloudflare.com) – nur lesbar, wenn der Server den Header per CORS freigibt</li>
   </ul>
+  <p style="margin:6px 0">Weitere Quellen zum Nachschlagen (hier steht die Zeitzone in der URL):</p>
+  <ul>
+    <li><a href="https://worldtimeapi.org/api/timezone/Europe/Zurich" target="_blank" rel="noopener">worldtimeapi.org/api/timezone/Europe/Zurich</a> – JSON mit <code>unixtime</code>, <code>datetime</code>, <code>utc_offset</code></li>
+    <li><a href="https://timeapi.io/api/time/current/zone?timeZone=Europe/Zurich" target="_blank" rel="noopener">timeapi.io</a> – JSON mit <code>dateTime</code>; kostenlos, ohne API-Key</li>
+    <li><a href="https://www.time.gov/" target="_blank" rel="noopener">time.gov</a> – offizielle UTC(NIST)-Seite zum Ablesen. Das NIST-Daytime-Protokoll (TCP-Port 13, time.nist.gov) ist aus Browsern nicht direkt nutzbar (kein HTTP/CORS); im Browser ist der HTTP-<code>Date</code>-Header die nächste programmatische Quelle.</li>
+  </ul>
+  <p style="margin:6px 0 0"><strong>Datenschutz:</strong> Beim Zeitabgleich geht technisch bedingt eine HTTPS-Anfrage an den jeweiligen Dienst – die <strong>IP-Adresse</strong> sieht der Server wie bei jedem Website-Aufruf (TLS verschlüsselt den Inhalt, nicht die Verbindungspartner); worldtimeapi.org meldet die IP sogar als <code>client_ip</code> in der Antwort. Die automatische Abfrage sendet darüber hinaus <strong>nichts</strong> (parameterfreie URLs). Koordinaten oder ein Suchbegriff werden nur bei der Ortssuche (Nominatim) übertragen. Ohne Internet bzw. mit abgeschaltetem Abgleich: Systemuhr, gar keine Übertragung.</p>
+  <label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:.9rem;color:var(--muted)"><input type="checkbox" id="zeitSync" checked> Zeitabgleich über Internet aktiv (abschalten = nur Systemuhr, keine externen Anfragen)</label>
 </div>
 
 <div class="card help">
@@ -242,14 +249,14 @@ function tzName() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; }
 }
 var TIME_SOURCES = [
-  { name: 'worldtimeapi.org', text: false, url: function () { return 'https://worldtimeapi.org/api/timezone/' + encodeURIComponent(tzName()); }, parse: function (j) { return j && isFinite(j.unixtime) ? j.unixtime * 1000 : NaN; } },
-  { name: 'timeapi.io', text: false, url: function () { return 'https://timeapi.io/api/time/current/zone?timeZone=' + encodeURIComponent(tzName()); }, parse: function (j) { return j && j.dateTime ? Date.parse(j.dateTime) : NaN; } },
-  { name: 'api.open-meteo.com', text: false, url: function () { return 'https://api.open-meteo.com/v1/forecast?latitude=47.3779&longitude=8.5403&current=temperature_2m&timezone=' + encodeURIComponent(tzName()); }, parse: function (j) {
+  { name: 'www.cloudflare.com/cdn-cgi/trace', mode: 'text', url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (s) { var m = String(s).match(/^ts=(\d+(?:\.\d+)?)\s*$/m); return m ? parseFloat(m[1]) * 1000 : NaN; } },
+  { name: 'worldtimeapi.org/api/ip', mode: 'json', url: function () { return 'https://worldtimeapi.org/api/ip'; }, parse: function (j) { return j && isFinite(j.unixtime) ? j.unixtime * 1000 : NaN; } },
+  { name: 'api.open-meteo.com (UTC, ohne Standort)', mode: 'json', url: function () { return 'https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m&timezone=UTC'; }, parse: function (j) {
       if (!j || !j.current || !j.current.time) { return NaN; }
       var off = j.utc_offset_seconds || 0, sg = off < 0 ? '-' : '+', a = Math.abs(off);
       return Date.parse(j.current.time + ':00' + sg + pad2(Math.floor(a / 3600)) + ':' + pad2(Math.floor((a % 3600) / 60)));
     } },
-  { name: 'www.cloudflare.com/cdn-cgi/trace', text: true, url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (s) { var m = String(s).match(/^ts=(\d+(?:\.\d+)?)\s*$/m); return m ? parseFloat(m[1]) * 1000 : NaN; } }
+  { name: 'HTTP-Date-Header (HEAD www.cloudflare.com)', mode: 'header', header: 'date', method: 'HEAD', url: function () { return 'https://www.cloudflare.com/cdn-cgi/trace'; }, parse: function (h) { return h ? Date.parse(h) : NaN; } }
 ];
 function sunParams(jd) {
   var T = (jd - 2451545.0) / 36525.0;
@@ -483,13 +490,14 @@ function fmtCoord(lat, lon) {
 
 if (typeof document !== 'undefined') {
   var $ = function (id) { return document.getElementById(id); };
-  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [] };
+  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true };
   try {
     var saved = JSON.parse(localStorage.getItem('sonneMond') || 'null');
     if (saved && isFinite(saved.lat) && isFinite(saved.lon)) {
       state.lat = saved.lat; state.lon = saved.lon;
       if (saved.datum && localDayStart(saved.datum) != null) { state.datum = saved.datum; }
       if (saved.name) { state.name = String(saved.name); }
+      if (saved.zeitSync === false) { state.zeitSync = false; }
     }
   } catch (e) { /* localStorage nicht verfuegbar */ }
   try {
@@ -506,7 +514,7 @@ if (typeof document !== 'undefined') {
     el.classList.remove('hidden');
   }
   function save() {
-    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name })); } catch (e) {}
+    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name, zeitSync: state.zeitSync })); } catch (e) {}
   }
   function updateUrl() {
     try {
@@ -681,8 +689,12 @@ if (typeof document !== 'undefined') {
       var src = TIME_SOURCES[idx++];
       var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
       var to = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 6000) : null;
-      return fetch(src.url(), ctrl ? { signal: ctrl.signal } : {})
-        .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return src.text ? r.text() : r.json(); })
+      return fetch(src.url(), { method: src.method || 'GET', signal: ctrl ? ctrl.signal : undefined })
+        .then(function (r) {
+          if (!r.ok) { throw new Error('HTTP ' + r.status); }
+          if (src.mode === 'header') { return r.headers.get(src.header); }
+          return src.mode === 'text' ? r.text() : r.json();
+        })
         .then(function (body) {
           var ms = src.parse(body);
           if (!isFinite(ms) || Math.abs(ms - Date.now()) > 366 * 86400000) { throw new Error('unplausibel'); }
@@ -694,6 +706,11 @@ if (typeof document !== 'undefined') {
     return attempt();
   }
   function refreshNetTime() {
+    if (!state.zeitSync) {
+      netOffsetMs = 0; netSource = '';
+      renderClockLine();
+      return Promise.resolve(null);
+    }
     return fetchNetTime().then(function (res) {
       if (res) { netOffsetMs = res.ms - Date.now(); netSource = res.source; }
       else { netOffsetMs = 0; netSource = ''; }
@@ -705,9 +722,11 @@ if (typeof document !== 'undefined') {
     var t = nowMs();
     var d = new Date(t);
     var pi = phaseInfo(sunPosition(state.lat, state.lon, t).alt);
-    var src = netSource
-      ? 'Quelle: ' + netSource + ' · Abweichung ' + (netOffsetMs >= 0 ? '+' : '−') + (Math.abs(netOffsetMs) / 1000).toFixed(1) + ' s'
-      : 'Systemuhr (keine Verbindung)';
+    var src = !state.zeitSync
+      ? 'Systemuhr (Zeitabgleich deaktiviert)'
+      : (netSource
+        ? 'Quelle: ' + netSource + ' · Abweichung ' + (netOffsetMs >= 0 ? '+' : '−') + (Math.abs(netOffsetMs) / 1000).toFixed(1) + ' s'
+        : 'Systemuhr (keine Verbindung)');
     $('clockLine').textContent = 'Jetzt: ' + fmtHM(t) + ':' + pad2(d.getSeconds()) + ' · ' + src + ' · ' + pi.l;
   }
   function renderAll() {
@@ -862,6 +881,12 @@ if (typeof document !== 'undefined') {
   $('timeSlider').value = state.minutes;
   renderAll();
   reverseGeocode();
+  $('zeitSync').checked = state.zeitSync;
+  $('zeitSync').addEventListener('change', function () {
+    state.zeitSync = $('zeitSync').checked;
+    save();
+    refreshNetTime();
+  });
   refreshNetTime();
   setInterval(function () {
     refreshNetTime();

@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -449,6 +449,13 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: animierter Hintergrund sky-bg mit bg-sun + bg-moon', ['class="sky-bg"', 'class="bg-sun"', 'class="bg-moon"', '@keyframes bgSunArc', '@keyframes bgMoonArc', 'aria-hidden="true"'].every(x => sm.indexOf(x) >= 0));
   ok('sonne-mond.html: Hintergrund-Sonne/Mond gegenlaeufig (Ebbe/Flut) + reduced-motion', sm.indexOf('animation-delay:-35s') >= 0 && /prefers-reduced-motion: reduce[\s\S]*?\.bg-sun \{ animation:none/.test(sm) && /prefers-reduced-motion: reduce[\s\S]*?\.bg-moon \{ animation:none/.test(sm));
   ok('sonne-mond.html: Hintergrund hinter dem Inhalt (z-index) und klick-durchlaessig', sm.indexOf('.sky-bg { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }') >= 0 && sm.indexOf('position:relative; z-index:1;') >= 0);
+  ok('buildSearchUrls: 2 Quellen (Nominatim + Photon), q encodiert', (function () { const u = S.buildSearchUrls('San Andrés', 28.1, -16.7); return u.length === 2 && u[0].indexOf('nominatim.openstreetmap.org/search') >= 0 && u[0].indexOf('q=San%20Andr%C3%A9s') >= 0 && u[1].indexOf('photon.komoot.io/api/') >= 0; })());
+  ok('buildSearchUrls: viewbox-Bias um (28.1, -16.7) + bounded=0 + photon lat/lon', (function () { const u = S.buildSearchUrls('x', 28.1, -16.7); return u[0].indexOf('viewbox=-18.7,26.1,-14.7,30.1') >= 0 && u[0].indexOf('bounded=0') >= 0 && u[1].indexOf('lat=28.1&lon=-16.7') >= 0; })());
+  ok('buildSearchUrls: ohne Koordinate kein Bias', (function () { const u = S.buildSearchUrls('x', NaN, NaN); return u[0].indexOf('viewbox=') < 0 && u[0].indexOf('bounded=') < 0 && u[1].indexOf('lat=') < 0; })());
+  ok('dedupeOrtResults: Duplikate entfernt, Reihenfolge stabil, kaputte Eintraege raus', (function () { const r = S.dedupeOrtResults([{ lat: 28.12, lon: -16.71, name: 'San Andrés' }, { lat: 28.1204, lon: -16.7098, name: 'san andrés' }, { lat: 28.5, lon: -16.2, name: 'La Laguna' }, { lat: NaN, lon: 1, name: 'kaputt' }]); return r.length === 2 && r[0].name === 'San Andrés' && r[1].name === 'La Laguna'; })());
+  ok('nominatimSub / photonLabel', S.nominatimSub({ address: { state: 'Santa Cruz de Tenerife', country: 'Spanien' } }) === 'Santa Cruz de Tenerife, Spanien' && S.nominatimSub({}) === '' && S.photonLabel({ name: 'San Andrés', city: 'San Andrés y Sauces', state: 'Santa Cruz de Tenerife', country: 'Spain' }) === 'San Andrés, San Andrés y Sauces, Santa Cruz de Tenerife, Spain');
+  ok('sonne-mond.html: Ortssuche robust verdrahtet (buildSearchUrls + Bias + Dedupe + Adressdetails + Tipp)', ['buildSearchUrls(q, state.lat, state.lon)', 'viewbox=', 'bounded=0', 'addressdetails=1', 'photon.komoot.io/api/', 'dedupeOrtResults', 'San Andrés Teneriffa'].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html: CSP enthaelt photon.komoot.io', (sm.match(/Content-Security-Policy"[^>]*/) || [''])[0].indexOf('https://photon.komoot.io') >= 0);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

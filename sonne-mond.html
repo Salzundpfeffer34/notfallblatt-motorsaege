@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://photon.komoot.io https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
 <link rel="icon" type="image/svg+xml" href="img/sonne-mond.svg">
@@ -140,14 +140,15 @@
   </div>
   </form>
   <div class="row" style="margin-top:10px">
-    <div class="field" style="flex:2 1 300px"><label for="ort">Ort suchen (optional, braucht Internet – Nominatim/OpenStreetMap)</label>
-      <input type="text" id="ort" placeholder="z. B. Matterhorn, Lago di Braies, Lofoten …" autocomplete="off">
+    <div class="field" style="flex:2 1 300px"><label for="ort">Ort suchen (optional, braucht Internet – Nominatim + Photon/OpenStreetMap)</label>
+      <input type="text" id="ort" placeholder="z. B. San Andrés Teneriffa, Matterhorn, Lofoten …" autocomplete="off">
     </div>
     <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
       <button type="button" id="ortBtn" class="secondary">Suchen</button>
     </div>
   </div>
   <div id="ortResults"></div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») – die Suche bevorzugt Orte nahe der aktuell gesetzten Koordinate (viewbox-/lat-lon-Bias) und fragt Nominatim und Photon ab; Duplikate werden gefiltert.</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -315,6 +316,35 @@ function calendarGrid(year, month) {
     cells.push({ date: dateStrOf(d.getTime()), day: d.getDate(), inMonth: d.getMonth() === month });
   }
   return cells;
+}
+function buildSearchUrls(q, lat, lon) {
+  var has = isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+  var vb = '';
+  if (has) {
+    var d = 2;
+    vb = '&viewbox=' + [Math.max(-180, lon - d), Math.max(-90, lat - d), Math.min(180, lon + d), Math.min(90, lat + d)].join(',') + '&bounded=0';
+  }
+  return [
+    'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&accept-language=de&q=' + encodeURIComponent(q) + vb,
+    'https://photon.komoot.io/api/?limit=8&q=' + encodeURIComponent(q) + (has ? '&lat=' + lat + '&lon=' + lon : '')
+  ];
+}
+function dedupeOrtResults(list) {
+  var seen = {}, out = [];
+  (list || []).forEach(function (it) {
+    if (!it || !isFinite(it.lat) || !isFinite(it.lon)) { return; }
+    var k = it.lat.toFixed(3) + ',' + it.lon.toFixed(3) + '|' + String(it.name || '').toLowerCase();
+    if (!seen[k]) { seen[k] = 1; out.push(it); }
+  });
+  return out;
+}
+function nominatimSub(f) {
+  var a = (f && f.address) || {};
+  return [a.state || a.region || '', a.country || ''].filter(function (s) { return s !== ''; }).join(', ');
+}
+function photonLabel(p) {
+  p = p || {};
+  return [p.name, p.city, p.state, p.country].filter(function (s) { return s; }).join(', ');
 }
 function tzName() {
   try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; }
@@ -936,29 +966,43 @@ if (typeof document !== 'undefined') {
     if (!q) { return; }
     var box = $('ortResults');
     box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche …</div>';
-    try {
-      fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=de&q=' + encodeURIComponent(q))
-        .then(function (r) { return r.json(); })
-        .then(function (j) {
-          box.innerHTML = '';
-          if (!j || !j.length) { box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer (offline oder nichts gefunden).</div>'; return; }
-          j.forEach(function (f) {
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.textContent = f.display_name;
-            b.addEventListener('click', function () {
-              applyCoords(parseFloat(f.lat), parseFloat(f.lon), String(f.display_name).split(',')[0]);
-              box.innerHTML = '';
-              $('ort').value = '';
-            });
-            box.appendChild(b);
+    var urls = buildSearchUrls(q, state.lat, state.lon);
+    var jobs = urls.map(function (u, i) {
+      return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+        if (i === 0) {
+          return (j || []).map(function (f) {
+            return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), name: String(f.display_name).split(',')[0], label: f.display_name, sub: nominatimSub(f) };
           });
-        })['catch'](function () {
-          box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche nicht möglich (keine Internetverbindung).</div>';
+        }
+        return ((j && j.features) || []).map(function (f) {
+          var c = f.geometry.coordinates;
+          return { lat: parseFloat(c[1]), lon: parseFloat(c[0]), name: f.properties.name, label: photonLabel(f.properties), sub: (f.properties.state ? f.properties.state + ', ' : '') + (f.properties.country || '') };
         });
-    } catch (e) {
-      box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche nicht möglich.</div>';
-    }
+      }).catch(function () { return []; });
+    });
+    Promise.all(jobs).then(function (lists) {
+      var all = [];
+      lists.forEach(function (l) { l.forEach(function (it) { all.push(it); }); });
+      var out = dedupeOrtResults(all);
+      box.innerHTML = '';
+      if (!out.length) {
+        box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer – Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») oder «📍 Meine Position» zuerst setzen. Offline: keine Suche möglich.</div>';
+        return;
+      }
+      out.forEach(function (it) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = '<b></b><br><span style="color:var(--muted);font-size:.8rem"></span>';
+        b.querySelector('b').textContent = it.name;
+        b.querySelector('span').textContent = (it.sub ? it.sub + ' · ' : '') + it.label;
+        b.addEventListener('click', function () {
+          applyCoords(it.lat, it.lon, it.name);
+          box.innerHTML = '';
+          $('ort').value = '';
+        });
+        box.appendChild(b);
+      });
+    });
   });
   Array.prototype.forEach.call(document.querySelectorAll('#chips .chip'), function (chip) {
     chip.addEventListener('click', function () {

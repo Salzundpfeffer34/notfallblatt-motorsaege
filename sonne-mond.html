@@ -663,7 +663,7 @@ function moonIllumination(ms) {
   return { fraction: fraction, phase: ((phase % 1) + 1) % 1 };
 }
 
-var MOON_PHASE_NAMES = ['Neumond', 'Zunehmende Sichel', 'Erstes Viertel', 'Zunehmender Mond', 'Vollmond', 'Abnehmender Mond', 'Letztes Viertel', 'Abnehmende Sichel'];
+var MOON_PHASE_NAMES = ['Neumond', 'Sichelmond (zunehmend)', 'Halbmond (erstes Viertel)', 'Zunehmender Mond', 'Vollmond', 'Abnehmender Mond', 'Halbmond (letztes Viertel)', 'Sichelmond (abnehmend)'];
 
 function moonPhaseInfo(ms) {
   var jd = toJD(ms);

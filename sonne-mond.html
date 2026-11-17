@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://nominatim.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Koordinate eingeben und Sonnenstand sehen: Sonnenauf-/untergang, Blaue Stunde, Goldene Stunde, Wahrer Mittag (Höchststand), Tageslänge sowie Mondauf-/untergang, Mondphase und Beleuchtung – für Fotografen. Alles wird lokal im Browser berechnet.">
+<style>
+  :root { --line:#e3e3dd; --muted:#6b6b64; --accent:#2f6db3; --accent2:#245a96; --bg:#f6f6f2; --card:#fff; --ink:#23231f; }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; margin:0; padding:0 16px 40px; color:var(--ink); background:var(--bg); }
+  .wrap { max-width:920px; margin:0 auto; }
+  header.top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:22px 0 6px; }
+  h1 { font-size:1.45rem; margin:0; letter-spacing:-.01em; }
+  .sub { color:var(--muted); font-size:.92rem; margin:4px 0 0; max-width:60ch; }
+  a.back { font-size:.88rem; color:var(--accent); text-decoration:none; border:1px solid var(--line); background:#fff; padding:8px 13px; border-radius:8px; white-space:nowrap; }
+  a.back:hover { border-color:var(--accent); }
+  .card { border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-top:16px; background:var(--card); box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .card h2 { font-size:1.05rem; margin:0 0 10px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  .row > * { flex:1 1 200px; }
+  .field label { font-size:.8rem; color:var(--muted); display:block; margin-bottom:4px; font-weight:600; }
+  input[type=text], input[type=date] { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:.98rem; background:#fff; font-family:inherit; }
+  input[type=text]:focus, input[type=date]:focus { outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  button, a.btn { background:var(--accent); color:#fff; border:0; border-radius:9px; padding:10px 18px; font-size:.93rem; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; font-family:inherit; white-space:nowrap; }
+  button:hover, a.btn:hover { background:var(--accent2); }
+  button.secondary { background:#fff; color:var(--ink); border:1px solid var(--line); }
+  button.secondary:hover { border-color:var(--accent); color:var(--accent); background:#fff; }
+  .btnrow { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .btnrow > * { flex:0 0 auto; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .chip { font-size:.82rem; padding:6px 11px; border:1px solid var(--line); border-radius:999px; background:#f7f7f5; cursor:pointer; color:var(--ink); font-family:inherit; }
+  .chip:hover { border-color:var(--accent); color:var(--accent); }
+  #ortResults { margin-top:8px; display:flex; flex-direction:column; gap:6px; }
+  #ortResults button { background:#f7f7f5; color:var(--ink); border:1px solid var(--line); font-weight:400; text-align:left; white-space:normal; border-radius:8px; padding:8px 12px; }
+  #ortResults button:hover { border-color:var(--accent); color:var(--accent); background:#fff; }
+  .coordinfo { margin-top:12px; font-size:.9rem; color:var(--muted); }
+  .coordinfo b { color:var(--ink); font-variant-numeric:tabular-nums; }
+  .error { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:10px; padding:10px 14px; margin-top:10px; font-size:.92rem; }
+  .stats { display:flex; gap:12px; flex-wrap:wrap; }
+  .stat { flex:1; min-width:150px; background:#f6f6f2; border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .stat .lbl { color:var(--muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
+  .stat .val { font-size:1.12rem; font-weight:600; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .stat .sub2 { color:var(--muted); font-size:.82rem; margin-top:2px; }
+  #stPhase { font-weight:700; }
+  .sliderrow { display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; }
+  .sliderrow input[type=range] { flex:1 1 240px; accent-color:var(--accent); }
+  #timeLabel { font-variant-numeric:tabular-nums; font-weight:700; font-size:1.05rem; min-width:52px; text-align:center; }
+  svg#sky, svg#bar { width:100%; height:auto; background:#fbfbf9; border:1px solid var(--line); border-radius:10px; margin-top:6px; display:block; }
+  svg#sky { cursor:crosshair; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:.82rem; color:var(--muted); margin-top:8px; }
+  .legend .sw { display:inline-block; width:18px; height:10px; border-radius:3px; vertical-align:middle; margin-right:6px; border:1px solid rgba(0,0,0,.12); }
+  .legend .ln { display:inline-block; width:18px; height:0; border-top:3px solid #f5a623; vertical-align:middle; margin-right:6px; }
+  .legend .ln.m { border-top:2px dashed #9db4d0; }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; margin-top:4px; }
+  td, th { border-bottom:1px solid var(--line); padding:7px 10px 7px 0; text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
+  td.t { font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:600; }
+  .help { font-size:.9rem; color:var(--muted); }
+  .help ul { margin:6px 0 0; padding-left:18px; }
+  .help li { margin:4px 0; }
+  .help code { background:#efefe9; padding:1px 5px; border-radius:4px; font-size:.85em; }
+  footer { margin-top:22px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; display:flex; gap:16px; flex-wrap:wrap; }
+  footer a { color:var(--accent); text-decoration:none; }
+  footer a:hover { text-decoration:underline; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>☀️ Sonne &amp; Mond für Fotografen</h1>
+    <p class="sub">Koordinate eingeben – und du siehst Sonnenauf-/untergang, Blaue Stunde, Goldene Stunde, Wahren Mittag (Höchststand) und den Mond. Alles lokal im Browser berechnet, auch offline nutzbar.</p>
+  </div>
+  <a class="back" href="koordinaten/index.html">← Koordinaten-Konverter</a>
+</header>
+
+<div class="card">
+  <h2>Ort &amp; Tag</h2>
+  <form id="coordForm">
+  <div class="row">
+    <div class="field" style="flex:2 1 300px"><label for="q">Koordinaten (WGS84 Dezimal, Grad/Min/Sek oder LV95)</label>
+      <input type="text" id="q" placeholder="z. B. 46.5225, 6.6325 oder 46°31'21&quot;N 6°37'57&quot;E oder 2624043, 1096620" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="field" style="flex:0 0 auto"><label for="datum">Datum</label>
+      <input type="date" id="datum">
+    </div>
+    <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
+      <button type="submit" id="goBtn">Anzeigen</button>
+    </div>
+  </div>
+  </form>
+  <div class="row" style="margin-top:10px">
+    <div class="field" style="flex:2 1 300px"><label for="ort">Ort suchen (optional, braucht Internet – Nominatim/OpenStreetMap)</label>
+      <input type="text" id="ort" placeholder="z. B. Matterhorn, Lago di Braies, Lofoten …" autocomplete="off">
+    </div>
+    <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
+      <button type="button" id="ortBtn" class="secondary">Suchen</button>
+    </div>
+  </div>
+  <div id="ortResults"></div>
+  <div class="btnrow">
+    <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
+    <button type="button" id="heuteBtn" class="secondary">Heute</button>
+    <button type="button" id="copyLink" class="secondary">🔗 Link kopieren</button>
+  </div>
+  <div class="chips" id="chips">
+    <button type="button" class="chip" data-lat="46.0207" data-lon="7.7491" data-name="Matterhorn">Matterhorn</button>
+    <button type="button" class="chip" data-lat="46.6938" data-lon="11.9447" data-name="Lago di Braies">Lago di Braies</button>
+    <button type="button" class="chip" data-lat="67.9300" data-lon="13.0900" data-name="Reine, Lofoten">Lofoten</button>
+    <button type="button" class="chip" data-lat="36.4618" data-lon="25.3762" data-name="Oia, Santorini">Santorini</button>
+    <button type="button" class="chip" data-lat="-24.7397" data-lon="15.3398" data-name="Sossusvlei">Sossusvlei</button>
+    <button type="button" class="chip" data-lat="47.3779" data-lon="8.5403" data-name="Zürich HB">Zürich</button>
+    <button type="button" class="chip" data-lat="48.8584" data-lon="2.2945" data-name="Eiffelturm">Eiffelturm</button>
+  </div>
+  <div id="err" class="error hidden"></div>
+  <p class="coordinfo" id="coordInfo"></p>
+</div>
+
+<div class="card">
+  <h2>Status zum gewählten Zeitpunkt</h2>
+  <div class="stats">
+    <div class="stat"><div class="lbl">Zeitpunkt</div><div class="val" id="stTime">–</div><div class="sub2" id="clockLine"></div></div>
+    <div class="stat"><div class="lbl">Sonne</div><div class="val" id="stSun">–</div><div class="sub2" id="stPhase">–</div></div>
+    <div class="stat"><div class="lbl">Mond</div><div class="val" id="stMoon">–</div><div class="sub2" id="stMoonPhase">–</div></div>
+    <div class="stat"><div class="lbl">Nächstes Ereignis</div><div class="val" style="font-size:.95rem" id="stNext">–</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Himmelsbahn (Azimut → Höhe)</h2>
+  <svg id="sky" viewBox="0 0 720 360" role="img" aria-label="Sonnen- und Mondbahn über dem Horizont"></svg>
+  <div class="sliderrow">
+    <input type="range" id="timeSlider" min="0" max="1439" step="1" value="720" aria-label="Uhrzeit des Tages">
+    <span id="timeLabel">12:00</span>
+    <button type="button" id="nowBtn" class="secondary">Jetzt</button>
+  </div>
+  <div class="legend">
+    <span><span class="ln"></span>Sonnenbahn</span>
+    <span><span class="ln m"></span>Mondbahn</span>
+    <span>🟡 aktueller Sonnenstand</span>
+    <span>⚪ aktueller Mondstand</span>
+    <span>Tipp: Auf die Bahn klicken springt zur passenden Uhrzeit</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>24-Stunden-Übersicht</h2>
+  <svg id="bar" viewBox="0 0 1440 64" role="img" aria-label="Lichtphasen über 24 Stunden"></svg>
+  <div class="legend">
+    <span><span class="sw" style="background:#ffdf7e"></span>Tag (&ge; +6°)</span>
+    <span><span class="sw" style="background:#f7b955"></span>Goldene Stunde (0°…+6°)</span>
+    <span><span class="sw" style="background:#e98a3c"></span>Goldene Stunde (bis −4°)</span>
+    <span><span class="sw" style="background:#6f8fc0"></span>Blaue Stunde (−6°…−4°)</span>
+    <span><span class="sw" style="background:#46608f"></span>Nautisch (−12°…−6°)</span>
+    <span><span class="sw" style="background:#2c3a63"></span>Astronomisch (−18°…−12°)</span>
+    <span><span class="sw" style="background:#161d36"></span>Nacht</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Alle Zeiten am gewählten Tag</h2>
+  <table id="times">
+    <tr><th>Ereignis</th><th>Zeit</th><th>Sonne Höhe</th><th>Sonne Azimut</th></tr>
+  </table>
+</div>
+
+<div class="card help">
+  <h2 style="font-size:1rem;margin:0 0 6px;color:var(--ink)">Tipps für Fotografen</h2>
+  <ul>
+    <li><strong>Goldene Stunde</strong> (Sonne −4° bis +6°): weiches, warmes Streiflicht – beste Zeit für Landschaften und Porträts. Azimut am Auf-/Untergang zeigt, von wo das Licht kommt.</li>
+    <li><strong>Blaue Stunde</strong> (−6° bis −4°): kühles, gleichmässiges Licht – ideal für Städte und Dämmerungsaufnahmen mit Kunstlicht; meist 1–2 Stufen länger belichten oder Stativ.</li>
+    <li><strong>Wahrer Mittag</strong>: Sonne steht im Süden (Azimut 180°) am höchsten – kürzeste Schatten, härtestes Licht.</li>
+    <li><strong>Mond</strong>: Vollmond geht etwa bei Sonnenuntergang auf (hell für Nachtlandschaften); bei Neumond/Sichel ist der Nachthimmel dunkel – ideal für Milchstrasse.</li>
+    <li>Koordinaten-Formate wie im <a href="koordinaten/index.html">Koordinaten-Konverter</a>: Dezimalgrad (<code>46.5225, 6.6325</code>), Grad/Min/Sek (<code>46°31'21"N 6°37'57"E</code>), Dezimalminuten (<code>N46 31.375 E6 37.95</code>) oder LV95 (<code>2624043, 1096620</code>).</li>
+  </ul>
+</div>
+
+<footer>
+  <span>← <a href="koordinaten/index.html">Koordinaten-Konverter</a></span>
+  <span><a href="gpx-reduce.html">GPX-Reduktion für Garmin</a></span>
+  <span><a href="index.html">Notfallblatt Motorsäge</a></span>
+  <span>Sonne nach NOAA-Formeln, Mond nach vereinfachter Mondtheorie – alles lokal im Browser, keine Daten verlassen das Gerät (Ortssuche nur mit Internet via OpenStreetMap).</span>
+</footer>
+</div>
+
+<script src="js/coords.js"></script>
+<script>
+'use strict';
+var RAD = Math.PI / 180;
+var DEG = 180 / Math.PI;
+var DAY_MS = 86400000;
+
+function toJD(ms) { return ms / DAY_MS + 2440587.5; }
+function norm360(d) { return ((d % 360) + 360) % 360; }
+function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function fmtHM(ms, utc) {
+  var d = new Date(ms);
+  return pad2(utc ? d.getUTCHours() : d.getHours()) + ':' + pad2(utc ? d.getUTCMinutes() : d.getMinutes());
+}
+function fmtDur(ms) {
+  var m = Math.max(0, Math.round(ms / 60000));
+  return Math.floor(m / 60) + ' h ' + pad2(m % 60) + ' min';
+}
+function compass(az) {
+  var dirs = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+  return dirs[Math.round(norm360(az) / 45) % 8];
+}
+function localDayStart(dateStr) {
+  var p = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!p) { return null; }
+  return new Date(+p[1], +p[2] - 1, +p[3], 0, 0, 0, 0).getTime();
+}
+function todayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+
+function sunParams(jd) {
+  var T = (jd - 2451545.0) / 36525.0;
+  var L0 = norm360(280.46646 + T * (36000.76983 + T * 0.0003032));
+  var M = norm360(357.52911 + T * (35999.05029 - 0.0001537 * T));
+  var e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
+  var C = Math.sin(M * RAD) * (1.914602 - T * (0.004817 + 0.000014 * T))
+    + Math.sin(2 * M * RAD) * (0.019993 - 0.000101 * T)
+    + Math.sin(3 * M * RAD) * 0.000289;
+  var trueLong = L0 + C;
+  var omega = 125.04 - 1934.136 * T;
+  var lambda = trueLong - 0.00569 - 0.00478 * Math.sin(omega * RAD);
+  var eps0 = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) / 60;
+  var eps = eps0 + 0.00256 * Math.cos(omega * RAD);
+  var dec = Math.asin(Math.sin(eps * RAD) * Math.sin(lambda * RAD));
+  var y = Math.pow(Math.tan(eps * RAD / 2), 2);
+  var eqTime = 4 * DEG * (y * Math.sin(2 * L0 * RAD)
+    - 2 * e * Math.sin(M * RAD)
+    + 4 * e * y * Math.sin(M * RAD) * Math.cos(2 * L0 * RAD)
+    - 0.5 * y * y * Math.sin(4 * L0 * RAD)
+    - 1.25 * e * e * Math.sin(2 * M * RAD));
+  var ra = Math.atan2(Math.cos(eps * RAD) * Math.sin(lambda * RAD), Math.cos(lambda * RAD));
+  return { dec: dec, eqTime: eqTime, ra: ra };
+}
+
+function sunPosition(lat, lon, ms) {
+  var p = sunParams(toJD(ms));
+  var utcMin = (ms % DAY_MS) / 60000;
+  if (utcMin < 0) { utcMin += 1440; }
+  var H = (utcMin / 4 + lon + p.eqTime / 4 - 180) * RAD;
+  var latR = lat * RAD;
+  var sinAlt = Math.sin(latR) * Math.sin(p.dec) + Math.cos(latR) * Math.cos(p.dec) * Math.cos(H);
+  var alt = Math.asin(clamp(sinAlt, -1, 1));
+  var az = norm360(Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(latR) - Math.tan(p.dec) * Math.cos(latR)) * DEG + 180);
+  return { alt: alt * DEG, az: az };
+}
+
+var SUN_CROSS = [-18, -12, -6, -4, -0.833, 0, 6];
+var CROSS_NAMES = {
+  '-18': 'Astronomische Dämmerung (Sonne −18°)',
+  '-12': 'Nautische Dämmerung (Sonne −12°)',
+  '-6': 'Bürgerliche Dämmerung (Sonne −6°)',
+  '-4': 'Grenze Blaue Stunde (Sonne −4°)',
+  '-0.833': 'Sonnenauf-/untergang (−0,83°, mit Refraktion)',
+  '0': 'Sonne am Horizont (0°)',
+  '6': 'Grenze Goldene Stunde (Sonne +6°)'
+};
+
+function sunEventsForDay(lat, lon, dayStartMs) {
+  var d0 = new Date(dayStartMs);
+  var utcMid = Date.UTC(d0.getFullYear(), d0.getMonth(), d0.getDate(), 0, 0, 0);
+  var p = sunParams(toJD(utcMid + 43200000));
+  var solarNoon = utcMid + 43200000 - (p.eqTime + 4 * lon) * 60000;
+  while (solarNoon - (dayStartMs + 43200000) > 43200000) { solarNoon -= DAY_MS; }
+  while ((dayStartMs + 43200000) - solarNoon > 43200000) { solarNoon += DAY_MS; }
+  var latR = lat * RAD, sinLat = Math.sin(latR), cosLat = Math.cos(latR);
+  var sinDec = Math.sin(p.dec), cosDec = Math.cos(p.dec);
+  function cross(altDeg, sign) {
+    var c = (Math.sin(altDeg * RAD) - sinLat * sinDec) / (cosLat * cosDec);
+    if (c < -1 || c > 1) { return null; }
+    return solarNoon + sign * (Math.acos(c) * DEG / 15) * 3600000;
+  }
+  var events = [];
+  var byAlt = {};
+  SUN_CROSS.forEach(function (a) {
+    var ev = { alt: a, morning: cross(a, -1), evening: cross(a, +1) };
+    events.push(ev);
+    byAlt[String(a)] = ev;
+  });
+  var noonPos = sunPosition(lat, lon, solarNoon);
+  var sunrise = byAlt['-0.833'].morning, sunset = byAlt['-0.833'].evening;
+  return {
+    solarNoon: solarNoon,
+    noonAlt: noonPos.alt,
+    noonAz: noonPos.az,
+    events: events,
+    byAlt: byAlt,
+    sunrise: sunrise,
+    sunset: sunset,
+    dayLength: (sunrise != null && sunset != null) ? sunset - sunrise : null
+  };
+}
+
+function moonPosition(lat, lon, ms) {
+  var jd = toJD(ms);
+  var d = jd - 2451545.0;
+  var L = norm360(218.316 + 13.176396 * d);
+  var M = norm360(134.963 + 13.064993 * d);
+  var F = norm360(93.272 + 13.229350 * d);
+  var l = (L + 6.289 * Math.sin(M * RAD)) * RAD;
+  var b = (5.128 * Math.sin(F * RAD)) * RAD;
+  var dist = 385001 - 20905 * Math.cos(M * RAD);
+  var eps = 23.4397 * RAD;
+  var ra = Math.atan2(Math.sin(l) * Math.cos(eps) - Math.tan(b) * Math.sin(eps), Math.cos(l));
+  var dec = Math.asin(clamp(Math.sin(b) * Math.cos(eps) + Math.cos(b) * Math.sin(eps) * Math.sin(l), -1, 1));
+  var gmst = norm360(280.46061837 + 360.98564736629 * (jd - 2451545));
+  var H = (norm360(gmst + lon) - ra * DEG) * RAD;
+  var latR = lat * RAD;
+  var sinAlt = Math.sin(latR) * Math.sin(dec) + Math.cos(latR) * Math.cos(dec) * Math.cos(H);
+  var alt = Math.asin(clamp(sinAlt, -1, 1));
+  alt -= Math.asin(6378.14 / dist) * Math.cos(alt);
+  var az = norm360(Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(latR) - Math.tan(dec) * Math.cos(latR)) * DEG + 180);
+  return { alt: alt * DEG, az: az, ra: ra * DEG, dec: dec, dist: dist };
+}
+
+function moonIllumination(ms) {
+  var p = sunParams(toJD(ms));
+  var m = moonPosition(0, 0, ms);
+  var sRa = p.ra, sDec = p.dec, mRa = m.ra * RAD, mDec = m.dec;
+  var phi = Math.acos(clamp(Math.sin(sDec) * Math.sin(mDec) + Math.cos(sDec) * Math.cos(mDec) * Math.cos(sRa - mRa), -1, 1));
+  var inc = Math.atan2(149598000 * Math.sin(phi), m.dist - 149598000 * Math.cos(phi));
+  var angle = Math.atan2(Math.cos(sDec) * Math.sin(sRa - mRa), Math.sin(sDec) * Math.cos(mDec) - Math.cos(sDec) * Math.sin(mDec) * Math.cos(sRa - mRa));
+  var fraction = (1 + Math.cos(inc)) / 2;
+  var phase = 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / Math.PI;
+  return { fraction: fraction, phase: ((phase % 1) + 1) % 1 };
+}
+
+var MOON_PHASE_NAMES = ['Neumond', 'Zunehmende Sichel', 'Erstes Viertel', 'Zunehmender Mond', 'Vollmond', 'Abnehmender Mond', 'Letztes Viertel', 'Abnehmende Sichel'];
+
+function moonPhaseInfo(ms) {
+  var jd = toJD(ms);
+  var age = ((jd - 2451550.1) % 29.530588853 + 29.530588853) % 29.530588853;
+  var ill = moonIllumination(ms);
+  return { fraction: ill.fraction, phase: ill.phase, age: age, name: MOON_PHASE_NAMES[Math.round(ill.phase * 8) % 8], waxing: ill.phase < 0.5 };
+}
+
+function moonEvents(lat, lon, centerMs, halfWindowMs) {
+  var step = 15 * 60000;
+  var start = centerMs - halfWindowMs, end = centerMs + halfWindowMs;
+  var out = [];
+  var prevT = start, prevA = moonPosition(lat, lon, start).alt;
+  for (var t = start + step; t <= end + 1; t += step) {
+    var a = moonPosition(lat, lon, t).alt;
+    if ((prevA < 0) !== (a < 0)) {
+      var lo = prevT, hi = t;
+      for (var i = 0; i < 40; i++) {
+        var mid = (lo + hi) / 2;
+        if ((moonPosition(lat, lon, lo).alt < 0) !== (moonPosition(lat, lon, mid).alt < 0)) { hi = mid; } else { lo = mid; }
+      }
+      out.push({ t: (lo + hi) / 2, rise: a > prevA });
+    }
+    prevT = t; prevA = a;
+  }
+  return out;
+}
+
+function phaseInfo(alt) {
+  if (alt >= 6) { return { c: '#ffdf7e', l: 'Tageslicht (Sonne ≥ +6°)' }; }
+  if (alt >= 0) { return { c: '#f7b955', l: 'Goldene Stunde (0° bis +6°)' }; }
+  if (alt >= -4) { return { c: '#e98a3c', l: 'Goldene Stunde (bis −4°)' }; }
+  if (alt >= -6) { return { c: '#6f8fc0', l: 'Blaue Stunde (−6° bis −4°)' }; }
+  if (alt >= -12) { return { c: '#46608f', l: 'Nautische Dämmerung (−12° bis −6°)' }; }
+  if (alt >= -18) { return { c: '#2c3a63', l: 'Astronomische Dämmerung (−18° bis −12°)' }; }
+  return { c: '#161d36', l: 'Nacht' };
+}
+
+function checkLatLon(lat, lon) {
+  if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    throw new Error('Ungültige Koordinaten (Breite ±90°, Länge ±180°)');
+  }
+}
+
+function parseCoordInput(raw) {
+  if (typeof raw !== 'string') { throw new Error('Bitte Koordinaten eingeben'); }
+  var s = raw.trim();
+  if (!s) { throw new Error('Bitte Koordinaten eingeben'); }
+  var parts = s.split(/[,;/\s]+/).filter(function (p) { return p !== ''; }).map(function (p) { return p.replace(/['’]/g, ''); });
+  if (parts.length === 2 && /^\d{6,7}$/.test(parts[0]) && /^\d{6,7}$/.test(parts[1]) && typeof lv95ToWgs84 === 'function') {
+    var e = parseInt(parts[0], 10), n = parseInt(parts[1], 10);
+    if (e >= 2400000 && e <= 2900000 && n >= 1000000 && n <= 1350000) {
+      var w = lv95ToWgs84(e, n);
+      checkLatLon(w.lat, w.lon);
+      return { lat: w.lat, lon: w.lon, note: 'LV95' };
+    }
+  }
+  var norm = s.replace(/[′‘’´`]/g, "'").replace(/[″“”]/g, '"');
+  if (norm.indexOf('°') >= 0) {
+    var re = /(-?\d+(?:[.,]\d+)?)\s*°\s*(?:(\d+(?:[.,]\d+)?)\s*'?\s*(?:(\d+(?:[.,]\d+)?)\s*"?\s*)?)?\s*([NSEW])/gi;
+    var comps = [], m;
+    while ((m = re.exec(norm)) !== null) {
+      comps.push({
+        v: parseFloat(m[1].replace(',', '.')) + (m[2] ? parseFloat(m[2].replace(',', '.')) / 60 : 0) + (m[3] ? parseFloat(m[3].replace(',', '.')) / 3600 : 0),
+        h: m[4].toUpperCase()
+      });
+    }
+    var latC = comps.filter(function (c) { return c.h === 'N' || c.h === 'S'; });
+    var lonC = comps.filter(function (c) { return c.h === 'E' || c.h === 'W'; });
+    if (latC.length === 1 && lonC.length === 1) {
+      var latD = latC[0].v * (latC[0].h === 'S' ? -1 : 1);
+      var lonD = lonC[0].v * (lonC[0].h === 'W' ? -1 : 1);
+      checkLatLon(latD, lonD);
+      return { lat: latD, lon: lonD, note: 'Grad/Min/Sek' };
+    }
+  }
+  var up = norm.toUpperCase();
+  var dm = up.match(/^([NS])\s*(-?\d+(?:[.,]\d+)?)\s+(\d+(?:[.,]\d+)?)\s+([EW])\s*(-?\d+(?:[.,]\d+)?)\s+(\d+(?:[.,]\d+)?)$/);
+  if (dm) {
+    var latM = (parseFloat(dm[2].replace(',', '.')) + parseFloat(dm[3].replace(',', '.')) / 60) * (dm[1] === 'S' ? -1 : 1);
+    var lonM = (parseFloat(dm[5].replace(',', '.')) + parseFloat(dm[6].replace(',', '.')) / 60) * (dm[4] === 'W' ? -1 : 1);
+    checkLatLon(latM, lonM);
+    return { lat: latM, lon: lonM, note: 'Dezimalminuten' };
+  }
+  var dec = up.match(/^([NS])?\s*(-?\d+(?:[.,]\d+)?)\s*([NS])?\s*[,;/\s]\s*([EW])?\s*(-?\d+(?:[.,]\d+)?)\s*([EW])?$/);
+  if (dec) {
+    var a = parseFloat(dec[2].replace(',', '.')), b = parseFloat(dec[5].replace(',', '.'));
+    var h1 = dec[1] || dec[3], h2 = dec[4] || dec[6];
+    var latX, lonX;
+    if (h1 === 'N' || h1 === 'S') {
+      latX = a * (h1 === 'S' ? -1 : 1);
+      lonX = b * (h2 === 'W' ? -1 : 1);
+    } else if (h2 === 'E' || h2 === 'W') {
+      lonX = b * (h2 === 'W' ? -1 : 1);
+      latX = a;
+    } else if (h1 === 'E' || h1 === 'W') {
+      lonX = a * (h1 === 'W' ? -1 : 1);
+      latX = b;
+    } else if (Math.abs(a) > 90 && Math.abs(b) <= 90) {
+      latX = b; lonX = a;
+    } else {
+      latX = a; lonX = b;
+    }
+    checkLatLon(latX, lonX);
+    return { lat: latX, lon: lonX, note: 'WGS84 Dezimal' };
+  }
+  throw new Error('Format nicht erkannt – z. B. 46.5225, 6.6325 oder 46°31\'21"N 6°37\'57"E');
+}
+
+function fmtCoord(lat, lon) {
+  return Math.abs(lat).toFixed(5) + '° ' + (lat >= 0 ? 'N' : 'S') + ', ' + Math.abs(lon).toFixed(5) + '° ' + (lon >= 0 ? 'O' : 'W');
+}
+
+if (typeof document !== 'undefined') {
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [] };
+  try {
+    var saved = JSON.parse(localStorage.getItem('sonneMond') || 'null');
+    if (saved && isFinite(saved.lat) && isFinite(saved.lon)) {
+      state.lat = saved.lat; state.lon = saved.lon;
+      if (saved.datum && localDayStart(saved.datum) != null) { state.datum = saved.datum; }
+      if (saved.name) { state.name = String(saved.name); }
+    }
+  } catch (e) { /* localStorage nicht verfuegbar */ }
+  try {
+    var qs = new URLSearchParams(location.search);
+    var qla = parseFloat(qs.get('lat')), qlo = parseFloat(qs.get('lon'));
+    if (isFinite(qla) && isFinite(qlo) && Math.abs(qla) <= 90 && Math.abs(qlo) <= 180) { state.lat = qla; state.lon = qlo; }
+    if (qs.get('datum') && localDayStart(qs.get('datum')) != null) { state.datum = qs.get('datum'); }
+  } catch (e) { /* keine URL-Parameter */ }
+
+  function err(msg) {
+    var el = $('err');
+    if (!msg) { el.classList.add('hidden'); return; }
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function save() {
+    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name })); } catch (e) {}
+  }
+  function updateUrl() {
+    try {
+      var u = '?lat=' + state.lat.toFixed(5) + '&lon=' + state.lon.toFixed(5) + '&datum=' + state.datum;
+      history.replaceState(null, '', u);
+    } catch (e) {}
+  }
+  function moonEventsInDay() {
+    return moonEvents(state.lat, state.lon, state.dayStart + 43200000, 43200000).filter(function (me) {
+      return me.t >= state.dayStart && me.t <= state.dayStart + DAY_MS;
+    });
+  }
+  function nextEvent(nowT) {
+    var list = [];
+    state.ev.events.forEach(function (e2) {
+      if (e2.morning != null && e2.morning > nowT && e2.morning <= state.dayStart + DAY_MS) { list.push({ t: e2.morning, label: CROSS_NAMES[String(e2.alt)] + ' (morgens)' }); }
+      if (e2.evening != null && e2.evening > nowT && e2.evening <= state.dayStart + DAY_MS) { list.push({ t: e2.evening, label: CROSS_NAMES[String(e2.alt)] + ' (abends)' }); }
+    });
+    if (state.ev.solarNoon > nowT && state.ev.solarNoon <= state.dayStart + DAY_MS) { list.push({ t: state.ev.solarNoon, label: 'Wahrer Mittag (Höchststand)' }); }
+    moonEventsInDay().forEach(function (me) {
+      if (me.t > nowT) { list.push({ t: me.t, label: me.rise ? 'Mondaufgang' : 'Monduntergang' }); }
+    });
+    list.sort(function (a, b) { return a.t - b.t; });
+    return list[0] || null;
+  }
+  function drawSky() {
+    var svg = $('sky');
+    var W = 720, H = 360, padL = 40, padR = 14, padT = 14, padB = 30;
+    var pw = W - padL - padR, ph = H - padT - padB;
+    function X(az) { return padL + az / 360 * pw; }
+    function Y(alt) { return padT + ph - (alt + 20) / 110 * ph; }
+    var s = '';
+    s += '<rect x="' + padL + '" y="' + padT + '" width="' + pw + '" height="' + ph + '" fill="#fbfbf8" stroke="#e3e3dd"/>';
+    s += '<rect x="' + padL + '" y="' + Y(0).toFixed(1) + '" width="' + pw + '" height="' + (padT + ph - Y(0)).toFixed(1) + '" fill="#e9edf4"/>';
+    [-18, -12, -6, 0, 30, 60, 90].forEach(function (a) {
+      s += '<line x1="' + padL + '" x2="' + (padL + pw) + '" y1="' + Y(a).toFixed(1) + '" y2="' + Y(a).toFixed(1) + '" stroke="' + (a === 0 ? '#9aa0a6' : '#e3e3dd') + '"' + (a < 0 ? ' stroke-dasharray="4 3"' : '') + '/>';
+      s += '<text x="' + (padL - 6) + '" y="' + (Y(a) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#6b6b64">' + a + '°</text>';
+    });
+    var dirs = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+    for (var az = 0; az <= 360; az += 45) {
+      s += '<line x1="' + X(az).toFixed(1) + '" x2="' + X(az).toFixed(1) + '" y1="' + padT + '" y2="' + (padT + ph) + '" stroke="#ecece6"/>';
+      s += '<text x="' + X(az).toFixed(1) + '" y="' + (padT + ph + 15) + '" text-anchor="middle" font-size="10" fill="#6b6b64">' + dirs[(az / 45) % 8] + '</text>';
+    }
+    var dayStart = state.dayStart;
+    var sunPts = [], moonPts = [];
+    for (var m = 0; m <= 1440; m += 10) {
+      var t = dayStart + m * 60000;
+      var sp = sunPosition(state.lat, state.lon, t);
+      sunPts.push({ t: t, m: m, x: X(sp.az), y: Y(Math.max(sp.alt, -20)), alt: sp.alt, az: sp.az });
+      var mp = moonPosition(state.lat, state.lon, t);
+      moonPts.push({ t: t, m: m, x: X(mp.az), y: Y(Math.max(mp.alt, -20)), alt: mp.alt, az: mp.az });
+    }
+    state.sunPts = sunPts; state.moonPts = moonPts;
+    s += '<polyline points="' + moonPts.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ') + '" fill="none" stroke="#9db4d0" stroke-width="1.8" stroke-dasharray="5 4"/>';
+    s += '<polyline points="' + sunPts.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ') + '" fill="none" stroke="#f5a623" stroke-width="2.6"/>';
+    state.ev.events.forEach(function (e2) {
+      [e2.morning, e2.evening].forEach(function (t) {
+        if (t == null || t < dayStart || t > dayStart + DAY_MS) { return; }
+        var p = sunPosition(state.lat, state.lon, t);
+        var col = e2.alt >= 0 ? '#f5a623' : (e2.alt >= -6 ? '#6f8fc0' : '#46608f');
+        s += '<circle cx="' + X(p.az).toFixed(1) + '" cy="' + Y(p.alt).toFixed(1) + '" r="3" fill="' + col + '"><title>' + CROSS_NAMES[String(e2.alt)] + ' · ' + fmtHM(t) + '</title></circle>';
+      });
+    });
+    s += '<circle cx="' + X(state.ev.noonAz).toFixed(1) + '" cy="' + Y(state.ev.noonAlt).toFixed(1) + '" r="4.5" fill="#e8710a"><title>Wahrer Mittag · ' + fmtHM(state.ev.solarNoon) + ' · Höhe ' + state.ev.noonAlt.toFixed(1) + '° · Azimut ' + state.ev.noonAz.toFixed(0) + '°</title></circle>';
+    var tm = dayStart + state.minutes * 60000;
+    var sp2 = sunPosition(state.lat, state.lon, tm), mp2 = moonPosition(state.lat, state.lon, tm);
+    s += '<circle cx="' + X(sp2.az).toFixed(1) + '" cy="' + Y(Math.max(sp2.alt, -20)).toFixed(1) + '" r="6.5" fill="#ffd76a" stroke="#b3261e" stroke-width="2"><title>Sonne ' + fmtHM(tm) + ' · Höhe ' + sp2.alt.toFixed(1) + '° · Azimut ' + sp2.az.toFixed(0) + '° ' + compass(sp2.az) + '</title></circle>';
+    if (mp2.alt >= -20) {
+      s += '<circle cx="' + X(mp2.az).toFixed(1) + '" cy="' + Y(mp2.alt).toFixed(1) + '" r="5.5" fill="#e8eef7" stroke="#33507e" stroke-width="2"><title>Mond ' + fmtHM(tm) + ' · Höhe ' + mp2.alt.toFixed(1) + '° · Azimut ' + mp2.az.toFixed(0) + '° ' + compass(mp2.az) + '</title></circle>';
+    }
+    svg.innerHTML = s;
+  }
+  function drawBar() {
+    var svg = $('bar');
+    var dayStart = state.dayStart;
+    var s = '';
+    var runs = [];
+    var cur = null;
+    for (var m = 0; m < 1440; m++) {
+      var pi = phaseInfo(sunPosition(state.lat, state.lon, dayStart + m * 60000).alt);
+      if (!cur || cur.c !== pi.c) { cur = { c: pi.c, l: pi.l, from: m, to: m }; runs.push(cur); } else { cur.to = m; }
+    }
+    runs.forEach(function (r) {
+      s += '<rect x="' + r.from + '" y="12" width="' + (r.to - r.from + 1) + '" height="28" fill="' + r.c + '"><title>' + r.l + ' · ' + fmtHM(dayStart + r.from * 60000) + '–' + fmtHM(dayStart + (r.to + 1) * 60000) + '</title></rect>';
+    });
+    for (var h = 0; h <= 24; h += 2) {
+      s += '<line x1="' + (h * 60) + '" x2="' + (h * 60) + '" y1="42" y2="47" stroke="#c8c8c0"/>';
+      s += '<text x="' + (h * 60) + '" y="58" text-anchor="middle" font-size="9" fill="#6b6b64">' + pad2(h) + '</text>';
+    }
+    moonEventsInDay().forEach(function (me) {
+      var x = (me.t - dayStart) / 60000;
+      s += '<text x="' + x.toFixed(1) + '" y="9" text-anchor="middle" font-size="10" fill="#33507e">' + (me.rise ? '☾↑' : '☾↓') + '<title>' + (me.rise ? 'Mondaufgang ' : 'Monduntergang ') + fmtHM(me.t) + '</title></text>';
+    });
+    if (state.datum === todayStr()) {
+      var now = new Date();
+      var x2 = now.getHours() * 60 + now.getMinutes();
+      s += '<line x1="' + x2 + '" x2="' + x2 + '" y1="4" y2="47" stroke="#b3261e" stroke-width="1.5"><title>Jetzt ' + fmtHM(now.getTime()) + '</title></line>';
+    }
+    svg.innerHTML = s;
+  }
+  function renderTimes() {
+    var ev = state.ev, dayStart = state.dayStart;
+    function posCell(t) {
+      var p = sunPosition(state.lat, state.lon, t);
+      return { alt: p.alt.toFixed(1) + '°', az: p.az.toFixed(0) + '° ' + compass(p.az) };
+    }
+    var rows = [];
+    function row(label, timeText, altText, azText) {
+      rows.push('<tr><td>' + label + '</td><td class="t">' + timeText + '</td><td>' + altText + '</td><td>' + azText + '</td></tr>');
+    }
+    function crossRow(altKey, suffix) {
+      var e2 = ev.byAlt[altKey];
+      var t = suffix === 'morgens' ? e2.morning : e2.evening;
+      if (t == null) { row(CROSS_NAMES[altKey] + ' ' + suffix, '–', '–', '–'); return; }
+      var c = posCell(t);
+      row(CROSS_NAMES[altKey] + ' ' + suffix, fmtHM(t), c.alt, c.az);
+    }
+    function rangeRow(label, t1, t2, altText) {
+      if (t1 == null || t2 == null) { row(label, '–', '–', '–'); return; }
+      row(label, fmtHM(t1) + ' – ' + fmtHM(t2), altText, '');
+    }
+    if (ev.sunrise == null) {
+      row('☀️ Hinweis', ev.noonAlt > 0 ? 'Polartag – die Sonne geht heute nicht unter' : 'Polarnacht – die Sonne geht heute nicht auf', ev.noonAlt.toFixed(1) + '° (Mittag)', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz));
+    }
+    crossRow('-18', 'morgens'); crossRow('-18', 'abends');
+    crossRow('-12', 'morgens'); crossRow('-12', 'abends');
+    crossRow('-6', 'morgens'); crossRow('-6', 'abends');
+    rangeRow('🌃 Blaue Stunde morgens', ev.byAlt['-6'].morning, ev.byAlt['-4'].morning, '−6° → −4°');
+    if (ev.sunrise != null) { var c1 = posCell(ev.sunrise); row('🌅 Sonnenaufgang', fmtHM(ev.sunrise), c1.alt, c1.az); }
+    else { row('🌅 Sonnenaufgang', '–', '–', '–'); }
+    rangeRow('🌇 Goldene Stunde morgens', ev.byAlt['-4'].morning, ev.byAlt['6'].morning, '−4° → +6°');
+    row('☀️ Wahrer Mittag (Höchststand)', fmtHM(ev.solarNoon), ev.noonAlt.toFixed(1) + '°', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz));
+    rangeRow('🌇 Goldene Stunde abends', ev.byAlt['6'].evening, ev.byAlt['-4'].evening, '+6° → −4°');
+    if (ev.sunset != null) { var c2 = posCell(ev.sunset); row('🌇 Sonnenuntergang', fmtHM(ev.sunset), c2.alt, c2.az); }
+    else { row('🌇 Sonnenuntergang', '–', '–', '–'); }
+    rangeRow('🌃 Blaue Stunde abends', ev.byAlt['-4'].evening, ev.byAlt['-6'].evening, '−4° → −6°');
+    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), ''); }
+    var mEv = moonEventsInDay();
+    var rise = null, set = null;
+    mEv.forEach(function (me) { if (me.rise && !rise) { rise = me.t; } if (!me.rise && !set) { set = me.t; } });
+    row('🌙 Mondaufgang', rise != null ? fmtHM(rise) : '– (heute keiner)', '', '');
+    row('🌙 Monduntergang', set != null ? fmtHM(set) : '– (heute keiner)', '', '');
+    var ph = moonPhaseInfo(dayStart + 43200000);
+    row('🌕 Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
+    $('times').innerHTML = '<tr><th>Ereignis</th><th>Zeit</th><th>Sonne Höhe</th><th>Sonne Azimut</th></tr>' + rows.join('');
+  }
+  function renderStatus() {
+    var dayStart = state.dayStart;
+    var t = dayStart + state.minutes * 60000;
+    var sp = sunPosition(state.lat, state.lon, t);
+    var mp = moonPosition(state.lat, state.lon, t);
+    var pi = phaseInfo(sp.alt);
+    $('stTime').textContent = state.datum + ' · ' + fmtHM(t);
+    $('stSun').textContent = sp.alt.toFixed(1) + '° Höhe · ' + sp.az.toFixed(0) + '° ' + compass(sp.az);
+    $('stPhase').textContent = pi.l + (sp.alt >= -0.833 ? ' · Sonne über Horizont' : ' · Sonne unter Horizont');
+    $('stMoon').textContent = mp.alt.toFixed(1) + '° Höhe · ' + mp.az.toFixed(0) + '° ' + compass(mp.az) + (mp.alt >= 0 ? ' · über Horizont' : ' · unter Horizont');
+    var ph = moonPhaseInfo(t);
+    $('stMoonPhase').textContent = ph.name + ' · ' + Math.round(ph.fraction * 100) + ' % beleuchtet · ' + ph.age.toFixed(1) + ' Tage alt';
+    $('timeLabel').textContent = fmtHM(t);
+    var nx = nextEvent(t);
+    $('stNext').textContent = nx ? nx.label + ' um ' + fmtHM(nx.t) + ' (in ' + fmtDur(nx.t - t) + ')' : 'Heute keine weiteren Ereignisse';
+  }
+  function renderCoordInfo() {
+    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? state.name.replace(/</g, '&lt;') : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + state.datum + '</b>';
+  }
+  function renderAll() {
+    state.dayStart = localDayStart(state.datum);
+    if (state.dayStart == null) { err('Ungültiges Datum'); return; }
+    err(null);
+    state.ev = sunEventsForDay(state.lat, state.lon, state.dayStart);
+    $('q').value = state.lat.toFixed(5) + ', ' + state.lon.toFixed(5);
+    $('datum').value = state.datum;
+    renderCoordInfo();
+    drawSky();
+    drawBar();
+    renderTimes();
+    renderStatus();
+    save();
+    updateUrl();
+  }
+  function applyCoords(lat, lon, name) {
+    checkLatLon(lat, lon);
+    state.lat = lat; state.lon = lon;
+    if (name) { state.name = name; }
+    renderAll();
+  }
+  function reverseGeocode() {
+    if (state.name) { return; }
+    try {
+      var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=de&lat=' + state.lat + '&lon=' + state.lon;
+      fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.display_name) {
+          state.name = String(j.display_name).split(',')[0];
+          renderCoordInfo(); save();
+        }
+      })['catch'](function () {});
+    } catch (e) {}
+  }
+  $('coordForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    try {
+      var r = parseCoordInput($('q').value);
+      applyCoords(r.lat, r.lon, state.name);
+      err(null);
+    } catch (ex) {
+      err(ex.message);
+    }
+  });
+  $('datum').addEventListener('change', function () {
+    if (localDayStart($('datum').value) == null) { return; }
+    state.datum = $('datum').value;
+    state.minutes = state.datum === todayStr() ? (new Date().getHours() * 60 + new Date().getMinutes()) : 720;
+    $('timeSlider').value = state.minutes;
+    renderAll();
+  });
+  $('timeSlider').addEventListener('input', function () {
+    state.minutes = parseInt($('timeSlider').value, 10) || 0;
+    renderStatus();
+    drawSky();
+  });
+  $('nowBtn').addEventListener('click', function () {
+    state.datum = todayStr();
+    var now = new Date();
+    state.minutes = now.getHours() * 60 + now.getMinutes();
+    $('timeSlider').value = state.minutes;
+    renderAll();
+  });
+  $('heuteBtn').addEventListener('click', function () {
+    state.datum = todayStr();
+    var now = new Date();
+    state.minutes = now.getHours() * 60 + now.getMinutes();
+    $('timeSlider').value = state.minutes;
+    renderAll();
+  });
+  $('copyLink').addEventListener('click', function () {
+    var btn = $('copyLink');
+    var done = function () {
+      var old = btn.textContent;
+      btn.textContent = '✓ kopiert';
+      setTimeout(function () { btn.textContent = old; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(location.href).then(done, done);
+    } else { done(); }
+  });
+  $('posBtn').addEventListener('click', function () {
+    if (!navigator.geolocation) { err('Geolokalisierung wird von diesem Browser nicht unterstützt'); return; }
+    err(null);
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      applyCoords(pos.coords.latitude, pos.coords.longitude, '');
+      reverseGeocode();
+    }, function () {
+      err('Position konnte nicht ermittelt werden (Berechtigung fehlt oder kein GPS-Empfang)');
+    }, { timeout: 10000 });
+  });
+  $('ortBtn').addEventListener('click', function () {
+    var q = $('ort').value.trim();
+    if (!q) { return; }
+    var box = $('ortResults');
+    box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche …</div>';
+    try {
+      fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=de&q=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          box.innerHTML = '';
+          if (!j || !j.length) { box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer (offline oder nichts gefunden).</div>'; return; }
+          j.forEach(function (f) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = f.display_name;
+            b.addEventListener('click', function () {
+              applyCoords(parseFloat(f.lat), parseFloat(f.lon), String(f.display_name).split(',')[0]);
+              box.innerHTML = '';
+              $('ort').value = '';
+            });
+            box.appendChild(b);
+          });
+        })['catch'](function () {
+          box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche nicht möglich (keine Internetverbindung).</div>';
+        });
+    } catch (e) {
+      box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche nicht möglich.</div>';
+    }
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#chips .chip'), function (chip) {
+    chip.addEventListener('click', function () {
+      applyCoords(parseFloat(chip.getAttribute('data-lat')), parseFloat(chip.getAttribute('data-lon')), chip.getAttribute('data-name'));
+      reverseGeocode();
+    });
+  });
+  $('sky').addEventListener('click', function (e) {
+    var svg = $('sky');
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    var ctm = svg.getScreenCTM();
+    if (!ctm) { return; }
+    pt = pt.matrixTransform(ctm.inverse());
+    var best = null, bd = Infinity;
+    state.sunPts.concat(state.moonPts).forEach(function (p) {
+      var d = (p.x - pt.x) * (p.x - pt.x) + (p.y - pt.y) * (p.y - pt.y);
+      if (d < bd) { bd = d; best = p; }
+    });
+    if (best) {
+      state.minutes = best.m;
+      $('timeSlider').value = best.m;
+      renderStatus();
+      drawSky();
+    }
+  });
+  if (state.datum === todayStr()) {
+    var now0 = new Date();
+    state.minutes = now0.getHours() * 60 + now0.getMinutes();
+  }
+  $('timeSlider').value = state.minutes;
+  renderAll();
+  reverseGeocode();
+  setInterval(function () {
+    if (state.datum !== todayStr()) { return; }
+    var now = new Date();
+    var pi = phaseInfo(sunPosition(state.lat, state.lon, now.getTime()).alt);
+    $('clockLine').textContent = 'Lokale Uhrzeit jetzt: ' + fmtHM(now.getTime()) + ' · ' + pi.l;
+    drawBar();
+  }, 30000);
+  var nowI = new Date();
+  $('clockLine').textContent = state.datum === todayStr() ? ('Lokale Uhrzeit jetzt: ' + fmtHM(nowI.getTime()) + ' · ' + phaseInfo(sunPosition(state.lat, state.lon, nowI.getTime()).alt).l) : '';
+}
+</script>
+</body>
+</html>

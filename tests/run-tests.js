@@ -297,5 +297,101 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('CSS sizing f\u00fcr .brand-icon img', css.indexOf('.brand-icon img {') >= 0);
 }
 
+// --- 5c. Verlinkung sonne-mond.html im Koordinaten-Konverter ---
+{
+  const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+  ok('Konverter verlinkt ../sonne-mond.html', konv.indexOf('href="../sonne-mond.html"') >= 0);
+  ok('Link ist als Button gestylt (class="btn")', konv.indexOf('class="btn" href="../sonne-mond.html"') >= 0);
+  ok('linkSonne in allen 5 Sprachen', (konv.match(/linkSonne:/g) || []).length === 5);
+  ok('linkSonneHint in allen 5 Sprachen', (konv.match(/linkSonneHint:/g) || []).length === 5);
+}
+
+// --- 8. sonne-mond.html: Parser, Sonne/Mond-Berechnung, Markup ---
+{
+  const sm = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8');
+  const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
+  const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
+  ok('sonne-mond.html hat Inline-Script-Block', !!m);
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, compass, localDayStart };')();
+  const pc = [
+    ['46.5225, 6.6325', 46.5225, 6.6325],
+    ['46.5225 6.6325', 46.5225, 6.6325],
+    ['-33.8688, 151.2093', -33.8688, 151.2093],
+    ['151.2093, -33.8688', -33.8688, 151.2093],
+    ["46°31'21\"N, 6°37'57\"E", 46.5225, 6.6325],
+    ["46°31.375'N 6°37.95'E", 46.5229167, 6.6325],
+    ['N46 31.375 E6 37.95', 46.5229167, 6.6325],
+    ['46.5225 N, 6.6325 E', 46.5225, 6.6325],
+    ['2624043, 1096620', 46.0207, 7.7491],
+    ["2'624'043 1'096'620", 46.0207, 7.7491]
+  ];
+  for (const [inp, lat, lon] of pc) {
+    try {
+      const r = S.parseCoordInput(inp);
+      ok('parseCoordInput ' + JSON.stringify(inp), near(r.lat, lat, 0.001) && near(r.lon, lon, 0.001));
+    } catch (e) {
+      ok('parseCoordInput ' + JSON.stringify(inp) + ' -> threw: ' + e.message, false);
+    }
+  }
+  let threw = 0;
+  for (const bad of ['abc', '', '91, 200', '200, 10']) {
+    try { S.parseCoordInput(bad); } catch (e) { threw++; }
+  }
+  ok('parseCoordInput: ungueltige Eingaben werfen Fehler (' + threw + '/4)', threw === 4);
+  {
+    const ds = Date.UTC(2026, 2, 20);
+    const ev = S.sunEventsForDay(0, 0, ds);
+    const noonH = (ev.solarNoon - ds) / 3600000;
+    ok('Aequator 20.3.2026: Wahrer Mittag ~12:07 UTC (war ' + noonH.toFixed(2) + ' h)', noonH > 11.9 && noonH < 12.35);
+    ok('Aequator 20.3.2026: Sonnenaufgang ~06:04 UTC', (ev.sunrise - ds) / 3600000 > 5.8 && (ev.sunrise - ds) / 3600000 < 6.35);
+    ok('Aequator 20.3.2026: Tageslaenge ~12 h', ev.dayLength / 3600000 > 11.8 && ev.dayLength / 3600000 < 12.45);
+    ok('Aequator 20.3.2026: Mittagshoehe ~90°', ev.noonAlt > 89);
+    ok('Aequator 20.3.2026: Azimut am Mittag = Sueden', near(ev.noonAz, 180, 2));
+  }
+  {
+    const ds = Date.UTC(2026, 5, 21);
+    const ev = S.sunEventsForDay(47.3769, 8.5417, ds);
+    const noonH = (ev.solarNoon - ds) / 3600000;
+    ok('Zuerich 21.6.2026: Wahrer Mittag ~11:28 UTC = 13:28 MESZ (war ' + noonH.toFixed(2) + ' h)', noonH > 11.3 && noonH < 11.65);
+    ok('Zuerich 21.6.2026: Mittagshoehe ~66°', near(ev.noonAlt, 66.06, 0.6));
+    ok('Zuerich 21.6.2026: Azimut am Mittag ~180°', near(ev.noonAz, 180, 1.5));
+    ok('Zuerich 21.6.2026: Sonnenaufgang ~03:29 UTC = 05:29 MESZ', (ev.sunrise - ds) / 3600000 > 3.25 && (ev.sunrise - ds) / 3600000 < 3.75);
+    ok('Zuerich 21.6.2026: Tageslaenge ~15 h 58 min', ev.dayLength / 3600000 > 15.5 && ev.dayLength / 3600000 < 16.25);
+    const b = ev.byAlt;
+    ok('Zuerich 21.6.2026: Ereignisreihenfolge korrekt', b['-0.833'].morning < b['0'].morning && b['0'].morning < b['6'].morning && b['6'].morning < ev.solarNoon && ev.solarNoon < b['6'].evening && b['6'].evening < b['0'].evening && b['0'].evening < b['-0.833'].evening);
+    const sp = S.sunPosition(47.3769, 8.5417, ev.solarNoon);
+    ok('sunPosition am Mittag stimmt mit noonAlt/noonAz ueberein', near(sp.alt, ev.noonAlt, 0.01) && near(sp.az, ev.noonAz, 0.01));
+  }
+  {
+    const evS = S.sunEventsForDay(78, 20, Date.UTC(2026, 5, 21));
+    ok('78°N 21.6.2026: Polartag (kein Auf-/Untergang, Mittagshoehe ~35°)', evS.sunrise === null && evS.sunset === null && evS.noonAlt > 34 && evS.noonAlt < 37);
+    const evW = S.sunEventsForDay(78, 20, Date.UTC(2026, 11, 21));
+    ok('78°N 21.12.2026: Polarnacht, aber astronomische Daemmerung existiert', evW.sunrise === null && evW.byAlt['-18'].morning !== null);
+  }
+  {
+    const nm = S.moonIllumination(Date.UTC(2025, 0, 29, 12, 36));
+    ok('Neumond 29.1.2025 12:36 UTC: Beleuchtung < 3 %', nm.fraction < 0.03);
+    ok('Neumond 29.1.2025: Phase ~0 und Name Neumond', (nm.phase < 0.05 || nm.phase > 0.95) && S.moonPhaseInfo(Date.UTC(2025, 0, 29, 12, 36)).name === 'Neumond');
+    const fm = S.moonIllumination(Date.UTC(2025, 2, 14, 6, 54));
+    ok('Vollmond 14.3.2025 06:54 UTC: Beleuchtung > 97 % und Name Vollmond', fm.fraction > 0.97 && S.moonPhaseInfo(Date.UTC(2025, 2, 14, 6, 54)).name === 'Vollmond');
+    const ev = S.moonEvents(47.3769, 8.5417, Date.UTC(2025, 2, 14, 12), 24 * 3600000);
+    ok('Mond: in 48 h mind. 1 Auf- und 1 Untergang', ev.filter(e => e.rise).length >= 1 && ev.filter(e => !e.rise).length >= 1);
+    ok('Mond: Horizontkreuzungen bei Hoehe ~0°', ev.every(e => Math.abs(S.moonPosition(47.3769, 8.5417, e.t).alt) < 0.3));
+    const mp = S.moonPosition(47.3769, 8.5417, Date.UTC(2025, 2, 14, 18, 0));
+    ok('Mondposition im gueltigen Bereich', mp.alt >= -90 && mp.alt <= 90 && mp.az >= 0 && mp.az < 360);
+  }
+  ok('fmtHM (UTC)', S.fmtHM(Date.UTC(2026, 0, 2, 7, 5), true) === '07:05');
+  ok('compass-Richtungen', S.compass(0) === 'N' && S.compass(90) === 'O' && S.compass(180) === 'S' && S.compass(270) === 'W');
+  ok('phaseInfo: -5° = Blaue Stunde', S.phaseInfo(-5).l.indexOf('Blaue Stunde') >= 0);
+  ok('phaseInfo: +3° = Goldene Stunde', S.phaseInfo(3).l.indexOf('Goldene Stunde') >= 0);
+  ok('phaseInfo: +30° = Tageslicht', S.phaseInfo(30).l.indexOf('Tageslicht') >= 0);
+  ok('localDayStart', S.localDayStart('2026-06-21') === new Date(2026, 5, 21).getTime() && S.localDayStart('xx') === null);
+  ok('sonne-mond.html: Begriffe Blaue Stunde / Goldene Stunde / Wahrer Mittag / Mondaufgang / Mondphase', ['Blaue Stunde', 'Goldene Stunde', 'Wahrer Mittag', 'Mondaufgang', 'Mondphase'].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html: Zurueck-Link + Footer-Links', sm.indexOf('href="koordinaten/index.html"') >= 0 && sm.indexOf('href="gpx-reduce.html"') >= 0 && sm.indexOf('href="index.html"') >= 0);
+  ok('sonne-mond.html: CSP mit nominatim connect-src, keine externen Skripte', sm.indexOf('connect-src https://nominatim.openstreetmap.org') >= 0 && !/<script src="http/.test(sm));
+  ok('sonne-mond.html: nutzt js/coords.js (LV95)', sm.indexOf('<script src="js/coords.js"></script>') >= 0);
+  ok('sonne-mond.html: Slider + Sky-SVG + 24h-Balken + Tabelle', ['id="timeSlider"', 'id="sky"', 'id="bar"', 'id="times"'].every(x => sm.indexOf(x) >= 0));
+}
+
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');
 process.exit(failures === 0 ? 0 : 1);

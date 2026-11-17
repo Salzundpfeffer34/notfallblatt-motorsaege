@@ -690,6 +690,54 @@ function moonEvents(lat, lon, centerMs, halfWindowMs) {
   return out;
 }
 
+var GAL_CENTER = { ra: 266.405, dec: -28.936 };
+function astroAltAz(raDeg, decDeg, lat, lon, ms) {
+  var jd = toJD(ms);
+  var gmst = norm360(280.46061837 + 360.98564736629 * (jd - 2451545));
+  var H = (norm360(gmst + lon) - raDeg) * RAD;
+  var latR = lat * RAD, decR = decDeg * RAD;
+  var sinAlt = Math.sin(latR) * Math.sin(decR) + Math.cos(latR) * Math.cos(decR) * Math.cos(H);
+  var alt = Math.asin(clamp(sinAlt, -1, 1)) * DEG;
+  var az = norm360(Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(latR) - Math.tan(decR) * Math.cos(latR)) * DEG + 180);
+  return { alt: alt, az: az };
+}
+function milkyWayInfo(lat, lon, dayStartMs, sunEv) {
+  var ra = GAL_CENTER.ra, dec = GAL_CENTER.dec;
+  var perMs = 360.98564736629 / DAY_MS;
+  var sidDay = 360 / perMs;
+  var g0 = 280.46061837 + 360.98564736629 * (toJD(dayStartMs) - 2451545);
+  var t = dayStartMs + norm360(ra - lon - g0) / perMs;
+  while (t < dayStartMs) { t += sidDay; }
+  while (t > dayStartMs + DAY_MS) { t -= sidDay; }
+  var p = astroAltAz(ra, dec, lat, lon, t);
+  var latR = lat * RAD, decR = dec * RAD;
+  var above = null;
+  var c15 = (Math.sin(15 * RAD) - Math.sin(latR) * Math.sin(decR)) / (Math.cos(latR) * Math.cos(decR));
+  if (c15 >= -1 && c15 <= 1) {
+    var half = Math.acos(c15) * DEG / 15 * 3600000;
+    above = [t - half, t + half];
+  }
+  var darkStart = sunEv.byAlt['-18'] ? sunEv.byAlt['-18'].evening : null;
+  var nextEv = sunEventsForDay(lat, lon, dayStartMs + DAY_MS);
+  var darkEnd = nextEv.byAlt['-18'] ? nextEv.byAlt['-18'].morning : null;
+  var overlap = null;
+  if (above && darkStart != null && darkEnd != null) {
+    var a = Math.max(above[0], darkStart), b = Math.min(above[1], darkEnd);
+    if (b - a >= 30 * 60000) { overlap = [a, b]; }
+  }
+  var windowText = '–';
+  if (overlap) { windowText = fmtHM(overlap[0]) + ' – ' + fmtHM(overlap[1]) + ' (dunkel, Zentrum > 15°)'; }
+  else if (above) { windowText = fmtHM(above[0]) + ' – ' + fmtHM(above[1]) + ' (Zentrum > 15°)'; }
+  var ph = moonPhaseInfo(dayStartMs + 43200000);
+  var mid = overlap ? (overlap[0] + overlap[1]) / 2 : (above ? (above[0] + above[1]) / 2 : t);
+  var moonAlt = moonPosition(lat, lon, mid).alt;
+  var reasons = [];
+  if (p.alt < 20) { reasons.push('Zentrum max. nur ' + p.alt.toFixed(0) + '° hoch'); }
+  if (!overlap) { reasons.push('kaum dunkle Zeit mit Zentrum > 15°'); }
+  if (ph.fraction > 0.6 && moonAlt > 0) { reasons.push('Mond ' + Math.round(ph.fraction * 100) + ' % beleuchtet und sichtbar'); }
+  var verdict = reasons.length ? 'Eher nein – ' + reasons.join('; ') : 'Ja – lohnenswert';
+  return { transit: t, alt: p.alt, az: p.az, above: above, overlap: overlap, windowText: windowText, verdict: verdict, moonFrac: ph.fraction };
+}
 function phaseInfo(alt) {
   if (alt >= 6) { return { c: '#ffdf7e', l: 'Tageslicht (Sonne ≥ +6°)' }; }
   if (alt >= 0) { return { c: '#f7b955', l: 'Goldene Stunde (0° bis +6°)' }; }
@@ -922,6 +970,10 @@ if (typeof document !== 'undefined') {
       var p = sunPosition(state.lat, state.lon, t);
       return { alt: p.alt.toFixed(1) + '°', az: p.az.toFixed(0) + '° ' + compass(p.az) };
     }
+    function azCell(t) {
+      var p = sunPosition(state.lat, state.lon, t);
+      return p.az.toFixed(0) + '° ' + compass(p.az);
+    }
     var rows = [];
     function row(label, timeText, altText, azText) {
       rows.push('<tr><td>' + label + '</td><td class="t">' + timeText + '</td><td>' + altText + '</td><td>' + azText + '</td></tr>');
@@ -935,7 +987,7 @@ if (typeof document !== 'undefined') {
     }
     function rangeRow(label, t1, t2, altText) {
       if (t1 == null || t2 == null) { row(label, '–', '–', '–'); return; }
-      row(label, fmtHM(t1) + ' – ' + fmtHM(t2), altText, '');
+      row(label, fmtHM(t1) + ' – ' + fmtHM(t2), altText, azCell(t1) + ' – ' + azCell(t2));
     }
     if (ev.sunrise == null) {
       row('☀️ Hinweis', ev.noonAlt > 0 ? 'Polartag – die Sonne geht heute nicht unter' : 'Polarnacht – die Sonne geht heute nicht auf', ev.noonAlt.toFixed(1) + '° (Mittag)', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz));
@@ -952,15 +1004,20 @@ if (typeof document !== 'undefined') {
     if (ev.sunset != null) { var c2 = posCell(ev.sunset); row('🌇 Sonnenuntergang', fmtHM(ev.sunset), c2.alt, c2.az); }
     else { row('🌇 Sonnenuntergang', '–', '–', '–'); }
     rangeRow('🌃 Blaue Stunde abends', ev.byAlt['-4'].evening, ev.byAlt['-6'].evening, '−4° → −6°');
-    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), ''); }
+    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), azCell(ev.sunrise) + ' – ' + azCell(ev.sunset)); }
     var mEv = moonEventsInDay();
     var rise = null, set = null;
     mEv.forEach(function (me) { if (me.rise && !rise) { rise = me.t; } if (!me.rise && !set) { set = me.t; } });
-    row('🌙 Mondaufgang', rise != null ? fmtHM(rise) : '– (heute keiner)', '', '');
-    row('🌙 Monduntergang', set != null ? fmtHM(set) : '– (heute keiner)', '', '');
+    if (rise != null) { var mr = moonPosition(state.lat, state.lon, rise); row('🌙 Mondaufgang', fmtHM(rise), mr.alt.toFixed(1) + '°', mr.az.toFixed(0) + '° ' + compass(mr.az)); }
+    else { row('🌙 Mondaufgang', '– (heute keiner)', '–', '–'); }
+    if (set != null) { var ms2 = moonPosition(state.lat, state.lon, set); row('🌙 Monduntergang', fmtHM(set), ms2.alt.toFixed(1) + '°', ms2.az.toFixed(0) + '° ' + compass(ms2.az)); }
+    else { row('🌙 Monduntergang', '– (heute keiner)', '–', '–'); }
+    var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
+    row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
+    row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict, '');
     var ph = moonPhaseInfo(dayStart + 43200000);
     row('🌕 Mondphase (am Mittag)', ph.name, Math.round(ph.fraction * 100) + ' % beleuchtet', ph.age.toFixed(1) + ' Tage alt');
-    $('times').innerHTML = '<tr><th>Ereignis</th><th>Zeit</th><th>Sonne Höhe</th><th>Sonne Azimut</th></tr>' + rows.join('');
+    $('times').innerHTML = '<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>' + rows.join('');
   }
   function renderStatus() {
     var dayStart = state.dayStart;

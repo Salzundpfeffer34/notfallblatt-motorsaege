@@ -148,7 +148,7 @@
     </div>
   </div>
   <div id="ortResults"></div>
-  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») – die Suche bevorzugt Orte nahe der aktuell gesetzten Koordinate (viewbox-/lat-lon-Bias) und fragt Nominatim und Photon ab; Duplikate werden gefiltert.</div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa»). Die Suche fragt Nominatim und Photon ab, bevorzugt Orte nahe der gesetzten Koordinate (viewbox-/lat-lon-Bias) und filtert Duplikate; ist noch keine Koordinate gesetzt, wird kurz der Gerätestandort (Geolokalisierung) als Bias verwendet.</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -591,11 +591,11 @@ function fmtCoord(lat, lon) {
 
 if (typeof document !== 'undefined') {
   var $ = function (id) { return document.getElementById(id); };
-  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true };
+  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false };
   try {
     var saved = JSON.parse(localStorage.getItem('sonneMond') || 'null');
     if (saved && isFinite(saved.lat) && isFinite(saved.lon)) {
-      state.lat = saved.lat; state.lon = saved.lon;
+      state.lat = saved.lat; state.lon = saved.lon; state.locKnown = true;
       if (saved.datum && localDayStart(saved.datum) != null) { state.datum = saved.datum; }
       if (saved.name) { state.name = String(saved.name); }
       if (saved.zeitSync === false) { state.zeitSync = false; }
@@ -604,7 +604,7 @@ if (typeof document !== 'undefined') {
   try {
     var qs = new URLSearchParams(location.search);
     var qla = parseFloat(qs.get('lat')), qlo = parseFloat(qs.get('lon'));
-    if (isFinite(qla) && isFinite(qlo) && Math.abs(qla) <= 90 && Math.abs(qlo) <= 180) { state.lat = qla; state.lon = qlo; }
+    if (isFinite(qla) && isFinite(qlo) && Math.abs(qla) <= 90 && Math.abs(qlo) <= 180) { state.lat = qla; state.lon = qlo; state.locKnown = true; }
     if (qs.get('datum') && localDayStart(qs.get('datum')) != null) { state.datum = qs.get('datum'); }
   } catch (e) { /* keine URL-Parameter */ }
 
@@ -847,12 +847,12 @@ if (typeof document !== 'undefined') {
   }
   function applyCoords(lat, lon, name) {
     checkLatLon(lat, lon);
-    state.lat = lat; state.lon = lon;
+    state.lat = lat; state.lon = lon; state.locKnown = true;
     if (name) { state.name = name; }
     renderAll();
   }
   function reverseGeocode() {
-    if (state.name) { return; }
+    if (!state.locKnown || state.name) { return; }
     try {
       var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=de&lat=' + state.lat + '&lon=' + state.lon;
       fetch(url).then(function (r) { return r.json(); }).then(function (j) {
@@ -961,48 +961,70 @@ if (typeof document !== 'undefined') {
       err('Position konnte nicht ermittelt werden (Berechtigung fehlt oder kein GPS-Empfang)');
     }, { timeout: 10000 });
   });
-  $('ortBtn').addEventListener('click', function () {
-    var q = $('ort').value.trim();
-    if (!q) { return; }
+  function searchOrt(q) {
     var box = $('ortResults');
     box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Suche …</div>';
-    var urls = buildSearchUrls(q, state.lat, state.lon);
-    var jobs = urls.map(function (u, i) {
-      return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
-        if (i === 0) {
-          return (j || []).map(function (f) {
-            return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), name: String(f.display_name).split(',')[0], label: f.display_name, sub: nominatimSub(f) };
+    var run = function (lat, lon) {
+      var urls = buildSearchUrls(q, lat, lon);
+      var jobs = urls.map(function (u, i) {
+        return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+          if (i === 0) {
+            return (j || []).map(function (f) {
+              return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), name: String(f.display_name).split(',')[0], label: f.display_name, sub: nominatimSub(f) };
+            });
+          }
+          return ((j && j.features) || []).map(function (f) {
+            var c = f.geometry.coordinates;
+            return { lat: parseFloat(c[1]), lon: parseFloat(c[0]), name: f.properties.name, label: photonLabel(f.properties), sub: (f.properties.state ? f.properties.state + ', ' : '') + (f.properties.country || '') };
           });
-        }
-        return ((j && j.features) || []).map(function (f) {
-          var c = f.geometry.coordinates;
-          return { lat: parseFloat(c[1]), lon: parseFloat(c[0]), name: f.properties.name, label: photonLabel(f.properties), sub: (f.properties.state ? f.properties.state + ', ' : '') + (f.properties.country || '') };
-        });
-      }).catch(function () { return []; });
-    });
-    Promise.all(jobs).then(function (lists) {
-      var all = [];
-      lists.forEach(function (l) { l.forEach(function (it) { all.push(it); }); });
-      var out = dedupeOrtResults(all);
-      box.innerHTML = '';
-      if (!out.length) {
-        box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer – Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») oder «📍 Meine Position» zuerst setzen. Offline: keine Suche möglich.</div>';
-        return;
-      }
-      out.forEach(function (it) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.innerHTML = '<b></b><br><span style="color:var(--muted);font-size:.8rem"></span>';
-        b.querySelector('b').textContent = it.name;
-        b.querySelector('span').textContent = (it.sub ? it.sub + ' · ' : '') + it.label;
-        b.addEventListener('click', function () {
-          applyCoords(it.lat, it.lon, it.name);
-          box.innerHTML = '';
-          $('ort').value = '';
-        });
-        box.appendChild(b);
+        }).catch(function () { return []; });
       });
-    });
+      Promise.all(jobs).then(function (lists) {
+        var all = [];
+        lists.forEach(function (l) { l.forEach(function (it) { all.push(it); }); });
+        var out = dedupeOrtResults(all);
+        box.innerHTML = '';
+        if (!out.length) {
+          box.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Keine Treffer – Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa») oder «📍 Meine Position» zuerst setzen. Offline: keine Suche möglich.</div>';
+          return;
+        }
+        out.forEach(function (it) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.innerHTML = '<b></b><br><span style="color:var(--muted);font-size:.8rem"></span>';
+          b.querySelector('b').textContent = it.name;
+          b.querySelector('span').textContent = (it.sub ? it.sub + ' · ' : '') + it.label;
+          b.addEventListener('click', function () {
+            applyCoords(it.lat, it.lon, it.name);
+            box.innerHTML = '';
+            $('ort').value = '';
+          });
+          box.appendChild(b);
+        });
+      });
+    };
+    if (state.locKnown) {
+      run(state.lat, state.lon);
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        run(pos.coords.latitude, pos.coords.longitude);
+      }, function () {
+        run(NaN, NaN);
+      }, { timeout: 8000, maximumAge: 600000 });
+    } else {
+      run(NaN, NaN);
+    }
+  }
+  $('ortBtn').addEventListener('click', function () {
+    var q = $('ort').value.trim();
+    if (q) { searchOrt(q); }
+  });
+  $('ort').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var q = $('ort').value.trim();
+      if (q) { searchOrt(q); }
+    }
   });
   Array.prototype.forEach.call(document.querySelectorAll('#chips .chip'), function (chip) {
     chip.addEventListener('click', function () {

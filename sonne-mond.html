@@ -151,7 +151,7 @@
     </div>
   </div>
   <div id="ortResults"></div>
-  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us). Europa/Länder: Land ans Ende anhängen (z. B. «Zermatt Schweiz», «Zermatt CH», «Paris Frankreich», «Lissabon Portugal») – die Suche wird automatisch auf dieses Land eingeschränkt (countrycodes=ch/fr/pt …); 2-Buchstaben-Codes bitte gross schreiben, sonst das Land voll ausschreiben («Berlin Deutschland»).</div>
+  <div style="color:var(--muted);font-size:.8rem;margin-top:6px">Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln»). Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us). Europa/Länder: Land ans Ende anhängen (z. B. «Zermatt Schweiz», «Zermatt CH», «Paris Frankreich», «Lissabon Portugal») – die Suche wird automatisch auf dieses Land eingeschränkt (countrycodes=ch/fr/pt …); Schweiz: Kanton anhängen (z. B. «Küsnacht ZH», «Lausanne VD», «Genf GE») → countrycodes=ch. 2-Buchstaben-Codes bitte gross schreiben, sonst Land/Kanton voll ausschreiben («Berlin Deutschland»).</div>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
@@ -454,6 +454,38 @@ Object.keys(EU_COUNTRIES).forEach(function (code) { addCountryAlias(code, EU_COU
 Object.keys(US_STATES).forEach(function (code) {
   addCountryAlias('us', [US_STATES[code]], false);
   COUNTRY_ALIASES[code] = 'us';
+});
+var CH_CANTONS = {
+  'zh': ['Zürich', 'Zurich'],
+  'be': ['Bern'],
+  'lu': ['Luzern', 'Lucerne'],
+  'ur': ['Uri'],
+  'sz': ['Schwyz'],
+  'ow': ['Obwalden'],
+  'nw': ['Nidwalden'],
+  'gl': ['Glarus'],
+  'zg': ['Zug'],
+  'fr': ['Freiburg', 'Fribourg'],
+  'so': ['Solothurn'],
+  'bs': ['Basel-Stadt', 'Basel Stadt', 'Basel-Stadt', 'Bâle-Ville'],
+  'bl': ['Basel-Landschaft', 'Basel Landschaft', 'Bâle-Campagne'],
+  'sh': ['Schaffhausen'],
+  'ar': ['Appenzell Ausserrhoden', 'Appenzell'],
+  'ai': ['Appenzell Innerrhoden'],
+  'sg': ['St. Gallen', 'St Gallen', 'Sankt Gallen', 'Saint Gall'],
+  'gr': ['Graubünden', 'Grisons', 'Grigioni'],
+  'ag': ['Aargau'],
+  'tg': ['Thurgau'],
+  'ti': ['Tessin', 'Ticino'],
+  'vd': ['Waadt', 'Vaud'],
+  'vs': ['Wallis', 'Valais'],
+  'ne': ['Neuenburg', 'Neuchâtel', 'Neuchatel'],
+  'ge': ['Genf', 'Genève', 'Geneva'],
+  'ju': ['Jura']
+};
+Object.keys(CH_CANTONS).forEach(function (code) {
+  addCountryAlias('ch', CH_CANTONS[code], false);
+  if (!COUNTRY_ALIASES[code]) { COUNTRY_ALIASES[code] = 'ch'; }
 });
 function detectCountryToken(q) {
   var raw = String(q || '').trim().split(/\s+/).filter(Boolean);

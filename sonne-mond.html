@@ -86,7 +86,8 @@
   .hint > div { margin-top:4px; }
   .hint.spec b.spec-blue { color:#2f6db3; }
   .hint.spec b.spec-red { color:#c0392b; }
-  .hint.spec b.spec-orange { color:#d97706; }
+  .hint.spec b.spec-shade { color:#b08968; }
+  .hint.spec b.spec-faint { color:#8d99ae; }
   .hint.spec b.spec-micro { color:#6b7280; }
   @keyframes specPulse { 0%,100% { font-size:1em; } 50% { font-size:1.3em; } }
   .hint.spec b.spec-super { color:#b45309; display:inline-block; animation:specPulse 1.6s ease-in-out infinite; }
@@ -790,7 +791,8 @@ function specMoonClass(label) {
   var s = String(label);
   if (/blau/i.test(s)) { return 'spec-blue'; }
   if (/blutmond/i.test(s)) { return 'spec-red'; }
-  if (/finsternis/i.test(s)) { return 'spec-orange'; }
+  if (/halbschatten/i.test(s)) { return 'spec-faint'; }
+  if (/finsternis/i.test(s)) { return 'spec-shade'; }
   if (/supermond/i.test(s)) { return 'spec-super'; }
   if (/mikromond/i.test(s)) { return 'spec-micro'; }
   return '';
@@ -1204,8 +1206,8 @@ if (typeof document !== 'undefined') {
     } else {
       specHtml += '<li>An diesem Tag keine besonderen Mond-Ereignisse (kein Blauer Mond, keine Finsternis, kein Super-/Mikromond).</li>';
     }
-    if (state.specNext.eclipse) { specHtml += '<li>Nächste Mondfinsternis: ' + fmtDateDE(dateStrOf(state.specNext.eclipse.opp)) + ' – ' + (state.specNext.eclipse.type === 'total' ? 'total (Blutmond)' : state.specNext.eclipse.type === 'partiell' ? 'partiell' : 'Halbschatten') + ', Maximum ca. ' + fmtHM(state.specNext.eclipse.opp) + '</li>'; }
-    if (state.specNext.blueMoon) { specHtml += '<li>Nächster Blauer Mond: ' + MONTH_NAMES_DE[state.specNext.blueMoon.month] + ' ' + state.specNext.blueMoon.year + ' (2. Vollmond am ' + fmtDateDE(dateStrOf(state.specNext.blueMoon.t)) + ')</li>'; }
+    if (state.specNext.eclipse) { specHtml += '<li><b class="' + specMoonClass(state.specNext.eclipse.type === 'total' ? 'Blutmond' : state.specNext.eclipse.type === 'partiell' ? 'Partielle Mondfinsternis' : 'Halbschatten-Mondfinsternis') + '">Nächste Mondfinsternis:</b> ' + fmtDateDE(dateStrOf(state.specNext.eclipse.opp)) + ' – ' + (state.specNext.eclipse.type === 'total' ? 'total (Blutmond)' : state.specNext.eclipse.type === 'partiell' ? 'partiell' : 'Halbschatten') + ', Maximum ca. ' + fmtHM(state.specNext.eclipse.opp) + '</li>'; }
+    if (state.specNext.blueMoon) { specHtml += '<li><b class="' + specMoonClass('Blauer Mond') + '">Nächster Blauer Mond:</b> ' + MONTH_NAMES_DE[state.specNext.blueMoon.month] + ' ' + state.specNext.blueMoon.year + ' (2. Vollmond am ' + fmtDateDE(dateStrOf(state.specNext.blueMoon.t)) + ')</li>'; }
     specHtml += '</ul>';
     rows.push('<tr><td colspan="4"><details class="hint spec"><summary>⭐ Besondere Mond-Daten (Blauer Mond, Blutmond, Supermond …) – ausklappen</summary><div>' + specHtml + '</div></details></td></tr>');
     sec('🌌 Milchstrasse');

@@ -313,7 +313,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, compass, localDayStart };')();
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, tzName, TIME_SOURCES, compass, localDayStart };')();
   const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
@@ -396,6 +396,34 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('sonne-mond.html: CSP mit nominatim connect-src, keine externen Skripte', sm.indexOf('connect-src https://nominatim.openstreetmap.org') >= 0 && !/<script src="http/.test(sm));
   ok('sonne-mond.html: nutzt js/coords.js (LV95)', sm.indexOf('<script src="js/coords.js"></script>') >= 0);
   ok('sonne-mond.html: Slider + Sky-SVG + 24h-Balken + Tabelle', ['id="timeSlider"', 'id="sky"', 'id="bar"', 'id="times"'].every(x => sm.indexOf(x) >= 0));
+  ok('TIME_SOURCES: mind. 3 Quellen mit name/url/parse/mode', Array.isArray(S.TIME_SOURCES) && S.TIME_SOURCES.length >= 3 && S.TIME_SOURCES.every(s => typeof s.name === 'string' && typeof s.url === 'function' && typeof s.parse === 'function' && (s.mode === 'json' || s.mode === 'text' || s.mode === 'header')));
+  ok('TIME_SOURCES: URLs zeigen auf erlaubte Hosts', S.TIME_SOURCES.every(s => /^https:\/\/(www\.cloudflare\.com|worldtimeapi\.org|api\.open-meteo\.com)\//.test(s.url())));
+  ok('TIME_SOURCES: Auto-URLs parameterfrei (keine Zeitzone/Koordinaten in der URL)', S.TIME_SOURCES.every(s => { const u = s.url(); return u.indexOf('Europe/') < 0 && u.indexOf('timeZone=') < 0 && u.indexOf('latitude=47') < 0 && u.indexOf('longitude=8') < 0; }));
+  ok('Quelle worldtimeapi ist /api/ip (ohne Zeitzone in der URL)', S.TIME_SOURCES.some(s => s.url() === 'https://worldtimeapi.org/api/ip'));
+  ok('Quelle open-meteo nutzt latitude=0&longitude=0&timezone=UTC', S.TIME_SOURCES.some(s => /latitude=0&longitude=0&current=temperature_2m&timezone=UTC/.test(s.url())));
+  ok('tzName() liefert IANA-Zeitzone oder UTC', typeof S.tzName() === 'string' && S.tzName().length > 0);
+  ok('dateStrOf', S.dateStrOf(new Date(2026, 5, 22, 0, 30).getTime()) === '2026-06-22');
+  {
+    const wt = S.TIME_SOURCES.find(s => s.url() === 'https://worldtimeapi.org/api/ip');
+    ok('Quelle worldtimeapi /api/ip: unixtime -> ms', near(wt.parse({ unixtime: 1763400000 }), 1763400000000, 1) && isNaN(wt.parse({})));
+    const om = S.TIME_SOURCES.find(s => s.name.indexOf('api.open-meteo.com') === 0);
+    ok('Quelle open-meteo: current.time + utc_offset_seconds (+1h)', om.parse({ current: { time: '2025-11-17T14:30' }, utc_offset_seconds: 3600 }) === Date.UTC(2025, 10, 17, 13, 30));
+    ok('Quelle open-meteo: UTC-Offset 0', om.parse({ current: { time: '2025-11-17T14:30' }, utc_offset_seconds: 0 }) === Date.UTC(2025, 10, 17, 14, 30));
+    ok('Quelle open-meteo: ohne current.time -> NaN', isNaN(om.parse({})));
+    const cf = S.TIME_SOURCES.find(s => s.mode === 'text');
+    ok('Quelle cloudflare cdn-cgi/trace: ts= parsen', near(cf.parse('h=www.cloudflare.com\nts=1763400000.5\n'), 1763400000500, 1) && isNaN(cf.parse('garbage')));
+    const hd = S.TIME_SOURCES.find(s => s.mode === 'header');
+    ok('Quelle HTTP-Date-Header: RFC1123 parsen', hd.parse('Wed, 18 Nov 2026 07:20:00 GMT') === Date.UTC(2026, 10, 18, 7, 20) && isNaN(hd.parse(null)));
+    ok('Header-Quelle nutzt HEAD + date', hd.method === 'HEAD' && hd.header === 'date');
+  }
+  {
+    const csp = sm.match(/Content-Security-Policy"[^>]*/)[0];
+    ok('CSP: Zeitquellen-Hosts in connect-src, timeapi.io nicht', ['https://nominatim.openstreetmap.org', 'https://worldtimeapi.org', 'https://api.open-meteo.com', 'https://www.cloudflare.com'].every(h => csp.indexOf(h) >= 0) && csp.indexOf('timeapi.io') < 0);
+  }
+  ok('sonne-mond.html: Zeitquellen-Liste im Markup (Auto + Nachschlagen + time.gov)', ['cdn-cgi/trace', 'worldtimeapi.org/api/ip', 'api.open-meteo.com/v1/forecast', 'worldtimeapi.org/api/timezone/', 'timeapi.io/api/time/current/zone', 'time.gov', 'Systemuhr'].every(x => sm.indexOf(x) >= 0));
+  ok('sonne-mond.html: Datenschutz-Hinweis (IP-Adresse, parameterfreie URLs, client_ip)', sm.indexOf('IP-Adresse') >= 0 && sm.indexOf('parameterfreie') >= 0 && sm.indexOf('client_ip') >= 0);
+  ok('sonne-mond.html: Zeitabgleich abschaltbar (Checkbox zeitSync)', sm.indexOf('id="zeitSync"') >= 0 && sm.indexOf('Zeitabgleich deaktiviert') >= 0);
+  ok('sonne-mond.html: fetchNetTime mit Header-Modus, Fallback Systemuhr', sm.indexOf("src.mode === 'header'") >= 0 && sm.indexOf('Systemuhr (keine Verbindung)') >= 0 && sm.indexOf('function nowMs()') >= 0);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

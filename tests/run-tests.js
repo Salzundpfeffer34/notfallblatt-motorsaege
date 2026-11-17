@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { parseCoordInput, sunEventsForDay, sunPosition, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, phaseInfo, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -484,6 +484,8 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('Datum-Funktionen: Leerzeichen vorne/hinten tolerant (localDayStart/shiftDateStr/fmtDateDE)', S.localDayStart(' 2025-03-14 ') === S.localDayStart('2025-03-14') && S.localDayStart('2025-03-14') != null && S.localDayStart('x') === null && S.shiftDateStr(' 2025-03-14 ', 1) === '2025-03-15' && S.fmtDateDE(' 2025-03-14 ') === '14.03.2025');
   ok('parseCoordInput: Leerzeichen vorne/hinten egal', (function () { const r = S.parseCoordInput('  46.5225, 6.6325  '); return !!r && Math.abs(r.lat - 46.5225) < 1e-9 && Math.abs(r.lon - 6.6325) < 1e-9; })());
   ok('sonne-mond.html: #q/#ort/#datum trimmen per blur (trimField); Submit/Enter/searchOrt nutzen trimField bzw. trim()', sm.indexOf('function trimField(el)') >= 0 && sm.indexOf("['q', 'ort', 'datum']") >= 0 && (sm.match(/addEventListener\('blur'/g) || []).length >= 1 && sm.indexOf('parseCoordInput(trimField($(') >= 0 && sm.indexOf('applyDatum(trimField($(') >= 0 && (sm.match(/var q = trimField\(\$\('ort'\)\);/g) || []).length === 2 && sm.indexOf("q = String(q || '').trim();") >= 0);
+  ok('stripLeadingWs: nur fuehrende Leerzeichen sofort weg, Rest bleibt fuer blur/trim', S.stripLeadingWs('  San Andrés') === 'San Andrés' && S.stripLeadingWs('\t\n Bern ') === 'Bern ' && S.stripLeadingWs('Bern') === 'Bern' && S.stripLeadingWs('') === '');
+  ok('sonne-mond.html: #q/#ort – fuehrende Leerzeichen werden sofort beim Tippen/Pasten entfernt (input-Event)', sm.indexOf("['q', 'ort']") >= 0 && sm.indexOf("addEventListener('input'") >= 0 && sm.indexOf('stripLeadingWs(el.value)') >= 0);
   ok('sonne-mond.html: Hinweistext erklaert Bias + Geraetestandort + weltweit ohne Bias', sm.indexOf('um deinen Gerätestandort (Geolokalisierung)') >= 0 && sm.indexOf('weltweit gesucht') >= 0);
 }
 

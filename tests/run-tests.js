@@ -404,6 +404,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
     var mwT = S.milkyWayInfo(28.1, -16.7, ds, S.sunEventsForDay(28.1, -16.7, ds));
     return Math.abs(mw0.alt - 61.06) < 0.2 && Math.abs(mw0.az - 180) < 1 && Math.abs(mwT.alt - 32.96) < 0.3 && mwT.transit >= ds && mwT.transit <= ds + 86400000 && typeof mwT.verdict === 'string' && mwT.verdict.length > 2 && typeof mwT.windowText === 'string';
   })());
+  ok('milkyWayInfo: Fenster nur noch dunkel (astronomisch < −18°, wie Fotopills «Darkness») + beste Zeit/Sicht (bestT/bestAlt/bestAz) in der Zeile – kein Tageslicht-Fenster mehr', (function () { var ds = S.localDayStart('2026-12-21'); var mw = S.milkyWayInfo(28.1, -16.7, ds, S.sunEventsForDay(28.1, -16.7, ds)); var ds2 = S.localDayStart('2026-06-21'); var mw2 = S.milkyWayInfo(47.3779, 8.5403, ds2, S.sunEventsForDay(47.3779, 8.5403, ds2)); var winOK = mw.windowText.indexOf('(dunkel') >= 0 && mw2.windowText.indexOf('(dunkel') >= 0 && (mw.windowText.indexOf('Zentrum > 15°') < 0 || mw.windowText.indexOf('dunkel, Zentrum > 15°') >= 0); return winOK && typeof mw.bestT === 'number' && typeof mw.bestAlt === 'number' && typeof mw.bestAz === 'number' && sm.indexOf("' · beste Zeit ' + fmtHM(mw.bestT)") >= 0 && sm.indexOf('mw.bestAlt.toFixed(0)') >= 0 && sm.indexOf('(dunkel, Zentrum > 15°)') >= 0; })());
   ok('milkyWayInfo: Zuerich (47.4°N) Zentrum nur ~14° -> «Eher nein» mit Begründung', (function () {
     var ds = S.localDayStart('2026-03-20');
     var mw = S.milkyWayInfo(47.3779, 8.5403, ds, S.sunEventsForDay(47.3779, 8.5403, ds));

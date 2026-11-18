@@ -1034,8 +1034,17 @@ function milkyWayInfo(lat, lon, dayStartMs, sunEv) {
     if (b - a >= 30 * 60000) { overlap = [a, b]; }
   }
   var windowText = '–';
-  if (overlap) { windowText = fmtHM(overlap[0]) + ' – ' + fmtHM(overlap[1]) + ' (dunkel, Zentrum > 15°)'; }
-  else if (above) { windowText = fmtHM(above[0]) + ' – ' + fmtHM(above[1]) + ' (Zentrum > 15°)'; }
+  if (darkStart != null && darkEnd != null) {
+    windowText = fmtHM(darkStart) + ' – ' + fmtHM(darkEnd) + ' (dunkel)';
+    if (overlap) { windowText = fmtHM(overlap[0]) + ' – ' + fmtHM(overlap[1]) + ' (dunkel, Zentrum > 15°)'; }
+  }
+  var win = overlap || (darkStart != null && darkEnd != null ? [darkStart, darkEnd] : null);
+  var bestT = t, bestAlt = p.alt, bestAz = p.az;
+  if (win) {
+    bestT = Math.min(Math.max(t, win[0]), win[1]);
+    var bp = astroAltAz(ra, dec, lat, lon, bestT);
+    bestAlt = bp.alt; bestAz = bp.az;
+  }
   var ph = moonPhaseInfo(dayStartMs + 43200000);
   var mid = overlap ? (overlap[0] + overlap[1]) / 2 : (above ? (above[0] + above[1]) / 2 : t);
   var moonAlt = moonPosition(lat, lon, mid).alt;
@@ -1044,7 +1053,7 @@ function milkyWayInfo(lat, lon, dayStartMs, sunEv) {
   if (!overlap) { reasons.push('kaum dunkle Zeit mit Zentrum > 15°'); }
   if (ph.fraction > 0.6 && moonAlt > 0) { reasons.push('Mond ' + Math.round(ph.fraction * 100) + ' % beleuchtet und sichtbar'); }
   var verdict = reasons.length ? 'Eher nein – ' + reasons.join('; ') : 'Ja – lohnenswert';
-  return { transit: t, alt: p.alt, az: p.az, above: above, overlap: overlap, windowText: windowText, verdict: verdict, moonFrac: ph.fraction };
+  return { transit: t, alt: p.alt, az: p.az, above: above, overlap: overlap, windowText: windowText, verdict: verdict, moonFrac: ph.fraction, bestT: bestT, bestAlt: bestAlt, bestAz: bestAz };
 }
 function hexA(hex, a) {
   var h = String(hex).replace('#', '');
@@ -1354,7 +1363,7 @@ if (typeof document !== 'undefined') {
     sec('🌌 Milchstrasse');
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
-    row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict, '');
+    row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict + ' · beste Zeit ' + fmtHM(mw.bestT) + ' (' + mw.bestAlt.toFixed(0) + '° ' + compass(mw.bestAz) + ')', '');
     var outRows = ['<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>'];
     sections.forEach(function (s2) {
       if (s2.title == null) { outRows.push(s2.html.join('')); return; }

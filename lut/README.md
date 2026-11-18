@@ -23,7 +23,23 @@ haben kein fixes Gamut, die korrekte Wandlung hängt von den Clip-Metadaten ab. 
 das bereits als Apple Log (Rec.2020) vorliegt (z. B. „RAW → Log“-Konvertierung in Final Cut Camera / Atomos,
 ProRes Log), oder für Workflows ohne Color Management.
 
-## 2) Kreativer Look: Cinematic Outdoor
+## 2) DJI D-Log / D-Log2 (z. B. ProRes RAW von Inspire 3 / Ronin 4D) → Rec.709
+
+Zwei technische Konvertierungs-LUTs, identischer Ziel-Farbraum wie bei (1) – **Rec.709 / BT.1886 (Gamma 2.4)**,
+damit DJI- und Apple-Material nach der LUT farblich matchen (18 % Grau landet bei beiden exakt auf ≈ 0,489):
+
+- `dji-dlog-dgamut-to-rec709-33.cube` – klassisches **D-Log + D-Gamut** (DJI White Paper 2017; Kurve wie im ACES-Referenz-CTL
+  `CSC.DJI.DLog_DGamut_to_ACES`: 18 % Grau = 10-bit Code 408, Weiss = 4200 % ≈ linear 42). Für DJI-Kameras, die ProRes RAW
+  aufnehmen (Inspire 3 / Zenmuse X9, Ronin 4D) und allgemein D-Log-Material.
+- `dji-dlog2-dgamut2-to-rec709-33.cube` – **D-Log2 + D-Gamut2** (Konstanten aus DJIs offiziellem DCTL: 18 % Grau = Code 312,
+  Weiss = 47500 % ≈ linear 475; D-Gamut2-Primaries aus dem offiziellen ACES-DCTL). Z. B. Osmo Pocket 4P.
+
+Generator: `generate_dji_lut.py` (erzeugt beide Dateien; Profil-Konstanten oben anpassbar).
+Anwendung wie bei (1): auf den **ersten Node**, wenn nicht color-managed gearbeitet wird. In RCM/ACES-Projekten
+stattdessen die CST „DJI D-Log“ / „DJI D-Gamut“ (bzw. ACES-IDT) nutzen – nicht beides kombinieren.
+Hinweis: **D-Log M** ist eine eigene, flachere Kurve in Rec.709-naher Umgebung – dafür diese LUTs nicht verwenden.
+
+## 3) Kreativer Look: Cinematic Outdoor
 
 `cinematic-outdoor-33.cube` ist eine 3D-LUT (33×33×33, Adobe/Resolve-`.cube`-Format) mit filmischem Outdoor-Look:
 angehobene, leicht kühle Schwarzwerte, weiche Highlight-Schulter, dezente S-Kurve (Kontrast), 90 % Sättigung
@@ -58,6 +74,7 @@ Beide Generatoren erzeugen ihre Datei neu (reines Python 3, keine Abhängigkeite
 ```bash
 cd lut
 python3 generate_apple_log_lut.py   # apple-log-to-rec709-33.cube
+python3 generate_dji_lut.py         # dji-dlog-... und dji-dlog2-...cube
 python3 generate_lut.py             # cinematic-outdoor-33.cube
 ```
 

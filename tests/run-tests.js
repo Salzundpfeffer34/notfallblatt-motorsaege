@@ -279,7 +279,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
     ok('counter.php enthält ' + needle, c1.indexOf(needle) >= 0);
   }
   ok('counter.php: site sonne-mond in counterSites()', c1.indexOf("array('notfallblatt', 'koordinaten', 'sonne-mond')") >= 0);
-  ok('counter.php: View-URL site=sonne-mond im Kommentar', c1.indexOf('counter.php?view=1&site=sonne-mond&key=') >= 0);
+  ok('counter.php: View-URL site=sonne-mond im Kommentar (Key per POST, nicht in URL)', c1.indexOf('counter.php?view=1&site=sonne-mond') >= 0);
   ok('counter.php: Dashboard-Switcher iteriert ueber alle Sites (kein hartkodiertes $other mehr)', c1.indexOf('foreach (counterSites() as') >= 0 && c1.indexOf('$other =') < 0);
   ok('robots.txt vorhanden', fs.existsSync(path.join(__dirname, '..', 'robots.txt')));
 }
@@ -316,7 +316,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart };')();  const pc = [
+  const S = new Function(coordsSrc + '\n' + m[1] + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart, escHtml };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -536,6 +536,33 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('stripLeadingWs: nur fuehrende Leerzeichen sofort weg, Rest bleibt fuer blur/trim', S.stripLeadingWs('  San Andrés') === 'San Andrés' && S.stripLeadingWs('\t\n Bern ') === 'Bern ' && S.stripLeadingWs('Bern') === 'Bern' && S.stripLeadingWs('') === '');
   ok('sonne-mond.html: #q/#ort – fuehrende Leerzeichen werden sofort beim Tippen/Pasten entfernt (input-Event)', sm.indexOf("['q', 'ort']") >= 0 && sm.indexOf("addEventListener('input'") >= 0 && sm.indexOf('stripLeadingWs(el.value)') >= 0);
   ok('sonne-mond.html: Hinweistext erklaert Bias + Geraetestandort + weltweit ohne Bias', sm.indexOf('um deinen Gerätestandort (Geolokalisierung)') >= 0 && sm.indexOf('weltweit gesucht') >= 0);
+  ok('escHtml: escapet & < > " \' vollstaendig', S.escHtml('<>&"\'') === '&lt;&gt;&amp;&quot;&#39;' && S.escHtml(null) === '' && S.escHtml(5) === '5');
+}
+
+// --- 9. Sicherheits-Haertung (XSS-Escaping, Clickjacking, CSP, Counter) ---
+{
+  const pages = {
+    'index.html': fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8'),
+    'gpx-reduce.html': fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8'),
+    'sonne-mond.html': fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8'),
+    'koordinaten/index.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8'),
+    'koordinaten/datenschutz.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'datenschutz.html'), 'utf8'),
+  };
+  for (const name of Object.keys(pages)) {
+    ok(name + ': Framebusting (window.top !== window.self) + Referrer-Policy + CSP-Meta', pages[name].indexOf('if (window.top !== window.self) { window.top.location.replace(') >= 0 && pages[name].indexOf('strict-origin-when-cross-origin') >= 0 && pages[name].indexOf('Content-Security-Policy') >= 0);
+  }
+  ok('gpx-reduce.html: CSP nur self + unsafe-inline, keine externen Hosts, object-src none', (function () { const m = pages['gpx-reduce.html'].match(/Content-Security-Policy" content="([^"]*)"/); return !!m && m[1].indexOf("default-src 'self'") >= 0 && m[1].indexOf('https://') < 0 && m[1].indexOf("object-src 'none'") >= 0 && m[1].indexOf("base-uri 'self'") >= 0; })());
+  const sm2 = pages['sonne-mond.html'];
+  ok('sonne-mond.html: escHtml in renderCoordInfo genutzt (kein partielles replace mehr)', sm2.indexOf('function escHtml(s)') >= 0 && sm2.indexOf('escHtml(state.name)') >= 0 && sm2.indexOf('state.name.replace(') < 0);
+  const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');
+  const c2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'counter.php'), 'utf8');
+  ok('counter.php: Key nur noch per POST (kein $_GET key, kein key= in URLs) + Login-Formular', c1.indexOf("isset($_POST['key'])") >= 0 && c1.indexOf("isset($_GET['key'])") < 0 && c1.indexOf('&amp;key=') < 0 && c1.indexOf('function counterViewForm') >= 0 && c1.indexOf("isset($_REQUEST['view'])") >= 0);
+  ok('counter.php: COUNTER_DATA_DIR-Override (Daten optional ausserhalb Webroot)', c1.indexOf('const COUNTER_DATA_DIR') >= 0 && c1.indexOf("COUNTER_DATA_DIR !== '' ? COUNTER_DATA_DIR") >= 0);
+  ok('counter.php: CSV-Formel-Injection-Schutz (trim + fuehrende = + - @ bekommen ein fuehrendes \')', c1.indexOf("in_array($v[0], array('=', '+', '-', '@'), true)") >= 0 && c1.indexOf('$v = "\'" . $v;') >= 0 && c1.indexOf('$v = trim($v);') >= 0 && c1.indexOf('/[\\x00-\\x1F\\x7F|]/') >= 0);
+  ok('counter.php Kopien weiterhin byte-identisch', c1 === c2);
+  ok('counter-data/index.html + koordinaten/counter-data/index.html als Guard vorhanden', fs.existsSync(path.join(__dirname, '..', 'counter-data', 'index.html')) && fs.existsSync(path.join(__dirname, '..', 'koordinaten', 'counter-data', 'index.html')));
+  const root = pages['index.html'];
+  ok('index.html: Leaflet gepinnt (1.9.4) + SRI integrity + crossorigin auf js und css', root.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.js') >= 0 && root.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.css') >= 0 && (root.match(/integrity="sha256-/g) || []).length >= 2 && (root.match(/crossorigin=""/g) || []).length >= 2);
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

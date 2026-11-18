@@ -558,6 +558,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const c2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'counter.php'), 'utf8');
   ok('counter.php: Key nur noch per POST (kein $_GET key, kein key= in URLs) + Login-Formular', c1.indexOf("isset($_POST['key'])") >= 0 && c1.indexOf("isset($_GET['key'])") < 0 && c1.indexOf('&amp;key=') < 0 && c1.indexOf('function counterViewForm') >= 0 && c1.indexOf("isset($_REQUEST['view'])") >= 0);
   ok('counter.php: COUNTER_DATA_DIR-Override (Daten optional ausserhalb Webroot)', c1.indexOf('const COUNTER_DATA_DIR') >= 0 && c1.indexOf("COUNTER_DATA_DIR !== '' ? COUNTER_DATA_DIR") >= 0);
+  ok('counter.php: CSV-Formel-Injection-Schutz (trim + fuehrende = + - @ bekommen ein fuehrendes \')', c1.indexOf("in_array($v[0], array('=', '+', '-', '@'), true)") >= 0 && c1.indexOf('$v = "\'" . $v;') >= 0 && c1.indexOf('$v = trim($v);') >= 0 && c1.indexOf('/[\\x00-\\x1F\\x7F|]/') >= 0);
   ok('counter.php Kopien weiterhin byte-identisch', c1 === c2);
   ok('counter-data/index.html + koordinaten/counter-data/index.html als Guard vorhanden', fs.existsSync(path.join(__dirname, '..', 'counter-data', 'index.html')) && fs.existsSync(path.join(__dirname, '..', 'koordinaten', 'counter-data', 'index.html')));
   const root = pages['index.html'];

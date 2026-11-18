@@ -21,6 +21,8 @@ declare(strict_types=1);
  *     enthält eine leere index.html (gegen Directory-Listing auf statischen Servern).
  *   - Optional kann das Datenverzeichnis per COUNTER_DATA_DIR ausserhalb des Webroots
  *     gelegt werden (z. B. '/var/private/counter-data').
+ *   - CSV-Formel-Injection: Felder, die mit = + - @ beginnen, bekommen ein fuehrendes '
+ *     (damit Excel/LibreOffice sie beim Oeffnen der Datendatei nicht als Formel ausfuehren).
  *   - Statistik-Abruf nur mit Key und mit X-Robots-Tag: noindex.
  *   - Aufbewahrung: Einträge älter als COUNTER_RETENTION_DAYS Tage werden automatisch gelöscht.
  *
@@ -157,6 +159,10 @@ function counterThrottled(): bool
 function counterField(string $v, int $max): string
 {
     $v = (string) preg_replace('/[\x00-\x1F\x7F|]/', '', $v);
+    $v = trim($v);
+    if ($v !== '' && in_array($v[0], array('=', '+', '-', '@'), true)) {
+        $v = "'" . $v;
+    }
     if (function_exists('mb_strlen') && mb_strlen($v, 'UTF-8') > $max) {
         $v = mb_substr($v, 0, $max, 'UTF-8');
     } elseif (strlen($v) > $max) {

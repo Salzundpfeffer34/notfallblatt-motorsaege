@@ -285,6 +285,7 @@
     <li><strong>Blaue Stunde</strong> (−6° bis −4°): kühles, gleichmässiges Licht – ideal für Städte und Dämmerungsaufnahmen mit Kunstlicht; meist 1–2 Stufen länger belichten oder Stativ.</li>
     <li><strong>Wahrer Mittag</strong>: Sonne steht im Süden (Azimut 180°) am höchsten – kürzeste Schatten, härtestes Licht.</li>
     <li><strong>Mond</strong>: Vollmond geht etwa bei Sonnenuntergang auf (hell für Nachtlandschaften); bei Neumond/Sichel ist der Nachthimmel dunkel – ideal für Milchstrasse.</li>
+    <li><details class="hint shdw" style="font-size:.9rem"><summary>🌓 <strong>Schöne Schatten</strong> (Sonne ≤ 15°): <span id="shdwTimes">–</span></summary><div style="margin-top:4px">Sonne steht tief → lange, weiche Schatten (Schattenverhältnis typisch ca. 2:1 bis 4:1 – weich bei bedecktem Himmel als Fill, dramatisch bei klarem Himmel/Gegenlicht). Zeitfenster gelten für den gewählten Ort und Tag.</div></details></li>
     <li>Koordinaten-Formate wie im <a href="koordinaten/index.html">Koordinaten-Konverter</a>: Dezimalgrad (<code>46.5225, 6.6325</code>), Grad/Min/Sek (<code>46°31'21"N 6°37'57"E</code>), Dezimalminuten (<code>N46 31.375 E6 37.95</code>) oder LV95 (<code>2624043, 1096620</code>).</li>
   </ul>
 </div>
@@ -1383,7 +1384,8 @@ if (typeof document !== 'undefined') {
     var shwHtml = '–';
     if (shw.morning && shw.evening) { shwHtml = 'morgens ' + fmtHM(shw.morning[0]) + ' – ' + fmtHM(shw.morning[1]) + ' · abends ' + fmtHM(shw.evening[0]) + ' – ' + fmtHM(shw.evening[1]); }
     else if (shw.morning) { shwHtml = fmtHM(shw.morning[0]) + ' – ' + fmtHM(shw.morning[1]) + ' (ganzer Tag Sonne ≤ 15°)'; }
-    curSec().html.push('<tr><td colspan="4"><details class="hint shdw"><summary>🌓 Schöne Schatten (Sonne ≤ 15°): ' + shwHtml + '</summary><div>Sonne steht tief → lange, weiche Schatten. Schattenverhältnis typisch ca. 2:1 bis 4:1 – weich bei bedecktem Himmel (Fill), dramatisch bei klarem Himmel/Gegenlicht.</div></details></td></tr>');
+    var stEl = $('shdwTimes');
+    if (stEl) { stEl.textContent = shwHtml; }
     sec('🌃 Dämmerung');
     crossRow('-18', 'morgens'); crossRow('-18', 'abends');
     crossRow('-12', 'morgens'); crossRow('-12', 'abends');

@@ -273,7 +273,7 @@
     <li><a href="https://timeapi.io/api/time/current/zone?timeZone=Europe/Zurich" target="_blank" rel="noopener">timeapi.io</a> – JSON mit <code>dateTime</code>; kostenlos, ohne API-Key</li>
     <li><a href="https://www.time.gov/" target="_blank" rel="noopener">time.gov</a> – offizielle UTC(NIST)-Seite zum Ablesen. Das NIST-Daytime-Protokoll (TCP-Port 13, time.nist.gov) ist aus Browsern nicht direkt nutzbar (kein HTTP/CORS); im Browser ist der HTTP-<code>Date</code>-Header die nächste programmatische Quelle.</li>
   </ul>
-  <p style="margin:6px 0 0"><strong>Datenschutz:</strong> Beim Zeitabgleich geht technisch bedingt eine HTTPS-Anfrage an den jeweiligen Dienst – die <strong>IP-Adresse</strong> sieht der Server wie bei jedem Website-Aufruf (TLS verschlüsselt den Inhalt, nicht die Verbindungspartner); worldtimeapi.org meldet die IP sogar als <code>client_ip</code> in der Antwort. Die automatische Abfrage sendet darüber hinaus <strong>nichts</strong> (parameterfreie URLs). Koordinaten oder ein Suchbegriff werden nur bei der Ortssuche (Nominatim) übertragen. Ohne Internet bzw. mit abgeschaltetem Abgleich: Systemuhr, gar keine Übertragung.</p>
+  <p style="margin:6px 0 0"><strong>Datenschutz:</strong> Beim Zeitabgleich geht technisch bedingt eine HTTPS-Anfrage an den jeweiligen Dienst – die <strong>IP-Adresse</strong> sieht der Server wie bei jedem Website-Aufruf (TLS verschlüsselt den Inhalt, nicht die Verbindungspartner); worldtimeapi.org meldet die IP sogar als <code>client_ip</code> in der Antwort. Die automatische Abfrage sendet darüber hinaus <strong>nichts</strong> (parameterfreie URLs). Koordinaten oder ein Suchbegriff werden nur bei der Ortssuche (Nominatim) übertragen. Ohne Internet bzw. mit abgeschaltetem Abgleich: Systemuhr, gar keine Übertragung. Die Wetterprognose für die Milchstrasse sendet die Koordinate an api.open-meteo.com (nur mit Internet; sonst erscheint kein Wettersymbol).</p>
   </div></details>
   <label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:.9rem;color:var(--muted)"><input type="checkbox" id="zeitSync" checked> Zeitabgleich über Internet aktiv (abschalten = nur Systemuhr, keine externen Anfragen)</label>
 </div>
@@ -978,6 +978,50 @@ function nextBlueMoon(fromMs) {
   }
   return null;
 }
+function cloudIcon(cc) {
+  if (cc <= 10) { return '☀️'; }
+  if (cc <= 35) { return '🌤️'; }
+  if (cc <= 65) { return '⛅'; }
+  return '☁️';
+}
+function cloudLabel(cc) {
+  if (cc <= 10) { return 'Himmel frei'; }
+  if (cc <= 35) { return 'leicht bewölkt'; }
+  if (cc <= 65) { return 'mittel bewölkt'; }
+  return 'stark bewölkt';
+}
+function renderMwWeather(lat, lon, dayStart, mw) {
+  var el = $('mwWetter');
+  if (!el) { return; }
+  var key = dayStart + '|' + lat.toFixed(3) + '|' + lon.toFixed(3);
+  if (state.mwWxKey === key && state.mwWx) { el.textContent = state.mwWx; return; }
+  el.textContent = '…';
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&hourly=cloudcover&timezone=UTC&forecast_days=3';
+  fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    if (!j || !j.hourly || !j.hourly.time) { return; }
+    var times = j.hourly.time, cc = j.hourly.cloudcover;
+    var a = Math.max(mw.darkStart != null ? mw.darkStart : mw.bestT, dayStart);
+    var b = Math.min(mw.darkEnd != null ? mw.darkEnd : mw.bestT, dayStart + 86400000);
+    var vals = [];
+    for (var i = 0; i < times.length; i++) {
+      var t = Date.parse(times[i] + 'Z');
+      if (t >= a && t <= b && isFinite(cc[i])) { vals.push(cc[i]); }
+    }
+    if (!vals.length) {
+      var best = Infinity, bi = -1;
+      for (var k = 0; k < times.length; k++) { var d = Math.abs(Date.parse(times[k] + 'Z') - mw.bestT); if (d < best) { best = d; bi = k; } }
+      if (bi >= 0 && isFinite(cc[bi])) { vals.push(cc[bi]); }
+    }
+    if (!vals.length) { el.textContent = '–'; return; }
+    var avg = vals.reduce(function (s2, v) { return s2 + v; }, 0) / vals.length;
+    var moonUp = moonPosition(lat, lon, mw.bestT).alt > 0;
+    var ph = moonPhaseInfo(dayStart + 43200000);
+    var txt = cloudIcon(avg) + ' ' + cloudLabel(avg) + (moonUp ? ' · ' + moonPhaseEmoji(ph.phase) : '');
+    state.mwWxKey = key; state.mwWx = txt;
+    var el2 = $('mwWetter');
+    if (el2) { el2.textContent = txt; }
+  }).catch(function () { var e2 = $('mwWetter'); if (e2) { e2.textContent = '–'; } });
+}
 function moonEvents(lat, lon, centerMs, halfWindowMs) {
   var step = 15 * 60000;
   var start = centerMs - halfWindowMs, end = centerMs + halfWindowMs;
@@ -1053,7 +1097,7 @@ function milkyWayInfo(lat, lon, dayStartMs, sunEv) {
   if (!overlap) { reasons.push('kaum dunkle Zeit mit Zentrum > 15°'); }
   if (ph.fraction > 0.6 && moonAlt > 0) { reasons.push('Mond ' + Math.round(ph.fraction * 100) + ' % beleuchtet und sichtbar'); }
   var verdict = reasons.length ? 'Eher nein – ' + reasons.join('; ') : 'Ja – lohnenswert';
-  return { transit: t, alt: p.alt, az: p.az, above: above, overlap: overlap, windowText: windowText, verdict: verdict, moonFrac: ph.fraction, bestT: bestT, bestAlt: bestAlt, bestAz: bestAz };
+  return { transit: t, alt: p.alt, az: p.az, above: above, overlap: overlap, windowText: windowText, verdict: verdict, moonFrac: ph.fraction, bestT: bestT, bestAlt: bestAlt, bestAz: bestAz, darkStart: darkStart, darkEnd: darkEnd };
 }
 function hexA(hex, a) {
   var h = String(hex).replace('#', '');
@@ -1364,12 +1408,14 @@ if (typeof document !== 'undefined') {
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
     row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict + ' · beste Zeit ' + fmtHM(mw.bestT) + ' (' + mw.bestAlt.toFixed(0) + '° ' + compass(mw.bestAz) + ')', '');
+    row('🌌 Wetter in der Nacht (Open-Meteo)', '<span id="mwWetter">–</span>', '', '');
     var outRows = ['<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>'];
     sections.forEach(function (s2) {
       if (s2.title == null) { outRows.push(s2.html.join('')); return; }
       outRows.push('<tr class="sec"><td colspan="4"><details class="secmenu"' + (s2.open ? ' open' : '') + '><summary>' + s2.title + '</summary><table class="sect"><tbody>' + s2.html.join('') + '</tbody></table></details></td></tr>');
     });
     $('times').innerHTML = outRows.join('');
+    renderMwWeather(state.lat, state.lon, state.dayStart, mw);
     var ib = $('icsList');
     if (ib) { ib.innerHTML = collectCalendarEvents(state.lat, state.lon, state.dayStart).map(function (e) { return '<label style="display:block;margin:2px 0"><input type="checkbox" class="icsEv" value="' + e.uid + '" checked> ' + e.summary + ' – ' + fmtDateDE(dateStrOf(e.start)) + '</label>'; }).join(''); }
   }

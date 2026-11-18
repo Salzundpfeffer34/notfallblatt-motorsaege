@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://photon.komoot.io https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<script>if (window.top !== window.self) { window.top.location.replace(window.self.location.href); }</script>
 <title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
 <link rel="icon" type="image/svg+xml" href="img/sonne-mond.svg">
 <meta name="description" content="Koordinate eingeben und Sonnenstand sehen: Sonnenauf-/untergang, Blaue Stunde, Goldene Stunde, Wahrer Mittag (Höchststand), Tageslänge sowie Mondauf-/untergang, Mondphase und Beleuchtung – für Fotografen. Alles wird lokal im Browser berechnet.">
@@ -323,6 +324,7 @@ function toJD(ms) { return ms / DAY_MS + 2440587.5; }
 function norm360(d) { return ((d % 360) + 360) % 360; }
 function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 function fmtHM(ms, utc) {
   var d = new Date(ms);
   return pad2(utc ? d.getUTCHours() : d.getHours()) + ':' + pad2(utc ? d.getUTCMinutes() : d.getMinutes());
@@ -1499,7 +1501,7 @@ if (typeof document !== 'undefined') {
     $('stNext').textContent = nx ? nx.label + ' um ' + fmtHM(nx.t) + ' (in ' + fmtDur(nx.t - t) + ')' : 'Heute keine weiteren Ereignisse';
   }
   function renderCoordInfo() {
-    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? state.name.replace(/</g, '&lt;') : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>';
+    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>';
   }
   var netOffsetMs = 0, netSource = '';
   function nowMs() { return Date.now() + netOffsetMs; }

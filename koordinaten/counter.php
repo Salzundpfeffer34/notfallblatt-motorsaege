@@ -17,7 +17,10 @@ declare(strict_types=1);
  * Härtung:
  *   - Datenfiles heissen *.php und beginnen mit "<?php exit; ?>" – selbst wenn .htaccess
  *     (Apache) mal nicht greift (z. B. nginx), liefert der Server keinen Inhalt aus.
- *   - counter-data/ ist zusätzlich per .htaccess geschützt (Require all denied).
+ *   - counter-data/ ist zusätzlich per .htaccess geschützt (Require all denied) und
+ *     enthält eine leere index.html (gegen Directory-Listing auf statischen Servern).
+ *   - Optional kann das Datenverzeichnis per COUNTER_DATA_DIR ausserhalb des Webroots
+ *     gelegt werden (z. B. '/var/private/counter-data').
  *   - Statistik-Abruf nur mit Key und mit X-Robots-Tag: noindex.
  *   - Aufbewahrung: Einträge älter als COUNTER_RETENTION_DAYS Tage werden automatisch gelöscht.
  *
@@ -25,10 +28,10 @@ declare(strict_types=1);
  * Lokal (file://) oder ohne PHP (GitHub Pages) passiert nichts – der Request schlägt fehl und
  * wird stillschweigend ignoriert.
  *
- * Abruf der Statistik (nur mit Key):
- *   counter.php?view=1&site=notfallblatt&key=DEIN_KEY
- *   counter.php?view=1&site=koordinaten&key=DEIN_KEY
- *   counter.php?view=1&site=sonne-mond&key=DEIN_KEY
+ * Abruf der Statistik (nur mit Key; der Key wird per POST übertragen, nie in der URL/Logs):
+ *   counter.php?view=1&site=notfallblatt   -> Formular erscheint, Key per POST eingeben
+ *   counter.php?view=1&site=koordinaten
+ *   counter.php?view=1&site=sonne-mond
  * Vor der produktiven Nutzung COUNTER_KEY unten auf einen eigenen geheimen Wert ändern!
  *
  * Rechtsgrundlage: berechtigtes Interesse am Betrieb/Reichweitenmessung der Website
@@ -40,10 +43,12 @@ const COUNTER_RETENTION_DAYS = 400;
 const COUNTER_FILE_HEADER = "<?php exit; ?>\n";
 const COUNTER_THROTTLE_SECONDS = 10;
 const COUNTER_THROTTLE_MEMORY = 120;
+/* Optional: absoluter Pfad ausserhalb des Webroots, z. B. '/var/private/counter-data'. Leer = counter-data/ neben dieser Datei. */
+const COUNTER_DATA_DIR = '';
 
 function counterDir(): string
 {
-    return __DIR__ . '/counter-data';
+    return COUNTER_DATA_DIR !== '' ? COUNTER_DATA_DIR : __DIR__ . '/counter-data';
 }
 
 function counterDataFile(string $site): string
@@ -361,12 +366,36 @@ function counterDayChart(array $byDate, int $days = 31): string
     return $s;
 }
 
+function counterViewKey(): string
+{
+    return isset($_POST['key']) ? (string) $_POST['key'] : '';
+}
+
+function counterViewForm(string $site): void
+{
+    http_response_code(403);
+    header('Content-Type: text/html; charset=utf-8');
+    header('X-Robots-Tag: noindex, nofollow');
+    $self = counterH(basename(__FILE__));
+    $siteH = counterH($site);
+    echo '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        . '<meta name="robots" content="noindex,nofollow">'
+        . '<title>Zähler · ' . $siteH . '</title>'
+        . '<style>body{font-family:system-ui,sans-serif;max-width:420px;margin:48px auto;padding:0 16px;color:#222}input,button{font:inherit;padding:8px 10px}button{margin-top:10px}</style></head><body>'
+        . '<h1>Besucherzähler · ' . $siteH . '</h1>'
+        . '<p>Statistik nur mit Key. Der Key wird per POST übertragen (steht nicht in der URL).</p>'
+        . '<form method="post" action="' . $self . '?view=1&amp;site=' . $siteH . '">'
+        . '<input type="password" name="key" placeholder="Key" autocomplete="off" style="width:100%">'
+        . '<br><button type="submit">Anzeigen</button>'
+        . '</form></body></html>';
+}
+
 function counterView(string $site): void
 {
-    $key = isset($_GET['key']) ? (string) $_GET['key'] : '';
+    $key = counterViewKey();
     if (COUNTER_KEY === 'BITTE-EIGENEN-KEY-EINSETZEN' || !hash_equals(COUNTER_KEY, $key)) {
-        http_response_code(403);
-        echo 'Forbidden';
+        counterViewForm($site);
         return;
     }
     header('X-Robots-Tag: noindex, nofollow');
@@ -406,11 +435,11 @@ function counterView(string $site): void
     $switcher = '';
     foreach (counterSites() as $s2) {
         $s2h = counterH($s2);
-        if ($s2 === $site) {
-            $switcher .= '<a href="' . $self . '?view=1&amp;site=' . $s2h . '&amp;key=' . $keyQ . '"><strong>' . $s2h . '</strong></a>';
-        } else {
-            $switcher .= '<a href="' . $self . '?view=1&amp;site=' . $s2h . '&amp;key=' . $keyQ . '">' . $s2h . '</a>';
-        }
+        $label = $s2 === $site ? '<strong>' . $s2h . '</strong>' : $s2h;
+        $switcher .= '<form method="post" action="' . $self . '?view=1&amp;site=' . $s2h . '" style="display:inline;margin-right:12px">'
+            . '<input type="hidden" name="key" value="' . $keyQ . '">'
+            . '<button type="submit" style="background:none;border:none;padding:0;color:#3b6ea5;cursor:pointer;text-decoration:underline;font:inherit">' . $label . '</button>'
+            . '</form>';
     }
 
     header('Content-Type: text/html; charset=utf-8');
@@ -420,7 +449,7 @@ function counterView(string $site): void
         . '<title>Zähler · ' . $siteH . '</title>'
         . '<style>body{font-family:system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#222}'
         . 'h1{font-size:1.4rem}h2{font-size:1.05rem;margin:24px 0 8px}'
-        . '.note{color:#666;font-size:.85rem}.switcher a{margin-right:12px}'
+        . '.note{color:#666;font-size:.85rem}.switcher form{display:inline;margin-right:12px}'
         . '.cards{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}'
         . '.card2{flex:1;min-width:130px;border:1px solid #e5e5e0;border-radius:10px;padding:12px 14px;background:#fafaf8}'
         . '.card2 .big{font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}'
@@ -469,7 +498,7 @@ function counterView(string $site): void
 }
 
 if (PHP_SAPI !== 'cli') {
-    if (isset($_GET['view'])) {
+    if (isset($_REQUEST['view'])) {
         counterView(counterRequestedSite());
     } elseif (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         counterHit(

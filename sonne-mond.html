@@ -91,7 +91,7 @@
   .hint.spec b.spec-red { color:var(--spec-red) !important; }
   .hint.spec b.spec-shade { color:var(--spec-shade) !important; }
   .hint.spec b.spec-faint { color:var(--spec-faint) !important; }
-  .hint.spec b.spec-micro { color:var(--spec-micro) !important; }
+  .hint.spec b.spec-micro { color:var(--spec-micro) !important; font-size:.85em; }
   @keyframes specPulse { 0%,100% { font-size:1em; } 50% { font-size:1.3em; } }
   .hint.spec b.spec-super { color:var(--spec-super) !important; display:inline-block; animation:specPulse 1.6s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce) { .hint.spec b.spec-super { animation:none; font-size:1.15em; } }
@@ -815,7 +815,7 @@ function specMoonClass(label) {
   return '';
 }
 var SPEC_MOON_COLORS = { 'spec-blue': 'var(--spec-blue)', 'spec-red': 'var(--spec-red)', 'spec-shade': 'var(--spec-shade)', 'spec-faint': 'var(--spec-faint)', 'spec-micro': 'var(--spec-micro)', 'spec-super': 'var(--spec-super)' };
-var SPEC_MOON_EMOJI = { 'spec-blue': '🔵', 'spec-red': '🔴', 'spec-shade': '🟤', 'spec-faint': '🔘', 'spec-super': '🟠', 'spec-micro': '⚫' };
+var SPEC_MOON_EMOJI = { 'spec-blue': '🌕', 'spec-red': '🌕', 'spec-shade': '🌓', 'spec-faint': '🌔', 'spec-super': '🌕', 'spec-micro': '🌕' };
 function specMoonB(label, text) {
   var cls = specMoonClass(label);
   var col = SPEC_MOON_COLORS[cls];

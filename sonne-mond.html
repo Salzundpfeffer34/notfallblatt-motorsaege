@@ -932,7 +932,8 @@ function collectCalendarEvents(lat, lon, dayStart) {
 function buildEventsIcs(lat, lon, dayStart, nowMs, onlyUids, locText) {
   var evs = collectCalendarEvents(lat, lon, dayStart);
   if (onlyUids) { evs = evs.filter(function (e) { return onlyUids.indexOf(e.uid) >= 0; }); }
-  var loc = locText || (lat.toFixed(4) + ', ' + lon.toFixed(4));
+  var coords = lat.toFixed(4) + ', ' + lon.toFixed(4);
+  var loc = locText ? locText + ' – ' + coords : coords;
   var stamp = icsStamp(nowMs || Date.now());
   var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//sonne-mond//Kalender-Events//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
   evs.forEach(function (e) {
@@ -945,7 +946,7 @@ function buildEventsIcs(lat, lon, dayStart, nowMs, onlyUids, locText) {
     lines.push('DESCRIPTION:' + icsEsc(e.desc));
     lines.push('LOCATION:' + icsEsc(loc));
     ['-P7D', '-P1D', 'PT0S'].forEach(function (trig) {
-      lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(e.summary + ' – Ort: ' + loc), 'TRIGGER:' + trig, 'END:VALARM');
+      lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(e.summary + ' – ' + coords + (locText ? ' – Ort: ' + locText : '')), 'TRIGGER:' + trig, 'END:VALARM');
     });
     lines.push('END:VEVENT');
   });
@@ -1477,8 +1478,7 @@ if (typeof document !== 'undefined') {
     var sel = [];
     var boxes = document.querySelectorAll('#icsList input.icsEv:checked');
     for (var bi = 0; bi < boxes.length; bi++) { sel.push(boxes[bi].value); }
-    var loc = (state.name ? state.name + ' – ' : '') + state.lat.toFixed(4) + ', ' + state.lon.toFixed(4);
-    var ics = buildEventsIcs(state.lat, state.lon, state.dayStart, Date.now(), sel, loc);
+    var ics = buildEventsIcs(state.lat, state.lon, state.dayStart, Date.now(), sel, state.name || '');
     var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

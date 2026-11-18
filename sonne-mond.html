@@ -79,7 +79,9 @@
   td, th { border-bottom:1px solid var(--line); padding:7px 10px 7px 0; text-align:left; vertical-align:top; }
   th { color:var(--muted); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
   td.t { font-variant-numeric:tabular-nums; white-space:nowrap; font-weight:600; }
-  #times tr.sec td { background:rgba(47,109,179,.10); color:var(--accent); font-weight:700; font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; padding-top:10px; }
+  #times tr.sec > td { background:rgba(47,109,179,.10); padding:0; }
+  #times details.secmenu > summary { color:var(--accent); font-weight:700; font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; padding:10px 10px 7px 0; cursor:pointer; }
+  #times table.sect { margin-top:0; }
   #times tr.noon td { background:rgba(47,109,179,.18); font-weight:600; }
   .hint { margin-top:6px; font-size:.8rem; color:var(--muted); }
   .hint summary { cursor:pointer; color:var(--accent); font-weight:600; }
@@ -821,7 +823,7 @@ function specialMoonInfo(dayStartMs) {
   }
   if (todayFm != null) {
     var ec = eclipseAt(todayFm);
-    if (ec.type === 'total') { out.push({ label: 'Blutmond', detail: 'totale Mondfinsternis, Maximum ca. ' + fmtHM(ec.opp) + ' – Mond kupferrot' }); }
+    if (ec.type === 'total') { out.push({ label: 'Blutmond', opp: ec.opp, detail: 'totale Mondfinsternis, Maximum ca. ' + fmtHM(ec.opp) + ' – Mond kupferrot' }); }
     else if (ec.type === 'partiell') { out.push({ label: 'Partielle Mondfinsternis', detail: 'Maximum ca. ' + fmtHM(ec.opp) }); }
     else if (ec.type === 'halbschatten') { out.push({ label: 'Halbschatten-Mondfinsternis', detail: 'Maximum ca. ' + fmtHM(ec.opp) }); }
     if (ec.dist < 360000) { out.push({ label: 'Supermond', detail: 'Vollmond nahe Perigäum · ' + Math.round(ec.dist) + ' km' }); }
@@ -1156,12 +1158,13 @@ if (typeof document !== 'undefined') {
       var p = sunPosition(state.lat, state.lon, t);
       return p.az.toFixed(0) + '° ' + compass(p.az);
     }
-    var rows = [];
+    var sections = [{ title: null, open: true, html: [] }];
+    function curSec() { return sections[sections.length - 1]; }
     function row(label, timeText, altText, azText, cls) {
-      rows.push('<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td><td class="t">' + timeText + '</td><td>' + altText + '</td><td>' + azText + '</td></tr>');
+      curSec().html.push('<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td><td class="t">' + timeText + '</td><td>' + altText + '</td><td>' + azText + '</td></tr>');
     }
-    function sec(title) {
-      rows.push('<tr class="sec"><td colspan="4">' + title + '</td></tr>');
+    function sec(title, open) {
+      sections.push({ title: title, open: open === true, html: [] });
     }
     function crossRow(altKey, suffix) {
       var e2 = ev.byAlt[altKey];
@@ -1182,13 +1185,13 @@ if (typeof document !== 'undefined') {
     crossRow('-12', 'morgens'); crossRow('-12', 'abends');
     crossRow('-6', 'morgens'); crossRow('-6', 'abends');
     row('☀️ Wahrer Mittag (Höchststand)', fmtHM(ev.solarNoon), ev.noonAlt.toFixed(1) + '°', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz), 'noon');
-    sec('🌅 Morgen');
+    sec('🌅 Morgen', true);
     rangeRow('🌃 Blaue Stunde morgens', ev.byAlt['-6'].morning, ev.byAlt['-4'].morning, '−6° → −4°');
     if (ev.sunrise != null) { var c1 = posCell(ev.sunrise); row('🌅 Sonnenaufgang', fmtHM(ev.sunrise), c1.alt, c1.az); }
     else { row('🌅 Sonnenaufgang', '–', '–', '–'); }
     rangeRow('🌇 Goldene Stunde morgens', ev.byAlt['-4'].morning, ev.byAlt['6'].morning, '−4° → +6°');
     if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), azCell(ev.sunrise) + ' – ' + azCell(ev.sunset)); }
-    sec('🌇 Abend');
+    sec('🌇 Abend', true);
     rangeRow('🌇 Goldene Stunde abends', ev.byAlt['6'].evening, ev.byAlt['-4'].evening, '+6° → −4°');
     if (ev.sunset != null) { var c2 = posCell(ev.sunset); row('🌇 Sonnenuntergang', fmtHM(ev.sunset), c2.alt, c2.az); }
     else { row('🌇 Sonnenuntergang', '–', '–', '–'); }
@@ -1217,12 +1220,23 @@ if (typeof document !== 'undefined') {
     if (state.specNext.eclipse) { specHtml += '<li>' + specMoonB(state.specNext.eclipse.type === 'total' ? 'Blutmond' : state.specNext.eclipse.type === 'partiell' ? 'Partielle Mondfinsternis' : 'Halbschatten-Mondfinsternis', 'Nächste Mondfinsternis:') + ' ' + fmtDateDE(dateStrOf(state.specNext.eclipse.opp)) + ' – ' + (state.specNext.eclipse.type === 'total' ? 'total (Blutmond)' : state.specNext.eclipse.type === 'partiell' ? 'partiell' : 'Halbschatten') + ', Maximum ca. ' + fmtHM(state.specNext.eclipse.opp) + '</li>'; }
     if (state.specNext.blueMoon) { specHtml += '<li>' + specMoonB('Blauer Mond', 'Nächster Blauer Mond:') + ' ' + MONTH_NAMES_DE[state.specNext.blueMoon.month] + ' ' + state.specNext.blueMoon.year + ' (2. Vollmond am ' + fmtDateDE(dateStrOf(state.specNext.blueMoon.t)) + ')</li>'; }
     specHtml += '</ul>';
-    rows.push('<tr><td colspan="4"><details class="hint spec"><summary>⭐ Besondere Mond-Daten (Blauer Mond, Blutmond, Supermond …) – ausklappen</summary><div>' + specHtml + '</div></details></td></tr>');
+    curSec().html.push('<tr><td colspan="4"><details class="hint spec"><summary>⭐ Besondere Mond-Daten (Blauer Mond, Blutmond, Supermond …) – ausklappen</summary><div>' + specHtml + '</div></details></td></tr>');
+    var blut = null;
+    state.spec.forEach(function (s) { if (/blutmond/i.test(s.label)) { blut = s; } });
+    if (blut) {
+      sec('🔴 Blutmond – totale Mondfinsternis', true);
+      row('🔴 Maximum (Mond kupferrot)', blut.opp != null ? fmtHM(blut.opp) : '–', '–', '–');
+    }
     sec('🌌 Milchstrasse');
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
     row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict, '');
-    $('times').innerHTML = '<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>' + rows.join('');
+    var outRows = ['<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>'];
+    sections.forEach(function (s2) {
+      if (s2.title == null) { outRows.push(s2.html.join('')); return; }
+      outRows.push('<tr class="sec"><td colspan="4"><details class="secmenu"' + (s2.open ? ' open' : '') + '><summary>' + s2.title + '</summary><table class="sect"><tbody>' + s2.html.join('') + '</tbody></table></details></td></tr>');
+    });
+    $('times').innerHTML = outRows.join('');
   }
   function renderStatus() {
     var dayStart = state.dayStart;

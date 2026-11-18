@@ -678,6 +678,24 @@ function sunEventsForDay(lat, lon, dayStartMs) {
   };
 }
 
+function shadowWindows(lat, lon, dayStartMs) {
+  var ev = sunEventsForDay(lat, lon, dayStartMs);
+  if (ev.sunrise == null || ev.sunset == null) { return { morning: null, evening: null }; }
+  var d0 = new Date(dayStartMs);
+  var utcMid = Date.UTC(d0.getFullYear(), d0.getMonth(), d0.getDate(), 0, 0, 0);
+  var p = sunParams(toJD(utcMid + 43200000));
+  var solarNoon = utcMid + 43200000 - (p.eqTime + 4 * lon) * 60000;
+  while (solarNoon - (dayStartMs + 43200000) > 43200000) { solarNoon -= DAY_MS; }
+  while ((dayStartMs + 43200000) - solarNoon > 43200000) { solarNoon += DAY_MS; }
+  var latR = lat * RAD, sinLat = Math.sin(latR), cosLat = Math.cos(latR);
+  var sinDec = Math.sin(p.dec), cosDec = Math.cos(p.dec);
+  var c = (Math.sin(15 * RAD) - sinLat * sinDec) / (cosLat * cosDec);
+  if (c < -1) { return { morning: null, evening: null }; }
+  if (c > 1) { return { morning: [ev.sunrise, ev.sunset], evening: null }; }
+  var half = (Math.acos(c) * DEG / 15) * 3600000;
+  return { morning: [ev.sunrise, solarNoon - half], evening: [solarNoon + half, ev.sunset] };
+}
+
 var MOON_TERMS_LR = [
   [0,0,1,0,6288774,-20905355], [2,0,-1,0,1274027,-3699111], [2,0,0,0,658314,-2955968], [0,0,2,0,213618,-569925],
   [0,1,0,0,-185116,48888], [0,0,0,2,-114332,-3149], [2,0,-2,0,58793,246158], [2,-1,-1,0,57066,-152138],
@@ -1361,6 +1379,11 @@ if (typeof document !== 'undefined') {
     if (ev.sunrise == null) {
       row('☀️ Hinweis', ev.noonAlt > 0 ? 'Polartag – die Sonne geht heute nicht unter' : 'Polarnacht – die Sonne geht heute nicht auf', ev.noonAlt.toFixed(1) + '° (Mittag)', ev.noonAz.toFixed(0) + '° ' + compass(ev.noonAz));
     }
+    var shw = shadowWindows(state.lat, state.lon, dayStart);
+    var shwHtml = '–';
+    if (shw.morning && shw.evening) { shwHtml = 'morgens ' + fmtHM(shw.morning[0]) + ' – ' + fmtHM(shw.morning[1]) + ' · abends ' + fmtHM(shw.evening[0]) + ' – ' + fmtHM(shw.evening[1]); }
+    else if (shw.morning) { shwHtml = fmtHM(shw.morning[0]) + ' – ' + fmtHM(shw.morning[1]) + ' (ganzer Tag Sonne ≤ 15°)'; }
+    curSec().html.push('<tr><td colspan="4"><details class="hint shdw"><summary>🌓 Schöne Schatten (Sonne ≤ 15°): ' + shwHtml + '</summary><div>Sonne steht tief → lange, weiche Schatten. Schattenverhältnis typisch ca. 2:1 bis 4:1 – weich bei bedecktem Himmel (Fill), dramatisch bei klarem Himmel/Gegenlicht.</div></details></td></tr>');
     sec('🌃 Dämmerung');
     crossRow('-18', 'morgens'); crossRow('-18', 'abends');
     crossRow('-12', 'morgens'); crossRow('-12', 'abends');

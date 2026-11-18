@@ -1,4 +1,29 @@
-# LUT für DaVinci Resolve
+# LUTs für DaVinci Resolve
+
+## 1) Apple ProRes RAW / Apple Log → korrekte Farben (Rec.709)
+
+`apple-log-to-rec709-33.cube` ist eine **technische Konvertierungs-LUT** (kein kreativer Look): Sie rechnet
+**Apple Log Profile in Rec.2020-Primaries** (so wie Apple ProRes RAW über die „RAW → Log“-Konvertierung bzw.
+ProRes Log auf dem iPhone landet) linear um, konvertiert das Gamut **Rec.2020 → Rec.709** und encodiert mit
+**BT.1886 (Gamma 2.4)** – also genau das Rec.709, das Resolve als Ausgabe erwartet.
+
+- Kurve: Apple Log Profile White Paper (Apple, 2023) – identisch zu `log_decoding_AppleLogProfile` in colour-science
+  (18 % Grau = Code 0,4883 → BT.1886 ≈ 0,489; Weisspunkt linear ≈ 12,0).
+- 33×33×33, `.cube`. Generator: `generate_apple_log_lut.py` (reines Python 3; Kurve, Gamut-Matrix und Gamma als
+  Konstanten oben anpassbar, z. B. `SIZE = 65`).
+
+**Anwendung in Resolve:** LUT auf den **ersten Node** jedes Clips ziehen (vor jeglichem Grading), wenn das
+Projekt **nicht** color-managed arbeitet (kein RCM/ACES). Mit RCM/ACES oder Apple-Log-CST **nicht zusätzlich**
+anwenden – sonst wird doppelt konvertiert.
+
+**Wichtig zu ProRes RAW direkt:** Ab **Resolve 20.2** decodiert Resolve Apple ProRes RAW nativ. Dann brauchst du
+für korrekte Farben **keine LUT**, sondern Color Management (Projekt-Einstellungen → Color Management →
+„DaVinci YRGB Color Managed" oder ACES) plus ggf. den **Camera-RAW-Tab** (Exposure/Kelvin) – echte RAW-Daten
+haben kein fixes Gamut, die korrekte Wandlung hängt von den Clip-Metadaten ab. Die LUT oben ist für Material,
+das bereits als Apple Log (Rec.2020) vorliegt (z. B. „RAW → Log“-Konvertierung in Final Cut Camera / Atomos,
+ProRes Log), oder für Workflows ohne Color Management.
+
+## 2) Kreativer Look: Cinematic Outdoor
 
 `cinematic-outdoor-33.cube` ist eine 3D-LUT (33×33×33, Adobe/Resolve-`.cube`-Format) mit filmischem Outdoor-Look:
 angehobene, leicht kühle Schwarzwerte, weiche Highlight-Schulter, dezente S-Kurve (Kontrast), 90 % Sättigung
@@ -28,13 +53,16 @@ LUT-Panel rechtsklicken → „Update LUTs":
 
 ## Anpassen / eigene Varianten
 
-`generate_lut.py` erzeugt die Datei neu (reines Python 3, keine Abhängigkeiten):
+Beide Generatoren erzeugen ihre Datei neu (reines Python 3, keine Abhängigkeiten):
 
 ```bash
 cd lut
-python3 generate_lut.py
+python3 generate_apple_log_lut.py   # apple-log-to-rec709-33.cube
+python3 generate_lut.py             # cinematic-outdoor-33.cube
 ```
 
-Die Look-Parameter stehen oben in der Datei als Konstanten (`BLACK_LIFT`, `CONTRAST`, `SATURATION`,
-`SHOULDER_*`, `WARM_HIGHLIGHTS`, `COOL_SHADOWS`, `SIZE`) – z. B. `SATURATION = 1.0` für volle Sättigung,
-`BLACK_LIFT = 0.0` für tiefes Schwarz, `SIZE = 65` für eine feinere 65³-LUT.
+Die Look-Parameter von `generate_lut.py` stehen oben in der Datei als Konstanten (`BLACK_LIFT`, `CONTRAST`,
+`SATURATION`, `SHOULDER_*`, `WARM_HIGHLIGHTS`, `COOL_SHADOWS`, `SIZE`) – z. B. `SATURATION = 1.0` für volle
+Sättigung, `BLACK_LIFT = 0.0` für tiefes Schwarz, `SIZE = 65` für eine feinere 65³-LUT. Bei
+`generate_apple_log_lut.py` sind Kurvenkonstanten (`R0`, `RT`, `C`, `BETA`, `GAMMA`, `DELTA`), die
+Gamut-Matrizen und `OUTPUT_GAMMA` anpassbar.

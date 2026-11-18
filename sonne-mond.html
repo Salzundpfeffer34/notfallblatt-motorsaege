@@ -85,6 +85,7 @@
   #times tr.noon td { background:rgba(47,109,179,.18); font-weight:600; }
   #times tr.day td { background:rgba(245,182,66,.16); }
   .hint { margin-top:6px; font-size:.8rem; color:var(--muted); }
+  .hint.zeitq { font-size:.9rem; }
   .hint summary { cursor:pointer; color:var(--accent); font-weight:600; }
   .hint > div { margin-top:4px; }
   .hint.spec { font-size:.98rem; line-height:1.55; }
@@ -257,7 +258,7 @@
 </div>
 
 <div class="card help">
-  <h2 style="font-size:1rem;margin:0 0 6px;color:var(--ink)">Zeitquellen für die aktuelle Uhrzeit</h2>
+  <details class="hint zeitq"><summary>⏱ Zeitquellen für die aktuelle Uhrzeit &amp; Datenschutz – ausklappen</summary><div>
   <p style="margin:0 0 6px">Die Seite fragt beim Laden und alle 30 s diese Quellen <strong>der Reihe nach</strong> ab (je 6 s Timeout) und nutzt die Zeit für «Jetzt», die rote Linie im 24h-Balken und die Abweichungsanzeige. Ohne Internetverbindung (oder abgeschaltetem Abgleich) gilt automatisch die <strong>Systemuhr</strong> (<code>Date.now()</code>).</p>
   <p style="margin:0 0 6px"><strong>Automatisch werden nur parameterfreie URLs abgefragt</strong> – keine Koordinaten, keine Zeitzone, kein Datum in der URL:</p>
   <ul>
@@ -273,6 +274,7 @@
     <li><a href="https://www.time.gov/" target="_blank" rel="noopener">time.gov</a> – offizielle UTC(NIST)-Seite zum Ablesen. Das NIST-Daytime-Protokoll (TCP-Port 13, time.nist.gov) ist aus Browsern nicht direkt nutzbar (kein HTTP/CORS); im Browser ist der HTTP-<code>Date</code>-Header die nächste programmatische Quelle.</li>
   </ul>
   <p style="margin:6px 0 0"><strong>Datenschutz:</strong> Beim Zeitabgleich geht technisch bedingt eine HTTPS-Anfrage an den jeweiligen Dienst – die <strong>IP-Adresse</strong> sieht der Server wie bei jedem Website-Aufruf (TLS verschlüsselt den Inhalt, nicht die Verbindungspartner); worldtimeapi.org meldet die IP sogar als <code>client_ip</code> in der Antwort. Die automatische Abfrage sendet darüber hinaus <strong>nichts</strong> (parameterfreie URLs). Koordinaten oder ein Suchbegriff werden nur bei der Ortssuche (Nominatim) übertragen. Ohne Internet bzw. mit abgeschaltetem Abgleich: Systemuhr, gar keine Übertragung.</p>
+  </div></details>
   <label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:.9rem;color:var(--muted)"><input type="checkbox" id="zeitSync" checked> Zeitabgleich über Internet aktiv (abschalten = nur Systemuhr, keine externen Anfragen)</label>
 </div>
 

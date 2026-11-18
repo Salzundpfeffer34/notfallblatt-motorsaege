@@ -249,6 +249,7 @@
     <span><span class="sw" style="background:#2c3a63"></span>Astronomisch (−18°…−12°)</span>
     <span><span class="sw" style="background:#161d36"></span>Nacht</span>
   </div>
+  <details class="hint shdw" style="font-size:.9rem;margin-top:8px"><summary>☀️ <strong>Tageslängen</strong>: <span id="dayLenInfo">–</span></summary><div style="margin-top:4px">Längster Tag ≈ Sommersonnenwende (ca. 21.06.), kürzester ≈ Wintersonnenwende (ca. 21.12.); Tageslänge = Sonnenaufgang bis -untergang am gewählten Ort. Gelten für das Jahr des gewählten Datums.</div></details>
 </div>
 
 <div class="card">
@@ -696,6 +697,28 @@ function shadowWindows(lat, lon, dayStartMs) {
   if (c > 1) { return { morning: [ev.sunrise, ev.sunset], evening: null }; }
   var half = (Math.acos(c) * DEG / 15) * 3600000;
   return { morning: [ev.sunrise, solarNoon - half], evening: [solarNoon + half, ev.sunset] };
+}
+
+function dayLengthExtremes(lat, lon, year, todayStr) {
+  function scan(mo0, d0, mo1, d1, pickMax) {
+    var best = null;
+    for (var mo = mo0; mo <= mo1; mo++) {
+      for (var d = d0; d <= d1; d++) {
+        var ds = Date.UTC(year, mo, d, 12, 0, 0);
+        var ev = sunEventsForDay(lat, lon, ds);
+        if (ev.dayLength == null) { continue; }
+        if (!best || (pickMax ? ev.dayLength > best.len : ev.dayLength < best.len)) { best = { dayStart: ds, len: ev.dayLength }; }
+      }
+    }
+    return best;
+  }
+  var out = { longest: scan(5, 18, 5, 24, true), shortest: scan(11, 19, 11, 24, false), today: null };
+  if (todayStr) {
+    var tds = localDayStart(todayStr);
+    var tev = sunEventsForDay(lat, lon, tds);
+    if (tev.dayLength != null) { out.today = { dayStart: tds, len: tev.dayLength }; }
+  }
+  return out;
 }
 
 var MOON_TERMS_LR = [
@@ -1387,6 +1410,17 @@ if (typeof document !== 'undefined') {
     else if (shw.morning) { shwHtml = fmtHM(shw.morning[0]) + ' – ' + fmtHM(shw.morning[1]) + ' (ganzer Tag Sonne ≤ 15°)'; }
     var stEl = $('shdwTimes');
     if (stEl) { stEl.textContent = shwHtml; }
+    var dli = dayLengthExtremes(state.lat, state.lon, new Date(state.dayStart).getFullYear(), state.datum);
+    var dlHtml = '–';
+    if (dli.today || dli.longest || dli.shortest) {
+      var parts = [];
+      if (dli.today) { parts.push('heute ' + fmtDur(dli.today.len)); }
+      if (dli.longest) { parts.push('längster Tag ' + fmtDateDE(dateStrOf(dli.longest.dayStart)) + ' (' + fmtDur(dli.longest.len) + ')'); }
+      if (dli.shortest) { parts.push('kürzester Tag ' + fmtDateDE(dateStrOf(dli.shortest.dayStart)) + ' (' + fmtDur(dli.shortest.len) + ')'); }
+      dlHtml = parts.join(' · ');
+    }
+    var dlEl = $('dayLenInfo');
+    if (dlEl) { dlEl.textContent = dlHtml; }
     sec('🌃 Dämmerung');
     crossRow('-18', 'morgens'); crossRow('-18', 'abends');
     crossRow('-12', 'morgens'); crossRow('-12', 'abends');

@@ -83,6 +83,7 @@
   #times details.secmenu > summary { color:var(--accent); font-weight:700; font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; padding:10px 10px 7px 0; cursor:pointer; }
   #times table.sect { margin-top:0; }
   #times tr.noon td { background:rgba(47,109,179,.18); font-weight:600; }
+  #times tr.day td { background:rgba(245,182,66,.16); }
   .hint { margin-top:6px; font-size:.8rem; color:var(--muted); }
   .hint summary { cursor:pointer; color:var(--accent); font-weight:600; }
   .hint > div { margin-top:4px; }
@@ -845,6 +846,19 @@ function nextEclipse(fromMs) {
   }
   return null;
 }
+function nextTotalEclipse(fromMs) {
+  var d = new Date(fromMs);
+  for (var i = 0; i < 96; i++) {
+    var fms = fullMoonsInMonth(d.getUTCFullYear(), d.getUTCMonth());
+    for (var k = 0; k < fms.length; k++) {
+      if (fms[k] <= fromMs) { continue; }
+      var ec = eclipseAt(fms[k]);
+      if (ec.type === 'total') { return { t: fms[k], opp: ec.opp, type: ec.type, dist: ec.dist }; }
+    }
+    d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  }
+  return null;
+}
 function nextBlueMoon(fromMs) {
   var d = new Date(fromMs);
   for (var i = 0; i < 60; i++) {
@@ -1190,7 +1204,7 @@ if (typeof document !== 'undefined') {
     if (ev.sunrise != null) { var c1 = posCell(ev.sunrise); row('🌅 Sonnenaufgang', fmtHM(ev.sunrise), c1.alt, c1.az); }
     else { row('🌅 Sonnenaufgang', '–', '–', '–'); }
     rangeRow('🌇 Goldene Stunde morgens', ev.byAlt['-4'].morning, ev.byAlt['6'].morning, '−4° → +6°');
-    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), azCell(ev.sunrise) + ' – ' + azCell(ev.sunset)); }
+    if (ev.dayLength != null) { row('⏱️ Tageslicht', fmtHM(ev.sunrise) + ' – ' + fmtHM(ev.sunset), 'Dauer ' + fmtDur(ev.dayLength), azCell(ev.sunrise) + ' – ' + azCell(ev.sunset), 'day'); }
     sec('🌇 Abend', true);
     rangeRow('🌇 Goldene Stunde abends', ev.byAlt['6'].evening, ev.byAlt['-4'].evening, '+6° → −4°');
     if (ev.sunset != null) { var c2 = posCell(ev.sunset); row('🌇 Sonnenuntergang', fmtHM(ev.sunset), c2.alt, c2.az); }
@@ -1224,8 +1238,14 @@ if (typeof document !== 'undefined') {
     var blut = null;
     state.spec.forEach(function (s) { if (/blutmond/i.test(s.label)) { blut = s; } });
     if (blut) {
-      sec('🔴 Blutmond – totale Mondfinsternis', true);
+      sec('🔴 Blutmond – totale Mondfinsternis (heute)', true);
       row('🔴 Maximum (Mond kupferrot)', blut.opp != null ? fmtHM(blut.opp) : '–', '–', '–');
+    } else {
+      var blutNext = nextTotalEclipse(dayStart);
+      if (blutNext) {
+        sec('🔴 Nächster Blutmond: ' + fmtDateDE(dateStrOf(blutNext.opp)), true);
+        row('🔴 Totale Mondfinsternis – Maximum', fmtHM(blutNext.opp), '–', '–');
+      }
     }
     sec('🌌 Milchstrasse');
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);

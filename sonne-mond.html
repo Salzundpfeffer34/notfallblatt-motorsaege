@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://photon.komoot.io https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://photon.komoot.io https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sonne &amp; Mond für Fotografen · Blaue Stunde, Goldene Stunde, Wahrer Mittag</title>
 <link rel="icon" type="image/svg+xml" href="img/sonne-mond.svg">
@@ -859,6 +859,76 @@ function nextTotalEclipse(fromMs) {
   }
   return null;
 }
+function nextFullMoonWhere(fromMs, pred) {
+  var d = new Date(fromMs);
+  for (var i = 0; i < 96; i++) {
+    var fms = fullMoonsInMonth(d.getUTCFullYear(), d.getUTCMonth());
+    for (var k = 0; k < fms.length; k++) {
+      if (fms[k] <= fromMs) { continue; }
+      var e = moonEcliptic(fms[k]);
+      if (pred(e.dist)) { return { t: fms[k], dist: e.dist }; }
+    }
+    d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1));
+  }
+  return null;
+}
+function nextSuperMoon(fromMs) { return nextFullMoonWhere(fromMs, function (dist) { return dist < 360000; }); }
+function nextMicroMoon(fromMs) { return nextFullMoonWhere(fromMs, function (dist) { return dist > 405000; }); }
+function nextMilkyWayNight(lat, lon, fromMs) {
+  var best = null;
+  for (var i = 7; i < 240; i++) {
+    var dayStart = fromMs + i * 86400000;
+    var mw = milkyWayInfo(lat, lon, dayStart, sunEventsForDay(lat, lon, dayStart));
+    var score = (mw.overlap ? mw.overlap[1] - mw.overlap[0] : 0) + mw.alt * 60000;
+    if (!best || score > best.score) { best = { dayStart: dayStart, mw: mw, score: score }; }
+  }
+  return best;
+}
+function icsStamp(ms) {
+  var d = new Date(ms);
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  return d.getUTCFullYear() + p2(d.getUTCMonth() + 1) + p2(d.getUTCDate()) + 'T' + p2(d.getUTCHours()) + p2(d.getUTCMinutes()) + p2(d.getUTCSeconds()) + 'Z';
+}
+function icsEsc(x) {
+  return String(x).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+function collectCalendarEvents(lat, lon, dayStart) {
+  var out = [];
+  var ec = nextEclipse(dayStart);
+  if (ec) {
+    var total = ec.type === 'total';
+    out.push({ uid: 'eclipse-' + icsStamp(ec.opp), summary: total ? '🔴 Blutmond – totale Mondfinsternis' : '🌘 Mondfinsternis (' + ec.type + ')', desc: 'Maximum ca. ' + fmtHM(ec.opp) + ' · Ort ' + lat.toFixed(4) + ', ' + lon.toFixed(4) + ' · lokal berechnet (Meeus/ELP2000-82)', start: ec.opp, durMin: 180 });
+  }
+  var bm = nextBlueMoon(dayStart);
+  if (bm) { out.push({ uid: 'blauermond-' + icsStamp(bm.t), summary: '🔵 Blauer Mond (2. Vollmond im ' + MONTH_NAMES_DE[bm.month] + ' ' + bm.year + ')', desc: 'Vollmond am ' + fmtDateDE(dateStrOf(bm.t)) + ' · ' + fmtHM(bm.t), start: bm.t, durMin: 60 }); }
+  var sm2 = nextSuperMoon(dayStart);
+  if (sm2) { out.push({ uid: 'supermond-' + icsStamp(sm2.t), summary: '🟠 Supermond (Vollmond nahe Perigäum)', desc: 'Distanz ca. ' + Math.round(sm2.dist) + ' km · ' + fmtDateDE(dateStrOf(sm2.t)) + ' ' + fmtHM(sm2.t), start: sm2.t, durMin: 60 }); }
+  var mm = nextMicroMoon(dayStart);
+  if (mm) { out.push({ uid: 'mikromond-' + icsStamp(mm.t), summary: '⚫ Mikromond (Vollmond nahe Apogäum)', desc: 'Distanz ca. ' + Math.round(mm.dist) + ' km · ' + fmtDateDE(dateStrOf(mm.t)) + ' ' + fmtHM(mm.t), start: mm.t, durMin: 60 }); }
+  var mw = nextMilkyWayNight(lat, lon, dayStart);
+  if (mw) { out.push({ uid: 'milchstrasse-' + icsStamp(mw.dayStart), summary: '🌌 Milchstrasse fotografieren – beste Nacht', desc: 'Zentrum kulminiert ' + fmtHM(mw.mw.transit) + ' bei ' + mw.mw.alt.toFixed(1) + '° · ' + mw.mw.verdict + ' · Ort ' + lat.toFixed(4) + ', ' + lon.toFixed(4), start: mw.dayStart + 43200000, durMin: 240 }); }
+  return out;
+}
+function buildEventsIcs(lat, lon, dayStart, nowMs) {
+  var evs = collectCalendarEvents(lat, lon, dayStart);
+  var stamp = icsStamp(nowMs || Date.now());
+  var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//sonne-mond//Kalender-Events//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  evs.forEach(function (e) {
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + e.uid + '@sonne-mond');
+    lines.push('DTSTAMP:' + stamp);
+    lines.push('DTSTART:' + icsStamp(e.start));
+    lines.push('DTEND:' + icsStamp(e.start + e.durMin * 60000));
+    lines.push('SUMMARY:' + icsEsc(e.summary));
+    lines.push('DESCRIPTION:' + icsEsc(e.desc));
+    ['-P7D', '-P1D', 'PT0S'].forEach(function (trig) {
+      lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(e.summary), 'TRIGGER:' + trig, 'END:VALARM');
+    });
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n') + '\r\n';
+}
 function nextBlueMoon(fromMs) {
   var d = new Date(fromMs);
   for (var i = 0; i < 60; i++) {
@@ -1234,7 +1304,7 @@ if (typeof document !== 'undefined') {
     if (state.specNext.eclipse) { specHtml += '<li>' + specMoonB(state.specNext.eclipse.type === 'total' ? 'Blutmond' : state.specNext.eclipse.type === 'partiell' ? 'Partielle Mondfinsternis' : 'Halbschatten-Mondfinsternis', 'Nächste Mondfinsternis:') + ' ' + fmtDateDE(dateStrOf(state.specNext.eclipse.opp)) + ' – ' + (state.specNext.eclipse.type === 'total' ? 'total (Blutmond)' : state.specNext.eclipse.type === 'partiell' ? 'partiell' : 'Halbschatten') + ', Maximum ca. ' + fmtHM(state.specNext.eclipse.opp) + '</li>'; }
     if (state.specNext.blueMoon) { specHtml += '<li>' + specMoonB('Blauer Mond', 'Nächster Blauer Mond:') + ' ' + MONTH_NAMES_DE[state.specNext.blueMoon.month] + ' ' + state.specNext.blueMoon.year + ' (2. Vollmond am ' + fmtDateDE(dateStrOf(state.specNext.blueMoon.t)) + ')</li>'; }
     specHtml += '</ul>';
-    curSec().html.push('<tr><td colspan="4"><details class="hint spec"><summary>⭐ Besondere Mond-Daten (Blauer Mond, Blutmond, Supermond …) – ausklappen</summary><div>' + specHtml + '</div></details></td></tr>');
+    curSec().html.push('<tr><td colspan="4"><details class="hint spec"><summary>⭐ Besondere Mond-Daten (Blauer Mond, Blutmond, Supermond …) – ausklappen</summary><div>' + specHtml + '<div style="margin-top:6px"><button type="button" class="secondary" id="btnIcs">📅 In Kalender eintragen (.ics – Eintrag + Erinnerungen 7 T / 1 T / am Ereignis)</button></div></div></details></td></tr>');
     var blut = null;
     state.spec.forEach(function (s) { if (/blutmond/i.test(s.label)) { blut = s; } });
     if (blut) {
@@ -1380,6 +1450,18 @@ if (typeof document !== 'undefined') {
   $('datum').addEventListener('change', function () { applyDatum(trimField($('datum'))); });
   $('dayMinus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, -1)); });
   $('dayPlus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, 1)); });
+  $('times').addEventListener('click', function (e) {
+    if (!e.target || e.target.id !== 'btnIcs') { return; }
+    var ics = buildEventsIcs(state.lat, state.lon, state.dayStart, Date.now());
+    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sonne-mond-events.ics';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  });
   var calY = 0, calM = 0;
   function renderCal() {
     var pop = $('calPop');

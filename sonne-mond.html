@@ -466,7 +466,28 @@ var TZ_CITY_ALIASES = [
   ['Ho-Chi-Minh-Stadt', 'Asia/Ho_Chi_Minh'], ['Ho Chi Minh', 'Asia/Ho_Chi_Minh'], ['Saigon', 'Asia/Ho_Chi_Minh'],
   ['Ulan Bator', 'Asia/Ulan_Bator'], ['Ulaanbaatar', 'Asia/Ulan_Bator'],
   ['Kolkata', 'Asia/Kolkata'], ['Calcutta', 'Asia/Kolkata'], ['Bombay', 'Asia/Kolkata'], ['New Delhi', 'Asia/Kolkata'],
-  ['Yangon', 'Asia/Yangon'], ['Rangoon', 'Asia/Yangon']
+  ['Yangon', 'Asia/Yangon'], ['Rangoon', 'Asia/Yangon'],
+  /* USA: Städte, die sich eine Zone teilen (Zone selbst ist schon über die IANA-Liste abgedeckt) */
+  ['Salt Lake City', 'America/Denver'], ['SLC', 'America/Denver'], ['Provo', 'America/Denver'], ['Ogden', 'America/Denver'],
+  ['Albuquerque', 'America/Denver'], ['El Paso', 'America/Denver'], ['Colorado Springs', 'America/Denver'], ['Boulder', 'America/Denver'],
+  ['Billings', 'America/Denver'], ['Cheyenne', 'America/Denver'], ['Casper', 'America/Denver'], ['Santa Fe', 'America/Denver'],
+  ['Portland', 'America/Los_Angeles'], ['Las Vegas', 'America/Los_Angeles'], ['Reno', 'America/Los_Angeles'],
+  ['Sacramento', 'America/Los_Angeles'], ['San Diego', 'America/Los_Angeles'], ['San Jose', 'America/Los_Angeles'], ['Fresno', 'America/Los_Angeles'], ['Spokane', 'America/Los_Angeles'],
+  ['Minneapolis', 'America/Chicago'], ['St. Paul', 'America/Chicago'], ['Milwaukee', 'America/Chicago'], ['Madison', 'America/Chicago'],
+  ['Des Moines', 'America/Chicago'], ['Omaha', 'America/Chicago'], ['Fargo', 'America/Chicago'], ['Sioux Falls', 'America/Chicago'],
+  ['Kansas City', 'America/Chicago'], ['St. Louis', 'America/Chicago'], ['Wichita', 'America/Chicago'], ['Tulsa', 'America/Chicago'],
+  ['Oklahoma City', 'America/Chicago'], ['Little Rock', 'America/Chicago'], ['New Orleans', 'America/Chicago'], ['Memphis', 'America/Chicago'],
+  ['Nashville', 'America/Chicago'], ['Birmingham', 'America/Chicago'], ['Jackson', 'America/Chicago'], ['Shreveport', 'America/Chicago'], ['Baton Rouge', 'America/Chicago'],
+  ['Atlanta', 'America/New_York'], ['Philadelphia', 'America/New_York'], ['Baltimore', 'America/New_York'], ['Pittsburgh', 'America/New_York'],
+  ['Cleveland', 'America/New_York'], ['Columbus', 'America/New_York'], ['Cincinnati', 'America/New_York'], ['Indianapolis', 'America/Indiana/Indianapolis'],
+  ['Buffalo', 'America/New_York'], ['Rochester', 'America/New_York'], ['Albany', 'America/New_York'], ['Providence', 'America/New_York'], ['Hartford', 'America/New_York'],
+  ['Richmond', 'America/New_York'], ['Norfolk', 'America/New_York'], ['Raleigh', 'America/New_York'], ['Charlotte', 'America/New_York'], ['Charleston', 'America/New_York'],
+  ['Savannah', 'America/New_York'], ['Jacksonville', 'America/New_York'], ['Orlando', 'America/New_York'], ['Tampa', 'America/New_York'], ['Tallahassee', 'America/New_York'],
+  ['Chattanooga', 'America/New_York'], ['Knoxville', 'America/New_York'], ['Lexington', 'America/New_York'], ['Louisville', 'America/New_York'],
+  ['Grand Rapids', 'America/Detroit'], ['Toledo', 'America/Detroit'],
+  ['Tucson', 'America/Phoenix'],
+  /* Kanada */
+  ['Ottawa', 'America/Toronto'], ['Quebec City', 'America/Toronto'], ['Québec', 'America/Toronto'], ['Calgary', 'America/Edmonton'], ['Winnipeg', 'America/Winnipeg'], ['Halifax', 'America/Halifax'], ['Victoria', 'America/Vancouver'], ['Regina', 'America/Regina'], ['Saskatoon', 'America/Regina']
 ];
 TZ_CITY_ALIASES.forEach(function (r) {
   var k = normalizeTzKey(r[0]);

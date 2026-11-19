@@ -99,7 +99,7 @@ window.NOTFALL_TEXTE.fr = {
   legendeLabel: "Légende :",
   legende: "↑ flèche du nord · ▲ début du travail, la flèche indique la direction de travail · → direction d’abattage · ▦ dépôt de grumes (nombre = capacité en m³, abréviation = essence) · ▤ dépôt de bois fendu · ⊕ coordination sauvetage aérien (point central) · ⊗ coordination point T · ▭ véhicule d’équipe · ── route carrossable avec sens d’évacuation · ┄ cloison d’exploitation · ┈ chemin d’exploitation · ⋯ ligne de câble · – sentier",
   pflichtHinweis: "L’organisation d’urgence doit être formulée par écrit, connue de tous et vérifiée chaque jour (météo, visibilité, accès).",
-  footer: "Les données restent uniquement sur cet appareil (localStorage). Aucune transmission à un serveur. Géocodage : Photon/Nominatim © contributeurs OpenStreetMap · Météo : Open-Meteo · Cartes : Leaflet + OpenStreetMap.",
+  footer: "Les données restent uniquement sur cet appareil (localStorage). Aucune transmission à un serveur. Géocodage : Photon/Nominatim © contributeurs OpenStreetMap · Météo : Open-Meteo · Cartes : Leaflet + OpenStreetMap. · Utilisation à vos propres risques – toutes les informations sans garantie.",
   datenschutzLink: "Confidentialité",
   druckTitel: "Mandat de travail et organisation d’urgence en forêt",
   druckMotorsaegearbeiten: "Travaux à la tronçonneuse",

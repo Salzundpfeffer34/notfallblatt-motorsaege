@@ -70,6 +70,7 @@
     <div class="h">oder klicken zum Auswählen</div>
   </div>
   <input type="file" id="file" accept=".gpx,.xml" style="display:none">
+  <div style="margin-top:10px"><button type="button" id="clearFile" class="secondary">🗑 Datei verwerfen (aus dem Speicher löschen)</button></div>
   <div id="msg"></div>
   <div id="stats" class="stats" style="display:none"></div>
 </div>
@@ -112,7 +113,7 @@
     <div class="check"><input type="checkbox" id="keepEle" checked>Höhe (&lt;ele&gt;) und Zeit (&lt;time&gt;) mitnehmen</div>
     <div class="check"><input type="checkbox" id="showMap">Karte mit GPX-Punkten darunterlegen (Leaflet + OpenStreetMap werden erst beim Anhaken geladen)</div>
   </div>
-  <p class="hint">Routen erlauben meist max. 250 Punkte (ältere Geräte teils nur 50), Tracks deutlich mehr (2.000–10.000). Die Toleranz wird per Binärsuche automatisch so angepasst, dass das Limit genau eingehalten wird – es wird nie mehr entfernt als nötig. Über „GPX-Type“ lässt sich zusätzlich ein <code>&lt;type&gt;</code> in Route und Track schreiben – Garmin zeigt die Route dann z. B. als „Wandern“ an statt als Standard-Profil (z. B. „Geländewagen“). Standard ist „Direkt“: dabei wird pro Routenpunkt die Garmin-Erweiterung <code>&lt;trp:ViaPoint&gt;&lt;trp:CalculationMode&gt;Direct&lt;/trp:CalculationMode&gt;&lt;/trp:ViaPoint&gt;</code> geschrieben (BaseCamp: „Direkte Route aus Track“) – das Gerät routet dann gerade Linien zwischen den Punkten (Direktrouting: bis 250 statt 50 Punkte) statt über Straßen/Standard-Profil.</p>
+  <p class="hint">Routen erlauben meist max. 250 Punkte (ältere Geräte teils nur 50), Tracks deutlich mehr (2.000–10.000). Die Toleranz wird per Binärsuche automatisch so angepasst, dass das Limit genau eingehalten wird – es wird nie mehr entfernt als nötig. Über „GPX-Type“ lässt sich zusätzlich ein <code>&lt;type&gt;</code> in Route und Track schreiben – Garmin zeigt die Route dann z. B. als „Wandern“ an statt als Standard-Profil (z. B. „Geländewagen“). Standard ist „Direkt“: dabei wird pro Routenpunkt die Garmin-Erweiterung <code>&lt;trp:ViaPoint&gt;&lt;trp:CalculationMode&gt;Direct&lt;/trp:CalculationMode&gt;&lt;/trp:ViaPoint&gt;</code> geschrieben (BaseCamp: „Direkte Route aus Track“) – das Gerät routet dann gerade Linien zwischen den Punkten (Direktrouting: bis 250 statt 50 Punkte) statt über Straßen/Standard-Profil. Die geladene Datei bleibt nur im Arbeitsspeicher (nie localStorage/Cookies), damit du das Limit ändern und erneut reduzieren kannst; nach „GPX herunterladen“ oder „Datei verwerfen“ wird sie sofort entfernt.</p>
 </div>
 
 <div class="card" id="result" style="display:none">

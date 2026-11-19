@@ -210,8 +210,9 @@
   <div id="err" class="error hidden"></div>
   <p class="coordinfo" id="coordInfo"></p>
   <div id="tzManWrap" class="hint" style="display:none;margin-top:4px">
-    <label for="tzMan">Zeitzone manuell setzen (nur nötig ohne automatische Ermittlung, z. B. offline):</label>
-    <select id="tzMan"></select>
+    <label for="tzMan">Zeitzone manuell setzen (nur nötig ohne automatische Ermittlung, z. B. offline) – UTC±x oder Stadt:</label>
+    <input type="text" id="tzMan" list="tzCityList" placeholder="z. B. UTC+2, Paris, New York, Tenerife …" autocomplete="off">
+    <datalist id="tzCityList"></datalist>
   </div>
 </div>
 
@@ -388,6 +389,61 @@ function dayStartView(dateStr) {
   if (!p) { return null; }
   var utcMid = Date.UTC(+p[1], +p[2] - 1, +p[3], 0, 0, 0);
   return utcMid - viewOffsetMs(utcMid - viewOffsetMs(utcMid));
+}
+var TZ_CITY_LIST = [
+  ['Zürich', 'Europe/Zurich', ['zrh']], ['Genf', 'Europe/Zurich'], ['Basel', 'Europe/Zurich'], ['Bern', 'Europe/Zurich'], ['Luzern', 'Europe/Zurich'],
+  ['Vaduz', 'Europe/Vaduz'],
+  ['Berlin', 'Europe/Berlin'], ['Hamburg', 'Europe/Berlin'], ['München', 'Europe/Berlin', ['munchen', 'munich']], ['Köln', 'Europe/Berlin', ['koeln', 'cologne']], ['Frankfurt', 'Europe/Berlin'],
+  ['Wien', 'Europe/Vienna', ['vienna']],
+  ['Paris', 'Europe/Paris'], ['London', 'Europe/London'], ['Dublin', 'Europe/Dublin'], ['Edinburgh', 'Europe/London'],
+  ['Reykjavik', 'Atlantic/Reykjavik'],
+  ['Lissabon', 'Europe/Lisbon', ['lisbon']], ['Madrid', 'Europe/Madrid'], ['Barcelona', 'Europe/Madrid'],
+  ['Rom', 'Europe/Rome', ['roma', 'rome']], ['Mailand', 'Europe/Rome', ['milan', 'milano']], ['Neapel', 'Europe/Rome'],
+  ['Amsterdam', 'Europe/Amsterdam'], ['Brüssel', 'Europe/Brussels', ['brussels']], ['Luxemburg', 'Europe/Luxembourg'],
+  ['Kopenhagen', 'Europe/Copenhagen', ['copenhagen']], ['Oslo', 'Europe/Oslo'], ['Stockholm', 'Europe/Stockholm'], ['Helsinki', 'Europe/Helsinki'],
+  ['Warschau', 'Europe/Warsaw', ['warsaw']], ['Prag', 'Europe/Prague'], ['Bratislava', 'Europe/Bratislava'], ['Budapest', 'Europe/Budapest'],
+  ['Athen', 'Europe/Athens', ['athens']], ['Istanbul', 'Europe/Istanbul'], ['Moskau', 'Europe/Moscow', ['moscow']], ['Kiew', 'Europe/Kyiv', ['kiev', 'kyiv']],
+  ['Casablanca', 'Africa/Casablanca'], ['Kairo', 'Africa/Cairo', ['cairo']], ['Lagos', 'Africa/Lagos'], ['Nairobi', 'Africa/Nairobi', ['nairobi']], ['Kapstadt', 'Africa/Johannesburg', ['capetown', 'johannesburg']],
+  ['Dubai', 'Asia/Dubai'], ['Mumbai', 'Asia/Kolkata', ['delhi', 'newdelhi', 'bombay', 'kolkata']],
+  ['Bangkok', 'Asia/Bangkok'], ['Singapur', 'Asia/Singapore', ['singapore']], ['Hongkong', 'Asia/Hong_Kong'],
+  ['Peking', 'Asia/Shanghai', ['beijing', 'shanghai', 'china']], ['Seoul', 'Asia/Seoul'], ['Tokio', 'Asia/Tokyo', ['tokyo']],
+  ['Sydney', 'Australia/Sydney'], ['Melbourne', 'Australia/Melbourne'], ['Perth', 'Australia/Perth'],
+  ['Auckland', 'Pacific/Auckland', ['neuseeland', 'newzealand']],
+  ['Honolulu', 'Pacific/Honolulu'], ['Anchorage', 'America/Anchorage', ['alaska']],
+  ['Vancouver', 'America/Vancouver'], ['Toronto', 'America/Toronto'], ['Montreal', 'America/Montreal'],
+  ['New York', 'America/New_York', ['nyc', 'newyorkcity', 'manhattan']], ['Boston', 'America/New_York'], ['Miami', 'America/New_York'], ['Washington', 'America/New_York'],
+  ['Chicago', 'America/Chicago'], ['Houston', 'America/Chicago'], ['Dallas', 'America/Chicago'],
+  ['Denver', 'America/Denver'], ['Phoenix', 'America/Phoenix'],
+  ['Los Angeles', 'America/Los_Angeles', ['losangeles', 'la']], ['San Francisco', 'America/Los_Angeles', ['sanfrancisco', 'sf']], ['Seattle', 'America/Los_Angeles'],
+  ['Mexiko-Stadt', 'America/Mexico_City', ['mexicocity', 'cdmx']], ['Havanna', 'America/Havana', ['havana']], ['Panama', 'America/Panama'],
+  ['Bogotá', 'America/Bogota', ['bogota']], ['Lima', 'America/Lima'], ['Caracas', 'America/Caracas'],
+  ['Santiago de Chile', 'America/Santiago', ['santiago']], ['São Paulo', 'America/Sao_Paulo', ['saopaulo']], ['Rio de Janeiro', 'America/Sao_Paulo', ['rio']],
+  ['Buenos Aires', 'America/Argentina/Buenos_Aires', ['buenosaires']], ['Montevideo', 'America/Montevideo'], ['Asunción', 'America/Asuncion', ['asuncion']], ['La Paz', 'America/La_Paz', ['lapaz']], ['Quito', 'America/Guayaquil'],
+  ['Kanarische Inseln', 'Atlantic/Canary', ['kanaren', 'canaryislands', 'canaries', 'teneriffa', 'grancanaria', 'laspalmas', 'santacruzdetenerife', 'lanzarote', 'fuerteventura']]
+];
+function normalizeTzKey(s) {
+  return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '');
+}
+var TZ_CITY_MAP = {};
+TZ_CITY_LIST.forEach(function (row) {
+  var iana = row[1];
+  TZ_CITY_MAP[normalizeTzKey(row[0])] = iana;
+  TZ_CITY_MAP[normalizeTzKey(iana)] = iana;
+  (row[2] || []).forEach(function (a) { TZ_CITY_MAP[normalizeTzKey(a)] = iana; });
+});
+function parseTzInput(v) {
+  v = String(v == null ? '' : v).trim();
+  if (!v) { return { clear: true }; }
+  var m = v.match(/^utc\s*([+-]?\d{1,2})\s*(?::?(\d{2}))?$/i);
+  if (m) {
+    var sign = m[1].charAt(0) === '-' ? -1 : 1;
+    var min = sign * (Math.abs(parseInt(m[1], 10)) * 60 + (m[2] ? parseInt(m[2], 10) : 0));
+    if (Math.abs(min) <= 840) { return { tzMin: min }; }
+    return { error: 'UTC-Offset max. ±14:00' };
+  }
+  var key = normalizeTzKey(v);
+  if (TZ_CITY_MAP[key]) { return { tz: TZ_CITY_MAP[key], label: v }; }
+  return { error: 'Unbekannt – z. B. UTC+2 oder Paris, New York, Tenerife …' };
 }
 function shiftDateStr(dateStr, days) {
   var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -1293,7 +1349,7 @@ if (typeof document !== 'undefined') {
       if (t !== el.value) { el.value = t; }
     });
   });
-  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false, tz: null, tzMin: null };
+  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false, tz: null, tzMin: null, tzAuto: false, tzManualLabel: '' };
   try {
     var saved = JSON.parse(localStorage.getItem('sonneMond') || 'null');
     if (saved && isFinite(saved.lat) && isFinite(saved.lon)) {
@@ -1303,6 +1359,8 @@ if (typeof document !== 'undefined') {
       if (saved.zeitSync === false) { state.zeitSync = false; }
       if (saved.tz && /^[A-Za-z0-9_+\-\/]{2,60}$/.test(String(saved.tz))) { state.tz = String(saved.tz); }
       if (isFinite(saved.tzMin) && Math.abs(saved.tzMin) <= 840) { state.tzMin = saved.tzMin; }
+      if (saved.tzAuto === true) { state.tzAuto = true; }
+      if (typeof saved.tzManualLabel === 'string') { state.tzManualLabel = saved.tzManualLabel.slice(0, 60); }
     }
   } catch (e) { /* localStorage nicht verfuegbar */ }
   try {
@@ -1319,7 +1377,7 @@ if (typeof document !== 'undefined') {
     el.classList.remove('hidden');
   }
   function save() {
-    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name, zeitSync: state.zeitSync, tz: state.tz, tzMin: state.tzMin })); } catch (e) {}
+    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name, zeitSync: state.zeitSync, tz: state.tz, tzMin: state.tzMin, tzAuto: state.tzAuto, tzManualLabel: state.tzManualLabel })); } catch (e) {}
   }
   function updateUrl() {
     try {
@@ -1550,12 +1608,12 @@ if (typeof document !== 'undefined') {
     var tz = viewTz();
     var tzHtml = '';
     if (state.tzMin != null) { tzHtml = ' &nbsp;·&nbsp; <b>' + fmtUtcOffset(state.tzMin * 60000) + ' (manuell)</b>'; }
-    else if (tz) { tzHtml = ' &nbsp;·&nbsp; <b>' + escHtml(tz) + '</b> (' + fmtUtcOffset(tzOffsetMs(nowMs(), tz)) + ')'; }
+    else if (tz) { tzHtml = ' &nbsp;·&nbsp; <b>' + escHtml(tz) + '</b> (' + fmtUtcOffset(tzOffsetMs(nowMs(), tz)) + (state.tzAuto ? '' : ' manuell') + ')'; }
     $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>' + tzHtml;
     var tw = $('tzManWrap');
-    if (tw) { tw.style.display = tz ? 'none' : ''; }
+    if (tw) { tw.style.display = state.tzAuto ? 'none' : ''; }
     var tm = $('tzMan');
-    if (tm) { var mv = state.tzMin == null ? '' : String(state.tzMin); if (tm.value !== mv) { tm.value = mv; } }
+    if (tm) { var mv = state.tzMin != null ? fmtUtcOffset(state.tzMin * 60000) : (state.tzAuto ? '' : (state.tzManualLabel || '')); if (tm.value !== mv) { tm.value = mv; } }
   }
   var netOffsetMs = 0, netSource = '';
   function nowMs() { return Date.now() + netOffsetMs; }
@@ -1636,6 +1694,8 @@ if (typeof document !== 'undefined') {
         if (j && typeof j.timezone === 'string' && /^[A-Za-z0-9_+\-\/]{2,60}$/.test(j.timezone) && j.timezone !== state.tz) {
           state.tz = j.timezone;
           state.tzMin = null;
+          state.tzAuto = true;
+          state.tzManualLabel = '';
           save();
           renderAll();
           renderCoordInfo();
@@ -1897,19 +1957,34 @@ if (typeof document !== 'undefined') {
   reverseGeocode();
   fetchOrtsZeitzone();
   (function buildTzMan() {
-    var sel = $('tzMan');
-    if (!sel) { return; }
-    var html = '<option value="">automatisch (aus den Koordinaten)</option>';
+    var dl = $('tzCityList');
+    if (!dl) { return; }
+    var html = '';
     var offs = [];
     for (var m = -720; m <= 840; m += 30) { offs.push(m); }
     offs.push(345, 525, 765);
     offs.sort(function (a, b) { return a - b; });
-    offs.forEach(function (m) { html += '<option value="' + m + '">' + fmtUtcOffset(m * 60000) + '</option>'; });
-    sel.innerHTML = html;
+    offs.forEach(function (m) { html += '<option value="' + fmtUtcOffset(m * 60000) + '"></option>'; });
+    TZ_CITY_LIST.forEach(function (row) {
+      html += '<option value="' + escHtml(row[0]) + '">' + escHtml(row[1]) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), row[1])) + ')</option>';
+    });
+    dl.innerHTML = html;
   })();
   $('tzMan').addEventListener('change', function () {
-    var v = $('tzMan').value;
-    state.tzMin = v === '' ? null : parseInt(v, 10);
+    var r = parseTzInput($('tzMan').value);
+    if (r.error) {
+      err(r.error);
+      $('tzMan').value = state.tzMin != null ? fmtUtcOffset(state.tzMin * 60000) : (state.tzAuto ? '' : (state.tzManualLabel || ''));
+      return;
+    }
+    if (r.clear) { state.tzMin = null; state.tz = null; state.tzManualLabel = ''; }
+    else if (r.tzMin != null) { state.tzMin = r.tzMin; state.tz = null; state.tzManualLabel = fmtUtcOffset(r.tzMin * 60000); }
+    else {
+      if (!tzDtf(r.tz)) { err('Unbekannte Zeitzone: ' + r.label); return; }
+      state.tz = r.tz; state.tzMin = null; state.tzManualLabel = r.label;
+    }
+    state.tzAuto = false;
+    err(null);
     save();
     renderAll();
     renderCoordInfo();

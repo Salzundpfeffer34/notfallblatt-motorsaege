@@ -5,7 +5,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const html = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8')
+  + '\n/*JS*/\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'koordinaten.js'), 'utf8');
 const KONV_LANGS_ALL = ['en','fr','it','es'].map(l => fs.readFileSync(path.join(__dirname, '..', 'js', 'konv-texte-' + l + '.js'), 'utf8')).join('\n');
 
 function extract(startMarker, endMarker) {
@@ -218,9 +219,9 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
 
 // --- 5. gpx-reduce.html: Reduktion (Douglas-Peucker + Limit) & GPX-Output ---
 {
-  const gpxHtml = fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8');
-  const m = gpxHtml.match(/<script>\n([\s\S]*?)\n<\/script>/);
-  ok('gpx-reduce.html hat Script-Block', !!m);
+  const gpxJs = fs.readFileSync(path.join(__dirname, '..', 'js', 'gpx-reduce.js'), 'utf8');
+  const gpxHtml = fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8') + '\n/*JS*/\n' + gpxJs;
+  ok('gpx-reduce.html: JS extern (js/gpx-reduce.js), kein Inline-Script mehr', gpxHtml.indexOf('src="js/gpx-reduce.js"') >= 0 && !/<script>\n/.test(fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8')));
   ok('DOMParser mit unterstuetztem MIME (text/xml, nicht application/gpx+xml)', gpxHtml.indexOf("parseFromString(text, 'text/xml')") >= 0 && gpxHtml.indexOf("parseFromString(text, 'application/gpx+xml')") < 0);
   ok('Limit-Presets 50/100/250/500 mit Default 250', ['value="50"', 'value="100"', 'value="250" selected', 'value="500"'].every(o => gpxHtml.indexOf(o) >= 0));
   ok('alte Presets 200/1000 entfernt', gpxHtml.indexOf('value="200"') < 0 && gpxHtml.indexOf('value="1000"') < 0);
@@ -229,7 +230,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('Hinweis wenn noch keine GPX geladen', gpxHtml.indexOf('Bitte zuerst eine GPX-Datei laden') >= 0);
   ok('nach Reduzieren: run-Button ausgeblendet, dl aktiv ohne secondary', gpxHtml.indexOf("getElementById('run').style.display = 'none'") >= 0 && gpxHtml.indexOf("classList.remove('secondary')") >= 0);
   ok('bei neuer Datei: run wieder sichtbar, dl deaktiviert+secondary', gpxHtml.indexOf("getElementById('run').style.display = ''") >= 0 && gpxHtml.indexOf("dlBtn0.disabled = true") >= 0 && gpxHtml.indexOf("classList.add('secondary')") >= 0);
-  const G = new Function(m[1] + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm };')();
+  const G = new Function(gpxJs + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm };')();
   // synthetische Tour: 2000 Punkte auf gewellter Linie + benannte Punkte
   const pts = [];
   for (let i = 0; i < 2000; i++) {
@@ -260,7 +261,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
 
 // --- 5b. Verlinkung gpx-reduce.html im Koordinaten-Konverter ---
 {
-  const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+  const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8') + '\n/*JS*/\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'koordinaten.js'), 'utf8');
   ok('Konverter verlinkt ../gpx-reduce.html', konv.indexOf('href="../gpx-reduce.html"') >= 0);
   ok('Link ist als Button gestylt (class="btn")', konv.indexOf('class="btn" href="../gpx-reduce.html"') >= 0 && konv.indexOf('a.btn {') >= 0);
   ok('linkGpxReduce in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkGpxReduce:/g) || []).length === 5);
@@ -304,7 +305,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
 
 // --- 5c. Verlinkung sonne-mond.html im Koordinaten-Konverter ---
 {
-  const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+  const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8') + '\n/*JS*/\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'koordinaten.js'), 'utf8');
   ok('Konverter verlinkt ../sonne-mond.html', konv.indexOf('href="../sonne-mond.html"') >= 0);
   ok('Link ist als Button gestylt (class="btn")', konv.indexOf('class="btn" href="../sonne-mond.html"') >= 0);
   ok('linkSonne in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkSonne:/g) || []).length === 5);
@@ -320,7 +321,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const tzSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'tz-cities.js'), 'utf8');
   const ortSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'ort-suche-data.js'), 'utf8');
   const smJs = fs.readFileSync(path.join(__dirname, '..', 'js', 'sonne-mond.js'), 'utf8');
-  ok('sonne-mond.html: CSS+JS extern (css/sonne-mond.css, js/sonne-mond.js), nur Framebusting inline', sm.indexOf('href="css/sonne-mond.css"') >= 0 && sm.indexOf('src="js/sonne-mond.js"') >= 0 && sm.indexOf('<script>\n') < 0 && sm.indexOf('if (window.top !== window.self)') >= 0);
+  ok('sonne-mond.html: CSS+JS extern (css/sonne-mond.css, js/sonne-mond.js), nur Framebusting inline', sm.indexOf('href="css/sonne-mond.css"') >= 0 && sm.indexOf('src="js/sonne-mond.js"') >= 0 && sm.indexOf('<script>\n') < 0 && sm.indexOf('src="js/framebust.js"') >= 0);
   const S = new Function(coordsSrc + '\n' + tzSrc + '\n' + ortSrc + '\n' + smJs + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart, escHtml, tzOffsetMs, dayStartUtc, fmtUtcOffset, viewTz, viewOffsetMs, dayStartView, TZ_CITY_LIST, TZ_CITY_MAP, TZ_CITY_ALIASES, parseTzInput, normalizeTzKey, tzZoneList };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
@@ -591,7 +592,12 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
     const ixHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     const cspSm = (smHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
     const cspIx = (ixHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
-    ok('CSP hart: sonne-mond.html script-src nur self (kein unsafe-inline mehr -> injiziertes Inline-Script wird blockiert), index.html script-src self+unpkg ohne unsafe-inline', cspSm.indexOf("script-src 'self'") >= 0 && !/script-src[^;]*unsafe-inline/.test(cspSm) && cspIx.indexOf("script-src 'self' https://unpkg.com") >= 0 && !/script-src[^;]*unsafe-inline/.test(cspIx) && cspSm.indexOf("style-src 'self' 'unsafe-inline'") >= 0);
+    ok('CSP hart: sonne-mond.html script-src nur self, index.html self+unpkg ohne unsafe-inline', cspSm.indexOf("script-src 'self'") >= 0 && !/script-src[^;]*unsafe-inline/.test(cspSm) && cspIx.indexOf("script-src 'self' https://unpkg.com") >= 0 && !/script-src[^;]*unsafe-inline/.test(cspIx) && cspSm.indexOf("style-src 'self' 'unsafe-inline'") >= 0);
+    {
+      const allPages = { 'sonne-mond.html': smHtml, 'index.html': ixHtml, 'gpx-reduce.html': fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8'), 'koordinaten/index.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8'), 'koordinaten/datenschutz.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'datenschutz.html'), 'utf8') };
+      const jsFiles = { 'sonne-mond.html': 'js/sonne-mond.js', 'index.html': null, 'gpx-reduce.html': 'js/gpx-reduce.js', 'koordinaten/index.html': 'js/koordinaten.js', 'koordinaten/datenschutz.html': 'js/datenschutz.js' };
+      ok('ALLE 5 Seiten: CSP script-src ohne unsafe-inline + kein Inline-Script mehr + externes JS eingebunden', Object.keys(allPages).every(n => { const c = (allPages[n].match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || ''; return !/script-src[^;]*unsafe-inline/.test(c) && !/<script>\n/.test(allPages[n]) && (jsFiles[n] === null || allPages[n].indexOf('src="' + jsFiles[n] + '"') >= 0); }));
+    }
     ok('keine Inline-Event-Handler (on*=) in sonne-mond.html und index.html', !/\son[a-z]{2,15}=/i.test(smHtml) && !/\son[a-z]{2,15}=/i.test(ixHtml));
     const konvHtml = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
     ok('koordinaten: OSM-Iframe mit sandbox="allow-scripts"', konvHtml.indexOf('<iframe id="osmmap" class="map hidden" loading="lazy" sandbox="allow-scripts"') >= 0);
@@ -605,7 +611,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const i18n = fs.readFileSync(path.join(__dirname, '..', 'js', 'i18n.js'), 'utf8');
   ok('index.html: nur texte-de.js statisch, fr/it/es/pt NICHT mehr als <script src>', root.indexOf('js/texte-de.js') >= 0 && ['fr','it','es','pt'].every(l => root.indexOf('js/texte-' + l + '.js') < 0));
   ok('js/i18n.js: ladeTexte() l\u00e4dt js/texte-<lang>.js on-demand (setzeSprache + Init bei gespeicherter Sprache)', i18n.indexOf('function ladeTexte(lang, cb)') >= 0 && i18n.indexOf("sc.src = 'js/texte-' + lang + '.js'") >= 0 && i18n.indexOf('ladeTexte(neu, function ()') >= 0 && i18n.indexOf("ladeTexte(sprache, function () { i18nAnwenden(); })") >= 0);
-  const konv2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+  const konv2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8') + '\n/*JS*/\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'koordinaten.js'), 'utf8');
   ok('koordinaten/index.html: TEXTE inline nur noch de; en/fr/it/es in js/konv-texte-*.js (lazy via ladeKonvTexte)', konv2.indexOf('  en: {') < 0 && konv2.indexOf('  fr: {') < 0 && konv2.indexOf('  es: {') < 0 && konv2.indexOf('  de: {') >= 0 && konv2.indexOf('function ladeKonvTexte(lang, cb)') >= 0 && konv2.indexOf("sc.src = 'js/konv-texte-' + lang + '.js'") >= 0 && konv2.indexOf("KONV_LANGS = ['de', 'en', 'fr', 'it', 'es']") >= 0 && konv2.indexOf('ladeKonvTexte(lang, function () { applyLang(lang); })') >= 0 && ['en','fr','it','es'].every(l => { const f = path.join(__dirname, '..', 'js', 'konv-texte-' + l + '.js'); return fs.existsSync(f) && fs.readFileSync(f, 'utf8').indexOf('window.TEXTE.' + l + ' = {') >= 0; }));
   const sm2 = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'sonne-mond.js'), 'utf8');
   ok('sonne-mond.html: Ortssuche-Daten (US_STATES/EU_COUNTRIES/CH_CANTONS) nicht mehr inline, sondern js/ort-suche-data.js lazy (loadOrtData, Fokus auf #ort, searchOrt l\u00e4dt nach, Guards)', (function () { const f = path.join(__dirname, '..', 'js', 'ort-suche-data.js'); if (!fs.existsSync(f)) { return false; } const d = fs.readFileSync(f, 'utf8'); return d.indexOf('var US_STATES = {') >= 0 && d.indexOf('var EU_COUNTRIES = {') >= 0 && d.indexOf('var CH_CANTONS = {') >= 0 && sm2.indexOf('var US_STATES = {') < 0 && sm2.indexOf('var EU_COUNTRIES = {') < 0 && sm2.indexOf('var CH_CANTONS = {') < 0 && sm2.indexOf('function loadOrtData(cb)') >= 0 && sm2.indexOf("sc.src = 'js/ort-suche-data.js'") >= 0 && sm2.indexOf('function ortDataLoaded()') >= 0 && sm2.indexOf('loadOrtData(function () { searchOrt(q); })') >= 0 && sm2.indexOf("addEventListener('focus', function () { loadOrtData(") >= 0 && sm2.indexOf("typeof US_STATE_NAMES === 'undefined'") >= 0 && sm2.indexOf("typeof COUNTRY_ALIASES === 'undefined'") >= 0; })());

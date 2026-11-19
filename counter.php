@@ -503,7 +503,15 @@ function counterView(string $site): void
     echo '</body></html>';
 }
 
+function counterSecurityHeaders(): void
+{
+    header('X-Content-Type-Options: nosniff');
+    header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+    header('Referrer-Policy: no-referrer');
+}
+
 if (PHP_SAPI !== 'cli') {
+    counterSecurityHeaders();
     if (isset($_REQUEST['view'])) {
         counterView(counterRequestedSite());
     } elseif (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {

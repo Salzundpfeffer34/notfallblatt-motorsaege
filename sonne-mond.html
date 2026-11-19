@@ -390,109 +390,48 @@ function dayStartView(dateStr) {
   var utcMid = Date.UTC(+p[1], +p[2] - 1, +p[3], 0, 0, 0);
   return utcMid - viewOffsetMs(utcMid - viewOffsetMs(utcMid));
 }
-var TZ_CITY_LIST = [
-  ['Zürich', 'Europe/Zurich', ['zrh']], ['Genf', 'Europe/Zurich'], ['Basel', 'Europe/Zurich'], ['Bern', 'Europe/Zurich'], ['Luzern', 'Europe/Zurich'],
-  ['Vaduz', 'Europe/Vaduz'],
-  ['Berlin', 'Europe/Berlin'], ['Hamburg', 'Europe/Berlin'], ['München', 'Europe/Berlin', ['munchen', 'munich']], ['Köln', 'Europe/Berlin', ['koeln', 'cologne']], ['Frankfurt', 'Europe/Berlin'],
-  ['Wien', 'Europe/Vienna', ['vienna']],
-  ['Paris', 'Europe/Paris'], ['London', 'Europe/London'], ['Dublin', 'Europe/Dublin'], ['Edinburgh', 'Europe/London'],
-  ['Reykjavik', 'Atlantic/Reykjavik'],
-  ['Lissabon', 'Europe/Lisbon', ['lisbon']], ['Madrid', 'Europe/Madrid'], ['Barcelona', 'Europe/Madrid'],
-  ['Rom', 'Europe/Rome', ['roma', 'rome']], ['Mailand', 'Europe/Rome', ['milan', 'milano']], ['Neapel', 'Europe/Rome'],
-  ['Amsterdam', 'Europe/Amsterdam'], ['Brüssel', 'Europe/Brussels', ['brussels']], ['Luxemburg', 'Europe/Luxembourg'],
-  ['Kopenhagen', 'Europe/Copenhagen', ['copenhagen']], ['Oslo', 'Europe/Oslo'], ['Stockholm', 'Europe/Stockholm'], ['Helsinki', 'Europe/Helsinki'],
-  ['Warschau', 'Europe/Warsaw', ['warsaw']], ['Prag', 'Europe/Prague'], ['Bratislava', 'Europe/Bratislava'], ['Budapest', 'Europe/Budapest'],
-  ['Athen', 'Europe/Athens', ['athens']], ['Istanbul', 'Europe/Istanbul'], ['Moskau', 'Europe/Moscow', ['moscow']], ['Kiew', 'Europe/Kyiv', ['kiev', 'kyiv']],
-  ['Casablanca', 'Africa/Casablanca'], ['Kairo', 'Africa/Cairo', ['cairo']], ['Lagos', 'Africa/Lagos'], ['Nairobi', 'Africa/Nairobi', ['nairobi']], ['Kapstadt', 'Africa/Johannesburg', ['capetown', 'johannesburg']],
-  ['Dubai', 'Asia/Dubai'], ['Mumbai', 'Asia/Kolkata', ['delhi', 'newdelhi', 'bombay', 'kolkata']],
-  ['Bangkok', 'Asia/Bangkok'], ['Singapur', 'Asia/Singapore', ['singapore']], ['Hongkong', 'Asia/Hong_Kong'],
-  ['Peking', 'Asia/Shanghai', ['beijing', 'shanghai', 'china']], ['Seoul', 'Asia/Seoul'], ['Tokio', 'Asia/Tokyo', ['tokyo']],
-  ['Sydney', 'Australia/Sydney'], ['Melbourne', 'Australia/Melbourne'], ['Perth', 'Australia/Perth'],
-  ['Auckland', 'Pacific/Auckland', ['neuseeland', 'newzealand']],
-  ['Honolulu', 'Pacific/Honolulu'], ['Anchorage', 'America/Anchorage', ['alaska']],
-  ['Vancouver', 'America/Vancouver'], ['Toronto', 'America/Toronto'], ['Montreal', 'America/Montreal'],
-  ['New York', 'America/New_York', ['nyc', 'newyorkcity', 'manhattan']], ['Boston', 'America/New_York'], ['Miami', 'America/New_York'], ['Washington', 'America/New_York'],
-  ['Chicago', 'America/Chicago'], ['Houston', 'America/Chicago'], ['Dallas', 'America/Chicago'],
-  ['Denver', 'America/Denver'], ['Phoenix', 'America/Phoenix'],
-  ['Los Angeles', 'America/Los_Angeles', ['losangeles', 'la']], ['San Francisco', 'America/Los_Angeles', ['sanfrancisco', 'sf']], ['Seattle', 'America/Los_Angeles'],
-  ['Mexiko-Stadt', 'America/Mexico_City', ['mexicocity', 'cdmx']], ['Havanna', 'America/Havana', ['havana']], ['Panama', 'America/Panama'],
-  ['Bogotá', 'America/Bogota', ['bogota']], ['Lima', 'America/Lima'], ['Caracas', 'America/Caracas'],
-  ['Santiago de Chile', 'America/Santiago', ['santiago']], ['São Paulo', 'America/Sao_Paulo', ['saopaulo']], ['Rio de Janeiro', 'America/Sao_Paulo', ['rio']],
-  ['Buenos Aires', 'America/Argentina/Buenos_Aires', ['buenosaires']], ['Montevideo', 'America/Montevideo'], ['Asunción', 'America/Asuncion', ['asuncion']], ['La Paz', 'America/La_Paz', ['lapaz']], ['Quito', 'America/Guayaquil'],
-  ['Ho-Chi-Minh-Stadt', 'Asia/Ho_Chi_Minh', ['hochiminh', 'saigon', 'hcmc', 'vietnam']],
-  ['Ulan Bator', 'Asia/Ulan_Bator', ['ulanbator', 'ulaanbaatar', 'mongolei', 'mongolia']],
-  ['Kolkata', 'Asia/Kolkata', ['calcutta', 'indien']],
-  ['Yangon', 'Asia/Yangon', ['rangoon', 'burma', 'myanmar']],
-  ['Kanarische Inseln', 'Atlantic/Canary', ['kanaren', 'canaryislands', 'canaries', 'teneriffa', 'grancanaria', 'laspalmas', 'santacruzdetenerife', 'lanzarote', 'fuerteventura']]
-];
+/* St\u00e4dte-/Alias-Daten liegen in js/tz-cities.js und werden erst bei Bedarf per loadTzCities() nachgeladen. */
 function normalizeTzKey(s) {
   return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '');
 }
 var TZ_CITY_MAP = {};
-TZ_CITY_LIST.forEach(function (row) {
-  var iana = row[1];
-  TZ_CITY_MAP[normalizeTzKey(row[0])] = iana;
-  TZ_CITY_MAP[normalizeTzKey(iana)] = iana;
-  (row[2] || []).forEach(function (a) { TZ_CITY_MAP[normalizeTzKey(a)] = iana; });
-});
-/* Mehrsprachige Aliase (de/en/fr/it/es) – normalizeTzKey macht Akzente/Grossschreibung egal */
-var TZ_CITY_ALIASES = [
-  ['Venedig', 'Europe/Rome'], ['Venice', 'Europe/Rome'], ['Venise', 'Europe/Rome'], ['Venezia', 'Europe/Rome'],
-  ['Mailand', 'Europe/Rome'], ['Milan', 'Europe/Rome'], ['Milano', 'Europe/Rome'],
-  ['Neapel', 'Europe/Rome'], ['Naples', 'Europe/Rome'], ['Napoli', 'Europe/Rome'],
-  ['Genf', 'Europe/Zurich'], ['Genève', 'Europe/Zurich'], ['Geneva', 'Europe/Zurich'], ['Ginevra', 'Europe/Zurich'],
-  ['Zürich', 'Europe/Zurich'], ['Zurigo', 'Europe/Zurich'],
-  ['Luzern', 'Europe/Zurich'], ['Lucerne', 'Europe/Zurich'], ['Lucerna', 'Europe/Zurich'],
-  ['Lissabon', 'Europe/Lisbon'], ['Lisboa', 'Europe/Lisbon'], ['Lisbonne', 'Europe/Lisbon'],
-  ['Brüssel', 'Europe/Brussels'], ['Bruxelles', 'Europe/Brussels'],
-  ['Luxemburg', 'Europe/Luxembourg'], ['Lussemburgo', 'Europe/Luxembourg'],
-  ['Kopenhagen', 'Europe/Copenhagen'], ['Copenhague', 'Europe/Copenhagen'],
-  ['Prag', 'Europe/Prague'], ['Prague', 'Europe/Prague'], ['Praga', 'Europe/Prague'],
-  ['Warschau', 'Europe/Warsaw'], ['Varsovie', 'Europe/Warsaw'], ['Varsavia', 'Europe/Warsaw'],
-  ['Athen', 'Europe/Athens'], ['Athens', 'Europe/Athens'], ['Athènes', 'Europe/Athens'], ['Atene', 'Europe/Athens'],
-  ['Moskau', 'Europe/Moscow'], ['Moscou', 'Europe/Moscow'], ['Mosca', 'Europe/Moscow'],
-  ['Kiew', 'Europe/Kyiv'], ['Kiev', 'Europe/Kyiv'], ['Kyiv', 'Europe/Kyiv'],
-  ['Kairo', 'Africa/Cairo'], ['Le Caire', 'Africa/Cairo'], ['Il Cairo', 'Africa/Cairo'],
-  ['Kapstadt', 'Africa/Johannesburg'], ['Cape Town', 'Africa/Johannesburg'], ['Le Cap', 'Africa/Johannesburg'], ['Città del Capo', 'Africa/Johannesburg'],
-  ['Singapur', 'Asia/Singapore'], ['Singapour', 'Asia/Singapore'],
-  ['Peking', 'Asia/Shanghai'], ['Pékin', 'Asia/Shanghai'], ['Pechino', 'Asia/Shanghai'],
-  ['São Paulo', 'America/Sao_Paulo'], ['San Paolo', 'America/Sao_Paulo'],
-  ['Mexiko-Stadt', 'America/Mexico_City'], ['Mexico City', 'America/Mexico_City'], ['Ciudad de México', 'America/Mexico_City'], ['Mexico', 'America/Mexico_City'],
-  ['Havanna', 'America/Havana'], ['La Habana', 'America/Havana'], ['La Havane', 'America/Havana'],
-  ['Santiago de Chile', 'America/Santiago'],
-  ['La Paz', 'America/La_Paz'],
-  ['Auckland', 'Pacific/Auckland'], ['Nouvelle-Zélande', 'Pacific/Auckland'], ['Nuova Zelanda', 'Pacific/Auckland'],
-  ['Kanarische Inseln', 'Atlantic/Canary'], ['Canary Islands', 'Atlantic/Canary'], ['Islas Canarias', 'Atlantic/Canary'], ['Îles Canaries', 'Atlantic/Canary'], ['Isole Canarie', 'Atlantic/Canary'],
-  ['Ho-Chi-Minh-Stadt', 'Asia/Ho_Chi_Minh'], ['Ho Chi Minh', 'Asia/Ho_Chi_Minh'], ['Saigon', 'Asia/Ho_Chi_Minh'],
-  ['Ulan Bator', 'Asia/Ulan_Bator'], ['Ulaanbaatar', 'Asia/Ulan_Bator'],
-  ['Kolkata', 'Asia/Kolkata'], ['Calcutta', 'Asia/Kolkata'], ['Bombay', 'Asia/Kolkata'], ['New Delhi', 'Asia/Kolkata'],
-  ['Yangon', 'Asia/Yangon'], ['Rangoon', 'Asia/Yangon'],
-  /* USA: Städte, die sich eine Zone teilen (Zone selbst ist schon über die IANA-Liste abgedeckt) */
-  ['Salt Lake City', 'America/Denver'], ['SLC', 'America/Denver'], ['Provo', 'America/Denver'], ['Ogden', 'America/Denver'],
-  ['Albuquerque', 'America/Denver'], ['El Paso', 'America/Denver'], ['Colorado Springs', 'America/Denver'], ['Boulder', 'America/Denver'],
-  ['Billings', 'America/Denver'], ['Cheyenne', 'America/Denver'], ['Casper', 'America/Denver'], ['Santa Fe', 'America/Denver'],
-  ['Portland', 'America/Los_Angeles'], ['Las Vegas', 'America/Los_Angeles'], ['Reno', 'America/Los_Angeles'],
-  ['Sacramento', 'America/Los_Angeles'], ['San Diego', 'America/Los_Angeles'], ['San Jose', 'America/Los_Angeles'], ['Fresno', 'America/Los_Angeles'], ['Spokane', 'America/Los_Angeles'],
-  ['Minneapolis', 'America/Chicago'], ['St. Paul', 'America/Chicago'], ['Milwaukee', 'America/Chicago'], ['Madison', 'America/Chicago'],
-  ['Des Moines', 'America/Chicago'], ['Omaha', 'America/Chicago'], ['Fargo', 'America/Chicago'], ['Sioux Falls', 'America/Chicago'],
-  ['Kansas City', 'America/Chicago'], ['St. Louis', 'America/Chicago'], ['Wichita', 'America/Chicago'], ['Tulsa', 'America/Chicago'],
-  ['Oklahoma City', 'America/Chicago'], ['Little Rock', 'America/Chicago'], ['New Orleans', 'America/Chicago'], ['Memphis', 'America/Chicago'],
-  ['Nashville', 'America/Chicago'], ['Birmingham', 'America/Chicago'], ['Jackson', 'America/Chicago'], ['Shreveport', 'America/Chicago'], ['Baton Rouge', 'America/Chicago'],
-  ['Atlanta', 'America/New_York'], ['Philadelphia', 'America/New_York'], ['Baltimore', 'America/New_York'], ['Pittsburgh', 'America/New_York'],
-  ['Cleveland', 'America/New_York'], ['Columbus', 'America/New_York'], ['Cincinnati', 'America/New_York'], ['Indianapolis', 'America/Indiana/Indianapolis'],
-  ['Buffalo', 'America/New_York'], ['Rochester', 'America/New_York'], ['Albany', 'America/New_York'], ['Providence', 'America/New_York'], ['Hartford', 'America/New_York'],
-  ['Richmond', 'America/New_York'], ['Norfolk', 'America/New_York'], ['Raleigh', 'America/New_York'], ['Charlotte', 'America/New_York'], ['Charleston', 'America/New_York'],
-  ['Savannah', 'America/New_York'], ['Jacksonville', 'America/New_York'], ['Orlando', 'America/New_York'], ['Tampa', 'America/New_York'], ['Tallahassee', 'America/New_York'],
-  ['Chattanooga', 'America/New_York'], ['Knoxville', 'America/New_York'], ['Lexington', 'America/New_York'], ['Louisville', 'America/New_York'],
-  ['Grand Rapids', 'America/Detroit'], ['Toledo', 'America/Detroit'],
-  ['Tucson', 'America/Phoenix'],
-  /* Kanada */
-  ['Ottawa', 'America/Toronto'], ['Quebec City', 'America/Toronto'], ['Québec', 'America/Toronto'], ['Calgary', 'America/Edmonton'], ['Winnipeg', 'America/Winnipeg'], ['Halifax', 'America/Halifax'], ['Victoria', 'America/Vancouver'], ['Regina', 'America/Regina'], ['Saskatoon', 'America/Regina']
-];
-TZ_CITY_ALIASES.forEach(function (r) {
-  var k = normalizeTzKey(r[0]);
-  if (!TZ_CITY_MAP[k]) { TZ_CITY_MAP[k] = r[1]; }
-});
+function tzCitiesLoaded() { return typeof TZ_CITY_LIST !== 'undefined' && typeof TZ_CITY_ALIASES !== 'undefined'; }
+function tzBuildCityMap() {
+  if (!tzCitiesLoaded()) { return; }
+  TZ_CITY_LIST.forEach(function (row) {
+    var iana = row[1];
+    TZ_CITY_MAP[normalizeTzKey(row[0])] = iana;
+    TZ_CITY_MAP[normalizeTzKey(iana)] = iana;
+    (row[2] || []).forEach(function (a) { TZ_CITY_MAP[normalizeTzKey(a)] = iana; });
+  });
+  TZ_CITY_ALIASES.forEach(function (r) {
+    var k = normalizeTzKey(r[0]);
+    if (!TZ_CITY_MAP[k]) { TZ_CITY_MAP[k] = r[1]; }
+  });
+}
+var _tzCitiesLoading = null;
+function loadTzCities(cb) {
+  if (tzCitiesLoaded()) { cb(true); return; }
+  if (_tzCitiesLoading) { _tzCitiesLoading.push(cb); return; }
+  _tzCitiesLoading = [cb];
+  try {
+    var sc = document.createElement('script');
+    sc.src = 'js/tz-cities.js';
+    sc.onload = function () {
+      tzBuildCityMap();
+      var cbs = _tzCitiesLoading; _tzCitiesLoading = null;
+      for (var i = 0; i < cbs.length; i++) { cbs[i](tzCitiesLoaded()); }
+    };
+    sc.onerror = function () {
+      var cbs = _tzCitiesLoading; _tzCitiesLoading = null;
+      for (var i = 0; i < cbs.length; i++) { cbs[i](false); }
+    };
+    document.head.appendChild(sc);
+  } catch (e) {
+    _tzCitiesLoading = null;
+    cb(false);
+  }
+}
 function tzAddZone(label, iana) {
   var k1 = normalizeTzKey(label), k2 = normalizeTzKey(iana);
   if (!TZ_CITY_MAP[k1]) { TZ_CITY_MAP[k1] = iana; }
@@ -513,6 +452,7 @@ function tzZoneList() {
     if (parts.length > 2) { tzAddZone(parts.slice(1).join(' ').replace(/_/g, ' '), z); }
   });
 })();
+tzBuildCityMap();
 function parseTzInput(v) {
   v = String(v == null ? '' : v).trim();
   if (!v) { return { clear: true }; }
@@ -1693,7 +1633,11 @@ if (typeof document !== 'undefined') {
     else if (tz) { tzHtml = ' &nbsp;·&nbsp; <b>' + escHtml(tz) + '</b> (' + fmtUtcOffset(tzOffsetMs(nowMs(), tz)) + (state.tzAuto ? '' : ' manuell') + ')'; }
     $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>' + tzHtml;
     var tw = $('tzManWrap');
-    if (tw) { tw.style.display = state.tzAuto ? 'none' : ''; }
+    if (tw) {
+      var showTz = !state.tzAuto;
+      tw.style.display = showTz ? '' : 'none';
+      if (showTz) { buildTzMan(); }
+    }
     var tm = $('tzMan');
     if (tm) { var mv = state.tzMin != null ? fmtUtcOffset(state.tzMin * 60000) : (state.tzAuto ? '' : (state.tzManualLabel || '')); if (tm.value !== mv) { tm.value = mv; } }
   }
@@ -2038,31 +1982,37 @@ if (typeof document !== 'undefined') {
   renderAll();
   reverseGeocode();
   fetchOrtsZeitzone();
-  (function buildTzMan() {
-    var dl = $('tzCityList');
-    if (!dl) { return; }
-    var html = '';
-    var offs = [];
-    for (var m = -720; m <= 840; m += 30) { offs.push(m); }
-    offs.push(345, 525, 765);
-    offs.sort(function (a, b) { return a - b; });
-    offs.forEach(function (m) { html += '<option value="' + fmtUtcOffset(m * 60000) + '"></option>'; });
-    var seen = {};
-    TZ_CITY_LIST.forEach(function (row) {
-      seen[normalizeTzKey(row[0])] = 1;
-      html += '<option value="' + escHtml(row[0]) + '">' + escHtml(row[1]) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), row[1])) + ')</option>';
+  function buildTzMan() {
+    loadTzCities(function () {
+      var dl = $('tzCityList');
+      if (!dl) { return; }
+      var html = '';
+      var offs = [];
+      for (var m = -720; m <= 840; m += 30) { offs.push(m); }
+      offs.push(345, 525, 765);
+      offs.sort(function (a, b) { return a - b; });
+      offs.forEach(function (m) { html += '<option value="' + fmtUtcOffset(m * 60000) + '"></option>'; });
+      var seen = {};
+      if (tzCitiesLoaded()) {
+        TZ_CITY_LIST.forEach(function (row) {
+          seen[normalizeTzKey(row[0])] = 1;
+          html += '<option value="' + escHtml(row[0]) + '">' + escHtml(row[1]) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), row[1])) + ')</option>';
+        });
+      }
+      tzZoneList().forEach(function (z) {
+        if (!z || z === 'UTC' || z.indexOf('Etc/') === 0) { return; }
+        var city = z.split('/').pop().replace(/_/g, ' ');
+        var k = normalizeTzKey(city);
+        if (seen[k]) { return; }
+        seen[k] = 1;
+        html += '<option value="' + escHtml(city) + '">' + escHtml(z) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), z)) + ')</option>';
+      });
+      dl.innerHTML = html;
     });
-    tzZoneList().forEach(function (z) {
-      if (!z || z === 'UTC' || z.indexOf('Etc/') === 0) { return; }
-      var city = z.split('/').pop().replace(/_/g, ' ');
-      var k = normalizeTzKey(city);
-      if (seen[k]) { return; }
-      seen[k] = 1;
-      html += '<option value="' + escHtml(city) + '">' + escHtml(z) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), z)) + ')</option>';
-    });
-    dl.innerHTML = html;
-  })();
+  }
+  $('tzMan').addEventListener('focus', function () { buildTzMan(); });
   $('tzMan').addEventListener('change', function () {
+    loadTzCities(function () {
     var r = parseTzInput($('tzMan').value);
     if (r.error) {
       err(r.error);
@@ -2080,6 +2030,7 @@ if (typeof document !== 'undefined') {
     save();
     renderAll();
     renderCoordInfo();
+    });
   });
   $('zeitSync').checked = state.zeitSync;
   $('zeitSync').addEventListener('change', function () {

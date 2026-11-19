@@ -133,7 +133,7 @@ function ladeKonvTexte(lang, cb) {
   _konvTexteLoading[lang] = [cb];
   try {
     var sc = document.createElement('script');
-    sc.src = 'js/konv-texte-' + lang + '.js';
+    sc.src = '../js/konv-texte-' + lang + '.js';
     sc.onload = function () {
       var cbs = _konvTexteLoading[lang] || []; delete _konvTexteLoading[lang];
       for (var i = 0; i < cbs.length; i++) { cbs[i](!!(window.TEXTE && window.TEXTE[lang])); }

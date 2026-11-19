@@ -276,7 +276,7 @@
     <li><a href="https://timeapi.io/api/time/current/zone?timeZone=Europe/Zurich" target="_blank" rel="noopener">timeapi.io</a> – JSON mit <code>dateTime</code>; kostenlos, ohne API-Key</li>
     <li><a href="https://www.time.gov/" target="_blank" rel="noopener">time.gov</a> – offizielle UTC(NIST)-Seite zum Ablesen. Das NIST-Daytime-Protokoll (TCP-Port 13, time.nist.gov) ist aus Browsern nicht direkt nutzbar (kein HTTP/CORS); im Browser ist der HTTP-<code>Date</code>-Header die nächste programmatische Quelle.</li>
   </ul>
-  <p style="margin:6px 0 0"><strong>Datenschutz:</strong> Beim Zeitabgleich geht technisch bedingt eine HTTPS-Anfrage an den jeweiligen Dienst – die <strong>IP-Adresse</strong> sieht der Server wie bei jedem Website-Aufruf (TLS verschlüsselt den Inhalt, nicht die Verbindungspartner); worldtimeapi.org meldet die IP sogar als <code>client_ip</code> in der Antwort. Die automatische Abfrage sendet darüber hinaus <strong>nichts</strong> (parameterfreie URLs). Koordinaten oder ein Suchbegriff werden nur bei der Ortssuche (Nominatim) übertragen. Ohne Internet bzw. mit abgeschaltetem Abgleich: Systemuhr, gar keine Übertragung. Die Wetterprognose für die Milchstrasse sendet die Koordinate an api.open-meteo.com (nur mit Internet; sonst erscheint kein Wettersymbol).</p>
+  <p style="margin:6px 0 0"><strong>Datenschutz:</strong> Beim Zeitabgleich geht technisch bedingt eine HTTPS-Anfrage an den jeweiligen Dienst – die <strong>IP-Adresse</strong> sieht der Server wie bei jedem Website-Aufruf (TLS verschlüsselt den Inhalt, nicht die Verbindungspartner); worldtimeapi.org meldet die IP sogar als <code>client_ip</code> in der Antwort. Die automatische Abfrage sendet darüber hinaus <strong>nichts</strong> (parameterfreie URLs). Koordinaten oder ein Suchbegriff werden nur bei der Ortssuche (Nominatim) übertragen. Ohne Internet bzw. mit abgeschaltetem Abgleich: Systemuhr, gar keine Übertragung. Wetterprognose und Zeitzone des Ortes (z. B. Atlantic/Canary) fragen die Koordinate bei api.open-meteo.com ab (nur mit Internet; sonst Geräte-Zeitzone und kein Wettersymbol).</p>
   </div></details>
   <label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:.9rem;color:var(--muted)"><input type="checkbox" id="zeitSync" checked> Zeitabgleich über Internet aktiv (abschalten = nur Systemuhr, keine externen Anfragen)</label>
 </div>
@@ -309,7 +309,7 @@
   <span><a href="gpx-reduce.html">GPX-Reduktion für Garmin</a></span>
   <span><a href="index.html">Notfallblatt Motorsäge</a></span>
   <span><a href="koordinaten/datenschutz.html">Datenschutz</a></span>
-  <span>Sonne nach NOAA-Formeln, Mond nach präziser Mondtheorie (Meeus/ELP2000-82, gekürzte Serie + Gezeiten-Term – über Jahrtausende brauchbar) – alles lokal im Browser. Nur mit Internet: Ortssuche (OpenStreetMap) und Zeitabgleich (worldtimeapi.org, timeapi.io, Open-Meteo, Cloudflare) – offline läuft alles über die Systemuhr.</span>
+  <span>Sonne nach NOAA-Formeln, Mond nach präziser Mondtheorie (Meeus/ELP2000-82, gekürzte Serie + Gezeiten-Term – über Jahrtausende brauchbar) – alles lokal im Browser. Nur mit Internet: Ortssuche (OpenStreetMap), Zeitabgleich (worldtimeapi.org, timeapi.io, Open-Meteo, Cloudflare) sowie Wetter/Zeitzone des Ortes (Open-Meteo) – offline läuft alles über die Systemuhr bzw. die Geräte-Zeitzone.</span>
 </footer>
 </div>
 
@@ -326,6 +326,8 @@ function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
 function pad2(n) { return (n < 10 ? '0' : '') + n; }
 function escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 function fmtHM(ms, utc) {
+  var tz = utc ? null : viewTz();
+  if (tz) { var z = new Date(ms + tzOffsetMs(ms, tz)); return pad2(z.getUTCHours()) + ':' + pad2(z.getUTCMinutes()); }
   var d = new Date(ms);
   return pad2(utc ? d.getUTCHours() : d.getHours()) + ':' + pad2(utc ? d.getUTCMinutes() : d.getMinutes());
 }
@@ -342,6 +344,38 @@ function localDayStart(dateStr) {
   if (!p) { return null; }
   return new Date(+p[1], +p[2] - 1, +p[3], 0, 0, 0, 0).getTime();
 }
+var _tzDtfCache = {};
+function tzDtf(tz) {
+  if (!(tz in _tzDtfCache)) {
+    try {
+      _tzDtfCache[tz] = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch (e) { _tzDtfCache[tz] = null; }
+  }
+  return _tzDtfCache[tz];
+}
+function tzOffsetMs(ms, tz) {
+  var dtf = tz ? tzDtf(tz) : null;
+  if (!dtf) { return -new Date(ms).getTimezoneOffset() * 60000; }
+  var o = {};
+  var parts = dtf.formatToParts(new Date(ms));
+  for (var i = 0; i < parts.length; i++) { o[parts[i].type] = parts[i].value; }
+  var asUTC = Date.UTC(+o.year, +o.month - 1, +o.day, (+o.hour) % 24, +o.minute, +o.second);
+  return asUTC - Math.floor(ms / 1000) * 1000;
+}
+function viewTz() {
+  return (typeof state !== 'undefined' && state && state.tz) ? state.tz : null;
+}
+function dayStartUtc(dateStr, tz) {
+  var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!p) { return null; }
+  var utcMid = Date.UTC(+p[1], +p[2] - 1, +p[3], 0, 0, 0);
+  return utcMid - tzOffsetMs(utcMid - tzOffsetMs(utcMid, tz), tz);
+}
+function fmtUtcOffset(offMs) {
+  var m = Math.round(offMs / 60000);
+  var a = Math.abs(m);
+  return 'UTC' + (m < 0 ? '-' : '+') + Math.floor(a / 60) + (a % 60 ? ':' + pad2(a % 60) : '');
+}
 function shiftDateStr(dateStr, days) {
   var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!p) { return String(dateStr); }
@@ -349,18 +383,16 @@ function shiftDateStr(dateStr, days) {
   d.setDate(d.getDate() + days);
   return dateStrOf(d.getTime());
 }
-function todayStr() {
-  var d = new Date();
-  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-}
+function todayStr() { return dateStrOf(Date.now()); }
 function fmtDateDE(dateStr) {
   var p = String(dateStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return p ? p[3] + '.' + p[2] + '.' + p[1] : String(dateStr);
 }
 
 function dateStrOf(ms) {
-  var d = new Date(ms);
-  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  var tz = viewTz();
+  var d = tz ? new Date(ms + tzOffsetMs(ms, tz)) : new Date(ms);
+  return (tz ? d.getUTCFullYear() : d.getFullYear()) + '-' + pad2((tz ? d.getUTCMonth() : d.getMonth()) + 1) + '-' + pad2(tz ? d.getUTCDate() : d.getDate());
 }
 var MONTH_NAMES_DE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 var DOW_NAMES_DE = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -1249,7 +1281,7 @@ if (typeof document !== 'undefined') {
       if (t !== el.value) { el.value = t; }
     });
   });
-  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false };
+  var state = { lat: 47.3779, lon: 8.5403, datum: todayStr(), name: '', minutes: 720, dayStart: 0, ev: null, sunPts: [], moonPts: [], zeitSync: true, locKnown: false, tz: null };
   try {
     var saved = JSON.parse(localStorage.getItem('sonneMond') || 'null');
     if (saved && isFinite(saved.lat) && isFinite(saved.lon)) {
@@ -1257,6 +1289,7 @@ if (typeof document !== 'undefined') {
       if (saved.datum && localDayStart(saved.datum) != null) { state.datum = saved.datum; }
       if (saved.name) { state.name = String(saved.name); }
       if (saved.zeitSync === false) { state.zeitSync = false; }
+      if (saved.tz && /^[A-Za-z0-9_+\-\/]{2,60}$/.test(String(saved.tz))) { state.tz = String(saved.tz); }
     }
   } catch (e) { /* localStorage nicht verfuegbar */ }
   try {
@@ -1273,7 +1306,7 @@ if (typeof document !== 'undefined') {
     el.classList.remove('hidden');
   }
   function save() {
-    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name, zeitSync: state.zeitSync })); } catch (e) {}
+    try { localStorage.setItem('sonneMond', JSON.stringify({ lat: state.lat, lon: state.lon, datum: state.datum, name: state.name, zeitSync: state.zeitSync, tz: state.tz })); } catch (e) {}
   }
   function updateUrl() {
     try {
@@ -1412,7 +1445,7 @@ if (typeof document !== 'undefined') {
     else if (shw.morning) { shwHtml = fmtHM(shw.morning[0]) + ' – ' + fmtHM(shw.morning[1]) + ' (ganzer Tag Sonne ≤ 15°)'; }
     var stEl = $('shdwTimes');
     if (stEl) { stEl.textContent = shwHtml; }
-    var dli = dayLengthExtremes(state.lat, state.lon, new Date(state.dayStart).getFullYear(), state.datum);
+    var dli = dayLengthExtremes(state.lat, state.lon, +dateStrOf(state.dayStart).slice(0, 4), state.datum);
     var dlHtml = '–';
     if (dli.today || dli.longest || dli.shortest) {
       var parts = [];
@@ -1501,7 +1534,9 @@ if (typeof document !== 'undefined') {
     $('stNext').textContent = nx ? nx.label + ' um ' + fmtHM(nx.t) + ' (in ' + fmtDur(nx.t - t) + ')' : 'Heute keine weiteren Ereignisse';
   }
   function renderCoordInfo() {
-    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>';
+    var tz = viewTz();
+    var tzHtml = tz ? ' &nbsp;·&nbsp; <b>' + escHtml(tz) + '</b> (' + fmtUtcOffset(tzOffsetMs(nowMs(), tz)) + ')' : '';
+    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>' + tzHtml;
   }
   var netOffsetMs = 0, netSource = '';
   function nowMs() { return Date.now() + netOffsetMs; }
@@ -1553,7 +1588,7 @@ if (typeof document !== 'undefined') {
     $('clockLine').textContent = 'Jetzt: ' + fmtHM(t) + ':' + pad2(d.getSeconds()) + ' · ' + src + ' · ' + pi.l;
   }
   function renderAll() {
-    state.dayStart = localDayStart(state.datum);
+    state.dayStart = dayStartUtc(state.datum, viewTz());
     if (state.dayStart == null) { err('Ungültiges Datum'); return; }
     err(null);
     state.ev = sunEventsForDay(state.lat, state.lon, state.dayStart);
@@ -1572,6 +1607,21 @@ if (typeof document !== 'undefined') {
     state.lat = lat; state.lon = lon; state.locKnown = true;
     if (name) { state.name = name; }
     renderAll();
+    fetchOrtsZeitzone();
+  }
+  function fetchOrtsZeitzone() {
+    if (!(location.protocol === 'http:' || location.protocol === 'https:')) { return; }
+    try {
+      var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + state.lat + '&longitude=' + state.lon + '&timezone=auto&forecast_days=1&hourly=temperature_2m';
+      fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+        if (j && typeof j.timezone === 'string' && /^[A-Za-z0-9_+\-\/]{2,60}$/.test(j.timezone) && j.timezone !== state.tz) {
+          state.tz = j.timezone;
+          save();
+          renderAll();
+          renderCoordInfo();
+        }
+      })['catch'](function () {});
+    } catch (e) {}
   }
   function reverseGeocode() {
     if (!state.locKnown || state.name) { return; }
@@ -1598,8 +1648,9 @@ if (typeof document !== 'undefined') {
   function applyDatum(nd) {
     if (localDayStart(nd) == null) { return; }
     state.datum = nd;
-    var now = new Date(nowMs());
-    state.minutes = state.datum === dateStrOf(nowMs()) ? (now.getHours() * 60 + now.getMinutes()) : 720;
+    var ds = dayStartUtc(nd, viewTz());
+    var now = nowMs();
+    state.minutes = (ds != null && dateStrOf(now) === nd) ? Math.max(0, Math.min(1439, Math.floor((now - ds) / 60000))) : 720;
     $('timeSlider').value = state.minutes;
     renderAll();
   }
@@ -1817,12 +1868,14 @@ if (typeof document !== 'undefined') {
     }
   });
   if (state.datum === dateStrOf(nowMs())) {
-    var now0 = new Date(nowMs());
-    state.minutes = now0.getHours() * 60 + now0.getMinutes();
+    var ds0 = dayStartUtc(state.datum, viewTz());
+    var now0ms = nowMs();
+    state.minutes = ds0 != null ? Math.max(0, Math.min(1439, Math.floor((now0ms - ds0) / 60000))) : 720;
   }
   $('timeSlider').value = state.minutes;
   renderAll();
   reverseGeocode();
+  fetchOrtsZeitzone();
   $('zeitSync').checked = state.zeitSync;
   $('zeitSync').addEventListener('change', function () {
     state.zeitSync = $('zeitSync').checked;

@@ -257,7 +257,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   // Limit groesser als Anzahl -> keine Reduktion
   const res2 = G.reducePoints(pts, 5000, forced, 10);
   ok('reducePoints: Limit > Anzahl -> alles behalten', res2.indices.length === 2000);
-  ok('gpx-reduce.html: GPX-Typ-Auswahl (id=gpxType) mit Presets', ['id="gpxType"', 'value="" selected', 'value="hiking"', 'value="driving"', 'value="other"'].every(o => gpxHtml.indexOf(o) >= 0));
+  ok('gpx-reduce.html: GPX-Typ-Auswahl (id=gpxType), Direkt als erste/Standard-Option', ['id="gpxType"', '<option value="direct" selected>', 'value="hiking"', 'value="driving"', 'value="other"'].every(o => gpxHtml.indexOf(o) >= 0) && gpxHtml.indexOf('<option value="direct" selected>') < gpxHtml.indexOf('<option value="">'));
   ok('gpx-reduce.js: dl liest gpxType, buildGpx nutzt opts.gpxType', gpxJs.indexOf("getElementById('gpxType').value") >= 0 && gpxJs.indexOf('opts.gpxType') >= 0);
   ok('buildGpx: ohne gpxType kein <type>-Tag', xml.indexOf('<type>') < 0);
   const xmlT = G.buildGpx({ trkpts: pts, wpts: [], trkName: 'Typtest' }, kept, { keepMeta: true, asRoute: true, gpxType: 'hiking' });
@@ -265,6 +265,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('buildGpx: Reihenfolge name < type < rtept bzw. trkseg', xmlT.indexOf('<name>Typtest</name>') < xmlT.indexOf('<type>hiking</type>') && xmlT.indexOf('<type>hiking</type>') < xmlT.indexOf('<rtept ') && xmlT.indexOf('<type>hiking</type>', xmlT.indexOf('<trk>')) < xmlT.indexOf('<trkseg>'));
   const xmlX = G.buildGpx({ trkpts: pts, wpts: [], trkName: 'X' }, kept, { gpxType: '<b>&"' });
   ok('buildGpx: gpxType wird XML-escaped', xmlX.indexOf('<type>&lt;b&gt;&amp;&quot;</type>') >= 0);
+  ok('buildGpx: anderer Typ (hiking) -> kein trp', xmlT.indexOf('trp:') < 0 && xmlT.indexOf('xmlns:trp') < 0);
+  const xmlD = G.buildGpx({ trkpts: pts, wpts: [], trkName: 'Direkt' }, kept, { keepMeta: false, asRoute: true, gpxType: 'direct' });
+  ok('buildGpx: direct -> <type>direct</type> in rte + trk', xmlD.split('<type>direct</type>').length - 1 === 2);
+  ok('buildGpx: direct -> xmlns:trp am gpx-Root + trp:CalculationMode Direct pro rtept (nicht im trk)', xmlD.indexOf('xmlns:trp="http://www.garmin.com/xmlschemas/TripExtensions/v1"') >= 0 && xmlD.split('<extensions><trp:ViaPoint><trp:CalculationMode>Direct</trp:CalculationMode></trp:ViaPoint></extensions>').length - 1 === kept.length && xmlD.split('<trk>')[1].indexOf('trp:') < 0);
 }
 
 // --- 5b. Verlinkung gpx-reduce.html im Koordinaten-Konverter ---
@@ -278,7 +282,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('linkGpxReduceHint in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkGpxReduceHint:/g) || []).length === 5);
   ok('Button-Text kurz (\u2192 Hier reduzieren)', konv.indexOf('data-i18n="linkGpxReduce">→ Hier reduzieren</a>') >= 0);
   ok('alter Langtext nicht mehr im Markup', konv.indexOf('Hier reduzieren (gpx-reduce.html)</a>') < 0);
-  ok('Konverter: gpxType-Select im Markup', konv.indexOf('id="gpxType"') >= 0 && konv.indexOf('value="hiking"') >= 0 && konv.indexOf('data-i18n="lblGpxType"') >= 0 && konv.indexOf('data-i18n-aria="ariaGpxType"') >= 0);
+  ok('Konverter: gpxType-Select im Markup, Direkt als Standard', konv.indexOf('id="gpxType"') >= 0 && konv.indexOf('<option value="direct" selected>') >= 0 && konv.indexOf('value="hiking"') >= 0 && konv.indexOf('data-i18n="lblGpxType"') >= 0 && konv.indexOf('data-i18n-aria="ariaGpxType"') >= 0);
   ok('Konverter: finishGpx schreibt <type> nach <name> im trk', konv.indexOf("'<type>' + esc(gpxType) + '</type>'") >= 0);
   ok('Konverter: gpxtype persistiert (konverter-gpxtype)', konv.indexOf('konverter-gpxtype') >= 0);
   ok('lblGpxType + ariaGpxType in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/lblGpxType:/g) || []).length === 5 && ((konv + KONV_LANGS_ALL).match(/ariaGpxType:/g) || []).length === 5);

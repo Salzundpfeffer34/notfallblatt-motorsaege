@@ -103,7 +103,7 @@ function parseGpx(text) {
   return { trkpts: trkpts, wpts: wpts, trkName: trkName };
 }
 function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-function ptXml(p, tag, keepMeta) {
+function ptXml(p, tag, keepMeta, extXml) {
   var s = '<' + tag + ' lat="' + p.lat + '" lon="' + p.lon + '">';
   if (keepMeta && p.ele) { s += '<ele>' + esc(p.ele) + '</ele>'; }
   if (keepMeta && p.time) { s += '<time>' + esc(p.time) + '</time>'; }
@@ -111,17 +111,21 @@ function ptXml(p, tag, keepMeta) {
   if (p.desc) { s += '<desc>' + esc(p.desc) + '</desc>'; }
   if (p.sym) { s += '<sym>' + esc(p.sym) + '</sym>'; }
   if (p.type) { s += '<type>' + esc(p.type) + '</type>'; }
+  if (extXml) { s += '<extensions>' + extXml + '</extensions>'; }
   return s + '</' + tag + '>';
 }
 function buildGpx(orig, keptPts, opts) {
+  var direct = opts.gpxType === 'direct';
+  var nsTrp = (direct && opts.asRoute) ? ' xmlns:trp="http://www.garmin.com/xmlschemas/TripExtensions/v1"' : '';
+  var viaXml = (direct && opts.asRoute) ? '<trp:ViaPoint><trp:CalculationMode>Direct</trp:CalculationMode></trp:ViaPoint>' : null;
   var out = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  out += '<gpx version="1.1" creator="gpx-reduce.html" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n';
+  out += '<gpx version="1.1" creator="gpx-reduce.html" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' + nsTrp + ' xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n';
   out += '<metadata><name>' + esc((orig.trkName || 'Tour') + ' (reduziert auf ' + keptPts.length + ' Punkte)') + '</name><time>' + new Date().toISOString() + '</time></metadata>\n';
   orig.wpts.forEach(function (w) { out += ptXml(w, 'wpt', opts.keepMeta) + '\n'; });
   var typeXml = opts.gpxType ? '<type>' + esc(opts.gpxType) + '</type>\n' : '';
   if (opts.asRoute) {
     out += '<rte><name>' + esc(orig.trkName || 'Tour') + '</name>\n' + typeXml;
-    keptPts.forEach(function (p) { out += ptXml(p, 'rtept', opts.keepMeta) + '\n'; });
+    keptPts.forEach(function (p) { out += ptXml(p, 'rtept', opts.keepMeta, viaXml) + '\n'; });
     out += '</rte>\n';
   }
   out += '<trk><name>' + esc(orig.trkName || 'Tour') + '</name>\n' + typeXml + '<trkseg>\n';

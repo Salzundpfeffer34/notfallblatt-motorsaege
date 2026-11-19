@@ -45,12 +45,26 @@
     }
   }
 
+  /* texte-<lang>.js wird erst bei Bedarf nachgeladen (nur texte-de.js ist statisch eingebunden) */
+  function ladeTexte(lang, cb) {
+    if (window.NOTFALL_TEXTE && window.NOTFALL_TEXTE[lang]) { cb(true); return; }
+    try {
+      const sc = document.createElement('script');
+      sc.src = 'js/texte-' + lang + '.js';
+      sc.onload = () => cb(!!(window.NOTFALL_TEXTE && window.NOTFALL_TEXTE[lang]));
+      sc.onerror = () => cb(false);
+      document.head.appendChild(sc);
+    } catch (e) { cb(false); }
+  }
+
   function setzeSprache(neu) {
     if (SPRACHEN.indexOf(neu) === -1 || neu === sprache) return;
-    sprache = neu;
-    try { localStorage.setItem(SPRACHE_KEY, sprache); } catch (e) { /* ignorieren */ }
-    i18nAnwenden();
-    document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: sprache } }));
+    ladeTexte(neu, function () {
+      sprache = neu;
+      try { localStorage.setItem(SPRACHE_KEY, sprache); } catch (e) { /* ignorieren */ }
+      i18nAnwenden();
+      document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: sprache } }));
+    });
   }
 
   function i18nInit() {
@@ -60,6 +74,7 @@
       select.addEventListener('change', function () { setzeSprache(select.value); });
     }
     i18nAnwenden();
+    if (sprache !== 'de') { ladeTexte(sprache, function () { i18nAnwenden(); }); }
   }
 
   if (document.readyState === 'loading') {

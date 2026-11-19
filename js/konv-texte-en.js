@@ -82,7 +82,7 @@ window.TEXTE.en = {
     helpLi6: '<strong>UTM:</strong> <code>30U 699316 5710164</code> or <code>699316, 5710164</code> (without a zone, zone 32 is assumed)',
     helpLi7: '<strong>MGRS:</strong> <code>54SUE8843349290</code> or <code>54SUE 88433 49290</code>',
     helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – for small values that could also be read as UTM, choose the format above explicitly',
-    footer: 'Accuracy: UTM/Mercator/MGRS are mathematically exact to the centimetre; LV95 uses the official approximation formulas of swisstopo (deviation typically &lt; 0.2 m). Elevations are not converted. The calculation runs entirely in the browser. · <a href="datenschutz.html">Privacy</a>',
+    footer: 'Accuracy: UTM/Mercator/MGRS are mathematically exact to the centimetre; LV95 uses the official approximation formulas of swisstopo (deviation typically &lt; 0.2 m). Elevations are not converted. The calculation runs entirely in the browser. · <a href="datenschutz.html">Privacy</a> · All information without guarantee – use at your own risk.',
     copyBtn: 'Copy',
     copied: 'Copied ✓',
     fmtUnknown: 'Unknown format',

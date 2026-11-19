@@ -81,7 +81,7 @@ var TEXTE = {
     helpLi6: '<strong>UTM:</strong> <code>30U 699316 5710164</code> oder <code>699316, 5710164</code> (ohne Zone wird Zone 32 angenommen)',
     helpLi7: '<strong>MGRS:</strong> <code>54SUE8843349290</code> oder <code>54SUE 88433 49290</code>',
     helpLi8: '<strong>Web Mercator (EPSG:3857, Google Maps):</strong> <code>-8238310, 4970072</code> – bei kleinen Werten, die auch als UTM interpretierbar sind, Format oben explizit wählen',
-    footer: 'Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet. Die Berechnung läuft komplett im Browser. · <a href="datenschutz.html">Datenschutz</a>',
+    footer: 'Genauigkeit: UTM/Mercator/MGRS rechnerisch auf Zentimeter genau; LV95 über die offiziellen Näherungsformeln von swisstopo (Abweichung typischerweise &lt; 0,2 m). Höhenangaben werden nicht umgerechnet. Die Berechnung läuft komplett im Browser. · <a href="datenschutz.html">Datenschutz</a> · Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr.',
     copyBtn: 'Kopieren',
     copied: 'Kopiert ✓',
     fmtUnknown: 'Format unbekannt',

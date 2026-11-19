@@ -25,6 +25,10 @@ Einfach `index.html` im Browser öffnen (Doppelklick genügt). Für Handy: Datei
 
 - **Mehrsprachig**: Deutsch, Français, Italiano, Español, Português – über den Sprachwähler oben rechts. Die Auswahl wird gespeichert; auch Gefahren-Chips, Druckblatt und Notfallkarte erscheinen in der gewählten Sprache. Die Übersetzungen liegen in `js/texte-*.js` (eine Datei pro Sprache) und können leicht angepasst werden.
 
+## Haftung
+
+Alle Seiten tragen im Footer den Hinweis **„Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr“** (mehrsprachig: de/fr/it/es/pt auf dem Notfallblatt, de/en/fr/it/es im Konverter; gpx-reduce und sonne-mond auf Deutsch). Auf dem Notfallblatt (`index.html`) zusätzlich: **„Dieses Blatt ersetzt keine Ausbildung bzw. Sicherheitsunterweisung nach Suva-Vorgaben.“**
+
 ## Technik
 
 - Reines HTML/CSS/JavaScript, keine Build-Werkzeuge, keine Abhängigkeiten ausser Leaflet (CDN; ohne Internet bleibt das Formular voll nutzbar, nur Karte/Suche/Wetter sind offline nicht verfügbar).

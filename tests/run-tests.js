@@ -567,8 +567,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
     'koordinaten/index.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8'),
     'koordinaten/datenschutz.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'datenschutz.html'), 'utf8'),
   };
+  const fb = fs.readFileSync(path.join(__dirname, '..', 'js', 'framebust.js'), 'utf8');
+  ok('js/framebust.js: Clickjacking-Schutz (window.top !== window.self)', fb.indexOf('if (window.top !== window.self) { window.top.location.replace(window.self.location.href); }') >= 0);
   for (const name of Object.keys(pages)) {
-    ok(name + ': Framebusting (window.top !== window.self) + Referrer-Policy + CSP-Meta', pages[name].indexOf('if (window.top !== window.self) { window.top.location.replace(') >= 0 && pages[name].indexOf('strict-origin-when-cross-origin') >= 0 && pages[name].indexOf('Content-Security-Policy') >= 0);
+    ok(name + ': Framebusting extern (js/framebust.js) + Referrer-Policy + Permissions-Policy + CSP-Meta', pages[name].indexOf('src="js/framebust.js"') >= 0 && pages[name].indexOf('strict-origin-when-cross-origin') >= 0 && pages[name].indexOf('Permissions-Policy') >= 0 && pages[name].indexOf('geolocation=(self)') >= 0 && pages[name].indexOf('camera=()') >= 0 && pages[name].indexOf('Content-Security-Policy') >= 0);
   }
   ok('gpx-reduce.html: CSP nur self + unsafe-inline, keine externen Hosts, object-src none', (function () { const m = pages['gpx-reduce.html'].match(/Content-Security-Policy" content="([^"]*)"/); return !!m && m[1].indexOf("default-src 'self'") >= 0 && m[1].indexOf('https://') < 0 && m[1].indexOf("object-src 'none'") >= 0 && m[1].indexOf("base-uri 'self'") >= 0; })());
   const sm2 = pages['sonne-mond.html'];
@@ -582,6 +584,17 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('counter-data/index.html + koordinaten/counter-data/index.html als Guard vorhanden', fs.existsSync(path.join(__dirname, '..', 'counter-data', 'index.html')) && fs.existsSync(path.join(__dirname, '..', 'koordinaten', 'counter-data', 'index.html')));
   const root = pages['index.html'];
   ok('index.html: Leaflet gepinnt (1.9.4) + SRI integrity + crossorigin auf js und css', root.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.js') >= 0 && root.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.css') >= 0 && (root.match(/integrity="sha256-/g) || []).length >= 2 && (root.match(/crossorigin=""/g) || []).length >= 2);
+  {
+    const smHtml = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8');
+    const ixHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const cspSm = (smHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
+    const cspIx = (ixHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
+    ok('CSP hart: sonne-mond.html script-src nur self (kein unsafe-inline mehr -> injiziertes Inline-Script wird blockiert), index.html script-src self+unpkg ohne unsafe-inline', cspSm.indexOf("script-src 'self'") >= 0 && !/script-src[^;]*unsafe-inline/.test(cspSm) && cspIx.indexOf("script-src 'self' https://unpkg.com") >= 0 && !/script-src[^;]*unsafe-inline/.test(cspIx) && cspSm.indexOf("style-src 'self' 'unsafe-inline'") >= 0);
+    ok('keine Inline-Event-Handler (on*=) in sonne-mond.html und index.html', !/\son[a-z]{2,15}=/i.test(smHtml) && !/\son[a-z]{2,15}=/i.test(ixHtml));
+    const konvHtml = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+    ok('koordinaten: OSM-Iframe mit sandbox="allow-scripts"', konvHtml.indexOf('<iframe id="osmmap" class="map hidden" loading="lazy" sandbox="allow-scripts"') >= 0);
+    ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy) in beiden Kopien', c1.indexOf("header('X-Content-Type-Options: nosniff')") >= 0 && c1.indexOf('Content-Security-Policy: default-src') >= 0 && c1.indexOf('counterSecurityHeaders();') >= 0 && c1 === c2);
+  }
 }
 
 // --- 10. Lazy Loading (nur laden wenn gebraucht) ---

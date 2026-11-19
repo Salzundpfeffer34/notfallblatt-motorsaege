@@ -8,17 +8,12 @@ function haversineKm(a, b) {
   return 2 * EARTH_R * Math.asin(Math.sqrt(h)) / 1000;
 }
 function trackKm(pts) { var s = 0; for (var i = 1; i < pts.length; i++) { s += haversineKm(pts[i - 1], pts[i]); } return s; }
-function osmEmbedUrl(pts) {
-  var minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-  pts.forEach(function (p) {
-    if (p.lat < minLat) { minLat = p.lat; }
-    if (p.lat > maxLat) { maxLat = p.lat; }
-    if (p.lon < minLon) { minLon = p.lon; }
-    if (p.lon > maxLon) { maxLon = p.lon; }
-  });
-  var padLat = Math.max((maxLat - minLat) * 0.1, 0.002), padLon = Math.max((maxLon - minLon) * 0.1, 0.004);
-  var bbox = (minLon - padLon).toFixed(5) + ',' + (minLat - padLat).toFixed(5) + ',' + (maxLon + padLon).toFixed(5) + ',' + (maxLat + padLat).toFixed(5);
-  return 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + pts[0].lat + ',' + pts[0].lon;
+function gpxLayers(origPts, keptPts) {
+  return {
+    orig: origPts.map(function (p) { return [p.lat, p.lon]; }),
+    kept: keptPts.map(function (p) { return [p.lat, p.lon]; }),
+    markers: keptPts.map(function (p) { return { lat: p.lat, lon: p.lon, name: p.name || '' }; })
+  };
 }
 function project(pts) {
   var lat0 = pts.reduce(function (m, p) { return Math.min(m, p.lat); }, 90);
@@ -149,16 +144,54 @@ function buildGpx(orig, keptPts, opts) {
 /* ---------- UI (nur im Browser) ---------- */
 if (typeof document !== 'undefined') {
   var drop = document.getElementById('drop'), file = document.getElementById('file');
-  var mapFrame = document.getElementById('osmmap'), showMapEl = document.getElementById('showMap');
+  var mapEl = document.getElementById('map'), showMapEl = document.getElementById('showMap');
   var gpx = null, reduced = null;
+  var mapObj = null, mapLayer = null, leafletQueue = null;
+  function loadLeaflet(cb) {
+    if (window.L) { cb(); return; }
+    if (leafletQueue) { leafletQueue.push(cb); return; }
+    leafletQueue = [cb];
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    css.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    css.crossOrigin = '';
+    document.head.appendChild(css);
+    var sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    sc.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    sc.crossOrigin = '';
+    sc.onload = function () { var q = leafletQueue; leafletQueue = null; q.forEach(function (f) { f(); }); };
+    document.head.appendChild(sc);
+  }
+  function drawMap() {
+    if (!mapEl || !reduced || !gpx) { return; }
+    loadLeaflet(function () {
+      if (!mapObj) {
+        mapObj = L.map(mapEl).setView([46.8, 8.2], 8);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap-Mitwirkende' }).addTo(mapObj);
+        mapLayer = L.layerGroup().addTo(mapObj);
+      }
+      mapLayer.clearLayers();
+      var d = gpxLayers(gpx.trkpts, reduced.pts);
+      L.polyline(d.orig, { color: '#c8c8c0', weight: 2, opacity: 0.9 }).addTo(mapLayer);
+      L.polyline(d.kept, { color: '#2f6db3', weight: 3.5 }).addTo(mapLayer);
+      d.markers.forEach(function (m) {
+        var cm = L.circleMarker([m.lat, m.lon], { radius: 4, color: '#2f6db3', fillColor: '#2f6db3', fillOpacity: 0.9 });
+        if (m.name) { cm.bindTooltip(esc(m.name)); }
+        cm.addTo(mapLayer);
+      });
+      mapObj.fitBounds(L.latLngBounds(d.orig.concat(d.kept)).pad(0.15));
+      setTimeout(function () { if (mapObj) { mapObj.invalidateSize(); } }, 60);
+    });
+  }
   function updateMap() {
-    if (!mapFrame) { return; }
+    if (!mapEl) { return; }
     if (showMapEl && showMapEl.checked && reduced && gpx) {
-      mapFrame.src = osmEmbedUrl(gpx.trkpts.concat(reduced.pts));
-      mapFrame.style.display = '';
+      mapEl.style.display = '';
+      drawMap();
     } else {
-      mapFrame.src = 'about:blank';
-      mapFrame.style.display = 'none';
+      mapEl.style.display = 'none';
     }
   }
   if (showMapEl) { showMapEl.addEventListener('change', updateMap); }

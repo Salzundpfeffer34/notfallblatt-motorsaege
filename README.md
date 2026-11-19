@@ -27,7 +27,7 @@ Einfach `index.html` im Browser öffnen (Doppelklick genügt). Für Handy: Datei
 
 ## Haftung
 
-Alle Seiten tragen im Footer den Hinweis **„Verwendung auf eigene Gefahr – alle Angaben ohne Gewähr“** (mehrsprachig: de/fr/it/es/pt auf dem Notfallblatt, de/en/fr/it/es im Konverter; gpx-reduce und sonne-mond auf Deutsch).
+Alle Seiten tragen im Footer den Hinweis **„Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr“** (mehrsprachig: de/fr/it/es/pt auf dem Notfallblatt, de/en/fr/it/es im Konverter; gpx-reduce und sonne-mond auf Deutsch). Auf dem Notfallblatt (`index.html`) zusätzlich: **„Dieses Blatt ersetzt keine Ausbildung bzw. Sicherheitsunterweisung nach Suva-Vorgaben.“**
 
 ## Technik
 

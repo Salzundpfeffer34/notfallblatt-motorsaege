@@ -435,6 +435,43 @@ TZ_CITY_LIST.forEach(function (row) {
   TZ_CITY_MAP[normalizeTzKey(iana)] = iana;
   (row[2] || []).forEach(function (a) { TZ_CITY_MAP[normalizeTzKey(a)] = iana; });
 });
+/* Mehrsprachige Aliase (de/en/fr/it/es) – normalizeTzKey macht Akzente/Grossschreibung egal */
+var TZ_CITY_ALIASES = [
+  ['Venedig', 'Europe/Rome'], ['Venice', 'Europe/Rome'], ['Venise', 'Europe/Rome'], ['Venezia', 'Europe/Rome'],
+  ['Mailand', 'Europe/Rome'], ['Milan', 'Europe/Rome'], ['Milano', 'Europe/Rome'],
+  ['Neapel', 'Europe/Rome'], ['Naples', 'Europe/Rome'], ['Napoli', 'Europe/Rome'],
+  ['Genf', 'Europe/Zurich'], ['Genève', 'Europe/Zurich'], ['Geneva', 'Europe/Zurich'], ['Ginevra', 'Europe/Zurich'],
+  ['Zürich', 'Europe/Zurich'], ['Zurigo', 'Europe/Zurich'],
+  ['Luzern', 'Europe/Zurich'], ['Lucerne', 'Europe/Zurich'], ['Lucerna', 'Europe/Zurich'],
+  ['Lissabon', 'Europe/Lisbon'], ['Lisboa', 'Europe/Lisbon'], ['Lisbonne', 'Europe/Lisbon'],
+  ['Brüssel', 'Europe/Brussels'], ['Bruxelles', 'Europe/Brussels'],
+  ['Luxemburg', 'Europe/Luxembourg'], ['Lussemburgo', 'Europe/Luxembourg'],
+  ['Kopenhagen', 'Europe/Copenhagen'], ['Copenhague', 'Europe/Copenhagen'],
+  ['Prag', 'Europe/Prague'], ['Prague', 'Europe/Prague'], ['Praga', 'Europe/Prague'],
+  ['Warschau', 'Europe/Warsaw'], ['Varsovie', 'Europe/Warsaw'], ['Varsavia', 'Europe/Warsaw'],
+  ['Athen', 'Europe/Athens'], ['Athens', 'Europe/Athens'], ['Athènes', 'Europe/Athens'], ['Atene', 'Europe/Athens'],
+  ['Moskau', 'Europe/Moscow'], ['Moscou', 'Europe/Moscow'], ['Mosca', 'Europe/Moscow'],
+  ['Kiew', 'Europe/Kyiv'], ['Kiev', 'Europe/Kyiv'], ['Kyiv', 'Europe/Kyiv'],
+  ['Kairo', 'Africa/Cairo'], ['Le Caire', 'Africa/Cairo'], ['Il Cairo', 'Africa/Cairo'],
+  ['Kapstadt', 'Africa/Johannesburg'], ['Cape Town', 'Africa/Johannesburg'], ['Le Cap', 'Africa/Johannesburg'], ['Città del Capo', 'Africa/Johannesburg'],
+  ['Singapur', 'Asia/Singapore'], ['Singapour', 'Asia/Singapore'],
+  ['Peking', 'Asia/Shanghai'], ['Pékin', 'Asia/Shanghai'], ['Pechino', 'Asia/Shanghai'],
+  ['São Paulo', 'America/Sao_Paulo'], ['San Paolo', 'America/Sao_Paulo'],
+  ['Mexiko-Stadt', 'America/Mexico_City'], ['Mexico City', 'America/Mexico_City'], ['Ciudad de México', 'America/Mexico_City'], ['Mexico', 'America/Mexico_City'],
+  ['Havanna', 'America/Havana'], ['La Habana', 'America/Havana'], ['La Havane', 'America/Havana'],
+  ['Santiago de Chile', 'America/Santiago'],
+  ['La Paz', 'America/La_Paz'],
+  ['Auckland', 'Pacific/Auckland'], ['Nouvelle-Zélande', 'Pacific/Auckland'], ['Nuova Zelanda', 'Pacific/Auckland'],
+  ['Kanarische Inseln', 'Atlantic/Canary'], ['Canary Islands', 'Atlantic/Canary'], ['Islas Canarias', 'Atlantic/Canary'], ['Îles Canaries', 'Atlantic/Canary'], ['Isole Canarie', 'Atlantic/Canary'],
+  ['Ho-Chi-Minh-Stadt', 'Asia/Ho_Chi_Minh'], ['Ho Chi Minh', 'Asia/Ho_Chi_Minh'], ['Saigon', 'Asia/Ho_Chi_Minh'],
+  ['Ulan Bator', 'Asia/Ulan_Bator'], ['Ulaanbaatar', 'Asia/Ulan_Bator'],
+  ['Kolkata', 'Asia/Kolkata'], ['Calcutta', 'Asia/Kolkata'], ['Bombay', 'Asia/Kolkata'], ['New Delhi', 'Asia/Kolkata'],
+  ['Yangon', 'Asia/Yangon'], ['Rangoon', 'Asia/Yangon']
+];
+TZ_CITY_ALIASES.forEach(function (r) {
+  var k = normalizeTzKey(r[0]);
+  if (!TZ_CITY_MAP[k]) { TZ_CITY_MAP[k] = r[1]; }
+});
 function tzAddZone(label, iana) {
   var k1 = normalizeTzKey(label), k2 = normalizeTzKey(iana);
   if (!TZ_CITY_MAP[k1]) { TZ_CITY_MAP[k1] = iana; }

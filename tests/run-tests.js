@@ -230,7 +230,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('Hinweis wenn noch keine GPX geladen', gpxHtml.indexOf('Bitte zuerst eine GPX-Datei laden') >= 0);
   ok('nach Reduzieren: run-Button ausgeblendet, dl aktiv ohne secondary', gpxHtml.indexOf("getElementById('run').style.display = 'none'") >= 0 && gpxHtml.indexOf("classList.remove('secondary')") >= 0);
   ok('bei neuer Datei: run wieder sichtbar, dl deaktiviert+secondary', gpxHtml.indexOf("getElementById('run').style.display = ''") >= 0 && gpxHtml.indexOf("dlBtn0.disabled = true") >= 0 && gpxHtml.indexOf("classList.add('secondary')") >= 0);
-  const G = new Function(gpxJs + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm };')();
+  const G = new Function(gpxJs + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm, osmEmbedUrl };')();
   // synthetische Tour: 2000 Punkte auf gewellter Linie + benannte Punkte
   const pts = [];
   for (let i = 0; i < 2000; i++) {
@@ -269,6 +269,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const xmlD = G.buildGpx({ trkpts: pts, wpts: [], trkName: 'Direkt' }, kept, { keepMeta: false, asRoute: true, gpxType: 'direct' });
   ok('buildGpx: direct -> <type>direct</type> in rte + trk', xmlD.split('<type>direct</type>').length - 1 === 2);
   ok('buildGpx: direct -> xmlns:trp am gpx-Root + trp:CalculationMode Direct pro rtept (nicht im trk)', xmlD.indexOf('xmlns:trp="http://www.garmin.com/xmlschemas/TripExtensions/v1"') >= 0 && xmlD.split('<extensions><trp:ViaPoint><trp:CalculationMode>Direct</trp:CalculationMode></trp:ViaPoint></extensions>').length - 1 === kept.length && xmlD.split('<trk>')[1].indexOf('trp:') < 0);
+  ok('gpx-reduce.html: optionale Karte (showMap-Checkbox + osmmap-iframe mit sandbox)', gpxHtml.indexOf('id="showMap"') >= 0 && gpxHtml.indexOf('id="osmmap"') >= 0 && gpxHtml.indexOf('sandbox="allow-scripts"') >= 0);
+  ok('gpx-reduce.js: updateMap laedt OSM erst bei angehakter Checkbox, sonst about:blank + display:none', gpxJs.indexOf('function updateMap()') >= 0 && gpxJs.indexOf("getElementById('showMap')") >= 0 && gpxJs.indexOf('about:blank') >= 0 && gpxJs.indexOf("style.display = 'none'") >= 0);
+  const osmU = G.osmEmbedUrl([{ lat: 46.0, lon: 7.0 }, { lat: 46.2, lon: 7.3 }]);
+  ok('osmEmbedUrl: OSM-embed-URL, bbox umfasst alle Punkte (mit Padding), marker am ersten Punkt', osmU.indexOf('https://www.openstreetmap.org/export/embed.html?bbox=') === 0 && osmU.indexOf('&layer=mapnik&marker=46,7') >= 0 && (function () { var b = osmU.split('bbox=')[1].split('&')[0].split(',').map(Number); return b.length === 4 && b[0] < 7 && b[1] < 46 && b[2] > 7.3 && b[3] > 46.2; })());
 }
 
 // --- 5b. Verlinkung gpx-reduce.html im Koordinaten-Konverter ---
@@ -592,7 +596,7 @@ ok('sonne-mond.html: Hintergrund-Sonne/Mond gegenlaeufig (Ebbe/Flut) + reduced-m
   for (const name of Object.keys(pages)) {
     ok(name + ': Framebusting extern (js/framebust.js) + Referrer-Policy + Permissions-Policy + CSP-Meta', pages[name].indexOf('js/framebust.js') >= 0 && pages[name].indexOf('strict-origin-when-cross-origin') >= 0 && pages[name].indexOf('Permissions-Policy') >= 0 && pages[name].indexOf('geolocation=(self)') >= 0 && pages[name].indexOf('camera=()') >= 0 && pages[name].indexOf('Content-Security-Policy') >= 0);
   }
-  ok('gpx-reduce.html: CSP nur self + unsafe-inline, keine externen Hosts, object-src none', (function () { const m = pages['gpx-reduce.html'].match(/Content-Security-Policy" content="([^"]*)"/); return !!m && m[1].indexOf("default-src 'self'") >= 0 && m[1].indexOf('https://') < 0 && m[1].indexOf("object-src 'none'") >= 0 && m[1].indexOf("base-uri 'self'") >= 0; })());
+  ok('gpx-reduce.html: CSP self + frame-src NUR openstreetmap.org (optionale Karte), img-src self/data:, object-src none', (function () { const m = pages['gpx-reduce.html'].match(/Content-Security-Policy\" content=\"([^\"]*)\"/); return !!m && m[1].indexOf("default-src 'self'") >= 0 && m[1].indexOf("frame-src https://www.openstreetmap.org") >= 0 && (m[1].match(/https:\/\//g) || []).length === 1 && m[1].indexOf("img-src 'self' data:") >= 0 && m[1].indexOf("object-src 'none'") >= 0 && m[1].indexOf("base-uri 'self'") >= 0; })());
   const sm2 = pages['sonne-mond.html'];
   ok('sonne-mond.html: escHtml in renderCoordInfo genutzt (kein partielles replace mehr)', sm2.indexOf('function escHtml(s)') >= 0 && sm2.indexOf('escHtml(state.name)') >= 0 && sm2.indexOf('state.name.replace(') < 0);
   const c1 = fs.readFileSync(path.join(__dirname, '..', 'counter.php'), 'utf8');

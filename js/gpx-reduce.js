@@ -8,6 +8,18 @@ function haversineKm(a, b) {
   return 2 * EARTH_R * Math.asin(Math.sqrt(h)) / 1000;
 }
 function trackKm(pts) { var s = 0; for (var i = 1; i < pts.length; i++) { s += haversineKm(pts[i - 1], pts[i]); } return s; }
+function osmEmbedUrl(pts) {
+  var minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+  pts.forEach(function (p) {
+    if (p.lat < minLat) { minLat = p.lat; }
+    if (p.lat > maxLat) { maxLat = p.lat; }
+    if (p.lon < minLon) { minLon = p.lon; }
+    if (p.lon > maxLon) { maxLon = p.lon; }
+  });
+  var padLat = Math.max((maxLat - minLat) * 0.1, 0.002), padLon = Math.max((maxLon - minLon) * 0.1, 0.004);
+  var bbox = (minLon - padLon).toFixed(5) + ',' + (minLat - padLat).toFixed(5) + ',' + (maxLon + padLon).toFixed(5) + ',' + (maxLat + padLat).toFixed(5);
+  return 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + pts[0].lat + ',' + pts[0].lon;
+}
 function project(pts) {
   var lat0 = pts.reduce(function (m, p) { return Math.min(m, p.lat); }, 90);
   var fx = Math.PI / 180, cos0 = Math.cos((pts[0].lat) * fx);
@@ -137,7 +149,19 @@ function buildGpx(orig, keptPts, opts) {
 /* ---------- UI (nur im Browser) ---------- */
 if (typeof document !== 'undefined') {
   var drop = document.getElementById('drop'), file = document.getElementById('file');
+  var mapFrame = document.getElementById('osmmap'), showMapEl = document.getElementById('showMap');
   var gpx = null, reduced = null;
+  function updateMap() {
+    if (!mapFrame) { return; }
+    if (showMapEl && showMapEl.checked && reduced && gpx) {
+      mapFrame.src = osmEmbedUrl(gpx.trkpts.concat(reduced.pts));
+      mapFrame.style.display = '';
+    } else {
+      mapFrame.src = 'about:blank';
+      mapFrame.style.display = 'none';
+    }
+  }
+  if (showMapEl) { showMapEl.addEventListener('change', updateMap); }
   drop.addEventListener('click', function () { file.click(); });
   drop.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } });
   file.addEventListener('change', function () { if (file.files[0]) { loadFile(file.files[0]); } });
@@ -152,6 +176,7 @@ if (typeof document !== 'undefined') {
         gpx = parseGpx(r.result);
         if (!gpx.trkpts.length) { throw new Error('keine Trackpunkte gefunden'); }
         reduced = null;
+        updateMap();
         document.getElementById('result').style.display = 'none';
         document.getElementById('run').style.display = '';
         var dlBtn0 = document.getElementById('dl');
@@ -197,6 +222,7 @@ if (typeof document !== 'undefined') {
       '<tr><td>Reduziert</td><td><b>' + keptPts.length + '</b> (Limit ' + limit + ')</td><td>' + km1.toFixed(2) + ' km (' + (km0 ? (100 * (km1 - km0) / km0).toFixed(1) : '0') + ' %)</td></tr>' +
       '<tr><td>Toleranz</td><td colspan="2">' + res.eps.toFixed(1) + ' m</td></tr>';
     drawPreview(gpx.trkpts, keptPts);
+    updateMap();
     document.getElementById('result').style.display = '';
     document.getElementById('run').style.display = 'none';
     var dlBtn = document.getElementById('dl');

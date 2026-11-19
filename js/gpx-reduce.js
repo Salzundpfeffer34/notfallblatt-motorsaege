@@ -257,11 +257,10 @@ if (typeof document !== 'undefined') {
     drawPreview(gpx.trkpts, keptPts);
     updateMap();
     document.getElementById('result').style.display = '';
-    document.getElementById('run').style.display = 'none';
     var dlBtn = document.getElementById('dl');
     dlBtn.disabled = false;
     dlBtn.classList.remove('secondary');
-    msg('Fertig: ' + gpx.trkpts.length + ' → ' + keptPts.length + ' Punkte.', 'ok');
+    msg('Fertig: ' + gpx.trkpts.length + ' → ' + keptPts.length + ' Punkte. Limit oben ändern und erneut „Reduzieren“ klicken für eine andere Punktzahl (Datei bleibt bis zum Download im Speicher).', 'ok');
   });
   function drawPreview(origPts, keptPts) {
     var svg = document.getElementById('preview');
@@ -294,5 +293,20 @@ if (typeof document !== 'undefined') {
     a.download = name + '-garmin-' + reduced.pts.length + 'p.gpx';
     document.body.appendChild(a); a.click();
     setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+    clearGpx('GPX heruntergeladen – die Datei wurde aus dem Arbeitsspeicher entfernt (Datenschutz). Für eine andere Punktzahl bitte Datei erneut laden.');
+  });
+  function clearGpx(note) {
+    gpx = null; reduced = null;
+    try { file.value = ''; } catch (e) {}
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    var dlBtn0 = document.getElementById('dl');
+    dlBtn0.disabled = true;
+    dlBtn0.classList.add('secondary');
+    updateMap();
+    msg(note, 'ok');
+  }
+  document.getElementById('clearFile').addEventListener('click', function () {
+    clearGpx('Datei verworfen – nichts bleibt im Speicher (nie localStorage/Cookies).');
   });
 }

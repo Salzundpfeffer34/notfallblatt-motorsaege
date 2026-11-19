@@ -228,8 +228,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('Zurück-Link zum Konverter vorhanden', gpxHtml.indexOf('href="koordinaten/index.html"') >= 0);
   ok('Einstellungen (inkl. Limit-Dropdown) sofort sichtbar (kein display:none)', gpxHtml.indexOf('<div class="card" id="settings">') >= 0 && gpxHtml.indexOf('id="settings" style="display:none"') < 0);
   ok('Hinweis wenn noch keine GPX geladen', gpxHtml.indexOf('Bitte zuerst eine GPX-Datei laden') >= 0);
-  ok('nach Reduzieren: run-Button ausgeblendet, dl aktiv ohne secondary', gpxHtml.indexOf("getElementById('run').style.display = 'none'") >= 0 && gpxHtml.indexOf("classList.remove('secondary')") >= 0);
+  ok('nach Reduzieren: run-Button BLEIBT sichtbar (Limit aenderbar + erneut reduzierbar), dl aktiv, Msg weist auf Limit-Aenderung hin', gpxJs.indexOf("getElementById('run').style.display = 'none'") < 0 && gpxJs.indexOf("classList.remove('secondary')") >= 0 && gpxJs.indexOf('Limit oben') >= 0);
   ok('bei neuer Datei: run wieder sichtbar, dl deaktiviert+secondary', gpxHtml.indexOf("getElementById('run').style.display = ''") >= 0 && gpxHtml.indexOf("dlBtn0.disabled = true") >= 0 && gpxHtml.indexOf("classList.add('secondary')") >= 0);
+  ok('gpx-reduce.html: Verwerfen-Button (clearFile) + Datenschutz-Hinweis im Hint (nie localStorage/Cookies)', gpxHtml.indexOf('id="clearFile"') >= 0 && gpxHtml.indexOf('nie localStorage/Cookies') >= 0);
+  ok('Datenschutz: clearGpx nach Download/Verwerfen loescht Datei aus Speicher (gpx=null, reduced=null, file.value=""), gpx-reduce.js nutzt KEIN localStorage', gpxJs.indexOf('function clearGpx(note)') >= 0 && gpxJs.indexOf('gpx = null; reduced = null;') >= 0 && gpxJs.indexOf('localStorage.getItem') < 0 && gpxJs.indexOf('localStorage.setItem') < 0 && gpxJs.indexOf('Arbeitsspeicher entfernt') >= 0);
   const G = new Function(gpxJs + '\nreturn { reducePoints, buildGpx, trackKm, haversineKm, gpxLayers };')();
   // synthetische Tour: 2000 Punkte auf gewellter Linie + benannte Punkte
   const pts = [];

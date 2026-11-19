@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+const KONV_LANGS_ALL = ['en','fr','it','es'].map(l => fs.readFileSync(path.join(__dirname, '..', 'js', 'konv-texte-' + l + '.js'), 'utf8')).join('\n');
 
 function extract(startMarker, endMarker) {
   const a = html.indexOf(startMarker);
@@ -262,10 +263,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
   ok('Konverter verlinkt ../gpx-reduce.html', konv.indexOf('href="../gpx-reduce.html"') >= 0);
   ok('Link ist als Button gestylt (class="btn")', konv.indexOf('class="btn" href="../gpx-reduce.html"') >= 0 && konv.indexOf('a.btn {') >= 0);
-  ok('linkGpxReduce in allen 5 Sprachen', (konv.match(/linkGpxReduce:/g) || []).length === 5);
+  ok('linkGpxReduce in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkGpxReduce:/g) || []).length === 5);
   ok('Hinweis als h3-Ueberschrift (linkGpxReduceHint)', konv.indexOf('<h3 class="batchhint" data-i18n="linkGpxReduceHint">') >= 0 && konv.indexOf('<span data-i18n="linkGpxReduceHint">') < 0);
   ok('Button separat darunter in p.batchhint', konv.indexOf('<p class="batchhint"><a class="btn" href="../gpx-reduce.html"') >= 0);
-  ok('linkGpxReduceHint in allen 5 Sprachen', (konv.match(/linkGpxReduceHint:/g) || []).length === 5);
+  ok('linkGpxReduceHint in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkGpxReduceHint:/g) || []).length === 5);
   ok('Button-Text kurz (\u2192 Hier reduzieren)', konv.indexOf('data-i18n="linkGpxReduce">→ Hier reduzieren</a>') >= 0);
   ok('alter Langtext nicht mehr im Markup', konv.indexOf('Hier reduzieren (gpx-reduce.html)</a>') < 0);
 }
@@ -306,8 +307,8 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const konv = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
   ok('Konverter verlinkt ../sonne-mond.html', konv.indexOf('href="../sonne-mond.html"') >= 0);
   ok('Link ist als Button gestylt (class="btn")', konv.indexOf('class="btn" href="../sonne-mond.html"') >= 0);
-  ok('linkSonne in allen 5 Sprachen', (konv.match(/linkSonne:/g) || []).length === 5);
-  ok('linkSonneHint in allen 5 Sprachen', (konv.match(/linkSonneHint:/g) || []).length === 5);
+  ok('linkSonne in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkSonne:/g) || []).length === 5);
+  ok('linkSonneHint in allen 5 Sprachen', ((konv + KONV_LANGS_ALL).match(/linkSonneHint:/g) || []).length === 5);
 }
 
 // --- 8. sonne-mond.html: Parser, Sonne/Mond-Berechnung, Markup ---
@@ -315,9 +316,10 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const sm = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8');
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const tzSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'tz-cities.js'), 'utf8');
+  const ortSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'ort-suche-data.js'), 'utf8');
   const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
   ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + tzSrc + '\n' + m[1] + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart, escHtml, tzOffsetMs, dayStartUtc, fmtUtcOffset, viewTz, viewOffsetMs, dayStartView, TZ_CITY_LIST, TZ_CITY_MAP, TZ_CITY_ALIASES, parseTzInput, normalizeTzKey, tzZoneList };')();  const pc = [
+  const S = new Function(coordsSrc + '\n' + tzSrc + '\n' + ortSrc + '\n' + m[1] + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart, escHtml, tzOffsetMs, dayStartUtc, fmtUtcOffset, viewTz, viewOffsetMs, dayStartView, TZ_CITY_LIST, TZ_CITY_MAP, TZ_CITY_ALIASES, parseTzInput, normalizeTzKey, tzZoneList };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -553,6 +555,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('US-Städte mit gemeinsamer Zone: Salt Lake City/SLC -> America/Denver, Portland/Las Vegas -> America/Los_Angeles, Minneapolis -> America/Chicago, Atlanta/Philadelphia -> America/New_York, Detroit -> America/Detroit, Tucson -> America/Phoenix, Ottawa -> America/Toronto, Calgary -> America/Edmonton', S.parseTzInput('Salt Lake City').tz === 'America/Denver' && S.parseTzInput('slc').tz === 'America/Denver' && S.parseTzInput('Portland').tz === 'America/Los_Angeles' && S.parseTzInput('Las Vegas').tz === 'America/Los_Angeles' && S.parseTzInput('Minneapolis').tz === 'America/Chicago' && S.parseTzInput('Atlanta').tz === 'America/New_York' && S.parseTzInput('Philadelphia').tz === 'America/New_York' && S.parseTzInput('Detroit').tz === 'America/Detroit' && S.parseTzInput('Tucson').tz === 'America/Phoenix' && S.parseTzInput('Ottawa').tz === 'America/Toronto' && S.parseTzInput('Calgary').tz === 'America/Edmonton' && S.parseTzInput('Denver').tz === 'America/Denver' && S.parseTzInput('Houston').tz === 'America/Chicago' && S.parseTzInput('Chicago').tz === 'America/Chicago');
   ok('sonne-mond.html: datalist enthält kuratierte Städte + alle IANA-Zonen (tzZoneList/supportedValuesOf, Etc/ und UTC ausgesondert)', ['function tzZoneList()', 'Intl.supportedValuesOf', "z.indexOf('Etc/') === 0", 'seen[normalizeTzKey(row[0])] = 1'].every(x => sm.indexOf(x) >= 0));
   ok('Lazy Loading: js/tz-cities.js enth\u00e4lt TZ_CITY_LIST + TZ_CITY_ALIASES (inkl. Salt Lake City), Hauptdatei l\u00e4dt sie NICHT inline, sondern per loadTzCities() -> createElement script js/tz-cities.js; buildTzMan on-demand (Fokus/Feld sichtbar), change-Handler l\u00e4dt zuerst nach', (function () { const tzf = path.join(__dirname, '..', 'js', 'tz-cities.js'); if (!fs.existsSync(tzf)) { return false; } const tz = fs.readFileSync(tzf, 'utf8'); return tz.indexOf('var TZ_CITY_LIST = [') >= 0 && tz.indexOf('var TZ_CITY_ALIASES = [') >= 0 && tz.indexOf("'Salt Lake City'") >= 0 && tz.indexOf('Kanarische Inseln') >= 0 && sm.indexOf('function loadTzCities(cb)') >= 0 && sm.indexOf("sc.src = 'js/tz-cities.js'") >= 0 && sm.indexOf('function tzCitiesLoaded()') >= 0 && sm.indexOf('function tzBuildCityMap()') >= 0 && sm.indexOf('var TZ_CITY_LIST = [') < 0 && sm.indexOf('var TZ_CITY_ALIASES = [') < 0 && sm.indexOf('function buildTzMan()') >= 0 && sm.indexOf("addEventListener('focus', function () { buildTzMan(); })") >= 0 && sm.indexOf('loadTzCities(function () {') >= 2; })());
+  ok('Suche funktioniert weiterhin mit ausgelagerten Daten (ortSrc im Test-Eval): US-Staat, Land, Kanton', S.usStateToken('Springfield MA') === 'ma' && S.detectCountryToken('Zermatt Schweiz') === 'ch' && S.detectCountryToken('Küsnacht ZH') === 'ch' && S.buildSearchUrls('Zermatt Schweiz', 46.0, 7.7)[0].indexOf('countrycodes=ch') >= 0);
 }
 
 // --- 9. Sicherheits-Haertung (XSS-Escaping, Clickjacking, CSP, Counter) ---
@@ -579,6 +582,18 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('counter-data/index.html + koordinaten/counter-data/index.html als Guard vorhanden', fs.existsSync(path.join(__dirname, '..', 'counter-data', 'index.html')) && fs.existsSync(path.join(__dirname, '..', 'koordinaten', 'counter-data', 'index.html')));
   const root = pages['index.html'];
   ok('index.html: Leaflet gepinnt (1.9.4) + SRI integrity + crossorigin auf js und css', root.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.js') >= 0 && root.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.css') >= 0 && (root.match(/integrity="sha256-/g) || []).length >= 2 && (root.match(/crossorigin=""/g) || []).length >= 2);
+}
+
+// --- 10. Lazy Loading (nur laden wenn gebraucht) ---
+{
+  const root = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const i18n = fs.readFileSync(path.join(__dirname, '..', 'js', 'i18n.js'), 'utf8');
+  ok('index.html: nur texte-de.js statisch, fr/it/es/pt NICHT mehr als <script src>', root.indexOf('js/texte-de.js') >= 0 && ['fr','it','es','pt'].every(l => root.indexOf('js/texte-' + l + '.js') < 0));
+  ok('js/i18n.js: ladeTexte() l\u00e4dt js/texte-<lang>.js on-demand (setzeSprache + Init bei gespeicherter Sprache)', i18n.indexOf('function ladeTexte(lang, cb)') >= 0 && i18n.indexOf("sc.src = 'js/texte-' + lang + '.js'") >= 0 && i18n.indexOf('ladeTexte(neu, function ()') >= 0 && i18n.indexOf("ladeTexte(sprache, function () { i18nAnwenden(); })") >= 0);
+  const konv2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
+  ok('koordinaten/index.html: TEXTE inline nur noch de; en/fr/it/es in js/konv-texte-*.js (lazy via ladeKonvTexte)', konv2.indexOf('  en: {') < 0 && konv2.indexOf('  fr: {') < 0 && konv2.indexOf('  es: {') < 0 && konv2.indexOf('  de: {') >= 0 && konv2.indexOf('function ladeKonvTexte(lang, cb)') >= 0 && konv2.indexOf("sc.src = 'js/konv-texte-' + lang + '.js'") >= 0 && konv2.indexOf("KONV_LANGS = ['de', 'en', 'fr', 'it', 'es']") >= 0 && konv2.indexOf('ladeKonvTexte(lang, function () { applyLang(lang); })') >= 0 && ['en','fr','it','es'].every(l => { const f = path.join(__dirname, '..', 'js', 'konv-texte-' + l + '.js'); return fs.existsSync(f) && fs.readFileSync(f, 'utf8').indexOf('window.TEXTE.' + l + ' = {') >= 0; }));
+  const sm2 = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8');
+  ok('sonne-mond.html: Ortssuche-Daten (US_STATES/EU_COUNTRIES/CH_CANTONS) nicht mehr inline, sondern js/ort-suche-data.js lazy (loadOrtData, Fokus auf #ort, searchOrt l\u00e4dt nach, Guards)', (function () { const f = path.join(__dirname, '..', 'js', 'ort-suche-data.js'); if (!fs.existsSync(f)) { return false; } const d = fs.readFileSync(f, 'utf8'); return d.indexOf('var US_STATES = {') >= 0 && d.indexOf('var EU_COUNTRIES = {') >= 0 && d.indexOf('var CH_CANTONS = {') >= 0 && sm2.indexOf('var US_STATES = {') < 0 && sm2.indexOf('var EU_COUNTRIES = {') < 0 && sm2.indexOf('var CH_CANTONS = {') < 0 && sm2.indexOf('function loadOrtData(cb)') >= 0 && sm2.indexOf("sc.src = 'js/ort-suche-data.js'") >= 0 && sm2.indexOf('function ortDataLoaded()') >= 0 && sm2.indexOf('loadOrtData(function () { searchOrt(q); })') >= 0 && sm2.indexOf("addEventListener('focus', function () { loadOrtData(") >= 0 && sm2.indexOf("typeof US_STATE_NAMES === 'undefined'") >= 0 && sm2.indexOf("typeof COUNTRY_ALIASES === 'undefined'") >= 0; })());
 }
 
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');

@@ -419,6 +419,10 @@ var TZ_CITY_LIST = [
   ['Bogotá', 'America/Bogota', ['bogota']], ['Lima', 'America/Lima'], ['Caracas', 'America/Caracas'],
   ['Santiago de Chile', 'America/Santiago', ['santiago']], ['São Paulo', 'America/Sao_Paulo', ['saopaulo']], ['Rio de Janeiro', 'America/Sao_Paulo', ['rio']],
   ['Buenos Aires', 'America/Argentina/Buenos_Aires', ['buenosaires']], ['Montevideo', 'America/Montevideo'], ['Asunción', 'America/Asuncion', ['asuncion']], ['La Paz', 'America/La_Paz', ['lapaz']], ['Quito', 'America/Guayaquil'],
+  ['Ho-Chi-Minh-Stadt', 'Asia/Ho_Chi_Minh', ['hochiminh', 'saigon', 'hcmc', 'vietnam']],
+  ['Ulan Bator', 'Asia/Ulan_Bator', ['ulanbator', 'ulaanbaatar', 'mongolei', 'mongolia']],
+  ['Kolkata', 'Asia/Kolkata', ['calcutta', 'indien']],
+  ['Yangon', 'Asia/Yangon', ['rangoon', 'burma', 'myanmar']],
   ['Kanarische Inseln', 'Atlantic/Canary', ['kanaren', 'canaryislands', 'canaries', 'teneriffa', 'grancanaria', 'laspalmas', 'santacruzdetenerife', 'lanzarote', 'fuerteventura']]
 ];
 function normalizeTzKey(s) {
@@ -431,6 +435,26 @@ TZ_CITY_LIST.forEach(function (row) {
   TZ_CITY_MAP[normalizeTzKey(iana)] = iana;
   (row[2] || []).forEach(function (a) { TZ_CITY_MAP[normalizeTzKey(a)] = iana; });
 });
+function tzAddZone(label, iana) {
+  var k1 = normalizeTzKey(label), k2 = normalizeTzKey(iana);
+  if (!TZ_CITY_MAP[k1]) { TZ_CITY_MAP[k1] = iana; }
+  TZ_CITY_MAP[k2] = iana;
+}
+function tzZoneList() {
+  try {
+    if (typeof Intl.supportedValuesOf === 'function') { return Intl.supportedValuesOf('timeZone'); }
+  } catch (e) {}
+  return [];
+}
+(function addAllZones() {
+  tzZoneList().forEach(function (z) {
+    if (!z || z === 'UTC' || z.indexOf('Etc/') === 0) { return; }
+    var parts = z.split('/');
+    var city = parts[parts.length - 1].replace(/_/g, ' ');
+    tzAddZone(city, z);
+    if (parts.length > 2) { tzAddZone(parts.slice(1).join(' ').replace(/_/g, ' '), z); }
+  });
+})();
 function parseTzInput(v) {
   v = String(v == null ? '' : v).trim();
   if (!v) { return { clear: true }; }
@@ -1965,8 +1989,18 @@ if (typeof document !== 'undefined') {
     offs.push(345, 525, 765);
     offs.sort(function (a, b) { return a - b; });
     offs.forEach(function (m) { html += '<option value="' + fmtUtcOffset(m * 60000) + '"></option>'; });
+    var seen = {};
     TZ_CITY_LIST.forEach(function (row) {
+      seen[normalizeTzKey(row[0])] = 1;
       html += '<option value="' + escHtml(row[0]) + '">' + escHtml(row[1]) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), row[1])) + ')</option>';
+    });
+    tzZoneList().forEach(function (z) {
+      if (!z || z === 'UTC' || z.indexOf('Etc/') === 0) { return; }
+      var city = z.split('/').pop().replace(/_/g, ' ');
+      var k = normalizeTzKey(city);
+      if (seen[k]) { return; }
+      seen[k] = 1;
+      html += '<option value="' + escHtml(city) + '">' + escHtml(z) + ' (jetzt ' + fmtUtcOffset(tzOffsetMs(Date.now(), z)) + ')</option>';
     });
     dl.innerHTML = html;
   })();

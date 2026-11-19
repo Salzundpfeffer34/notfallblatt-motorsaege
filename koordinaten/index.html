@@ -237,6 +237,20 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <input type="checkbox" id="gpxSort">
 <label for="gpxSort" style="margin:0;font-weight:400" data-i18n="lblGpxSort">Punkte nach N&auml;he sortieren (sinnvolle Abfolge; Start bleibt der erste Punkt)</label>
 </div>
+<div class="check" style="margin-top:6px">
+<label for="gpxType" style="margin:0;font-weight:400" data-i18n="lblGpxType">GPX-Typ (Art auf dem Garmin-Ger&auml;t)</label>
+<select id="gpxType" aria-label="GPX-Typ" style="margin-left:10px;padding:4px 6px" data-i18n-aria="ariaGpxType">
+<option value="" selected>Kein Typ (wie bisher)</option>
+<option value="hiking">Wandern (hiking)</option>
+<option value="walking">Gehen (walking)</option>
+<option value="running">Laufen (running)</option>
+<option value="cycling">Radfahren (cycling)</option>
+<option value="mountain biking">Mountainbike (mountain biking)</option>
+<option value="driving">Auto fahren (driving)</option>
+<option value="motorcycling">Motorrad (motorcycling)</option>
+<option value="other">Sonstige (other)</option>
+</select>
+</div>
 <div id="batchOut" style="margin-top:12px"></div>
 </div>
 

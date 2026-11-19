@@ -313,13 +313,15 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
 
 // --- 8. sonne-mond.html: Parser, Sonne/Mond-Berechnung, Markup ---
 {
-  const sm = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8');
+  const sm = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8')
+    + '\n/*CSS*/\n' + fs.readFileSync(path.join(__dirname, '..', 'css', 'sonne-mond.css'), 'utf8')
+    + '\n/*JS*/\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'sonne-mond.js'), 'utf8');
   const coordsSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'coords.js'), 'utf8');
   const tzSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'tz-cities.js'), 'utf8');
   const ortSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'ort-suche-data.js'), 'utf8');
-  const m = sm.match(/<script>\n([\s\S]*?)\n<\/script>/);
-  ok('sonne-mond.html hat Inline-Script-Block', !!m);
-  const S = new Function(coordsSrc + '\n' + tzSrc + '\n' + ortSrc + '\n' + m[1] + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart, escHtml, tzOffsetMs, dayStartUtc, fmtUtcOffset, viewTz, viewOffsetMs, dayStartView, TZ_CITY_LIST, TZ_CITY_MAP, TZ_CITY_ALIASES, parseTzInput, normalizeTzKey, tzZoneList };')();  const pc = [
+  const smJs = fs.readFileSync(path.join(__dirname, '..', 'js', 'sonne-mond.js'), 'utf8');
+  ok('sonne-mond.html: CSS+JS extern (css/sonne-mond.css, js/sonne-mond.js), nur Framebusting inline', sm.indexOf('href="css/sonne-mond.css"') >= 0 && sm.indexOf('src="js/sonne-mond.js"') >= 0 && sm.indexOf('<script>\n') < 0 && sm.indexOf('if (window.top !== window.self)') >= 0);
+  const S = new Function(coordsSrc + '\n' + tzSrc + '\n' + ortSrc + '\n' + smJs + '\nreturn { toJD, sunParams, RAD, DEG, parseCoordInput, sunEventsForDay, sunPosition, shadowWindows, dayLengthExtremes, moonPosition, moonIllumination, moonPhaseInfo, moonEvents, astroAltAz, milkyWayInfo, GAL_CENTER, cloudIcon, cloudLabel, moonPhaseEmoji, MOON_PHASE_EMOJI, MOON_PHASE_NAMES, moonEcliptic, MOON_TERMS_LR, MOON_TERMS_B, fullMoonsInMonth, eclipseAt, specialMoonInfo, specMoonClass, specMoonB, SPEC_MOON_COLORS, SPEC_MOON_EMOJI, nextEclipse, nextTotalEclipse, nextFullMoonWhere, nextSuperMoon, nextMicroMoon, nextMilkyWayNight, icsStamp, icsEsc, collectCalendarEvents, buildEventsIcs, nextBlueMoon, phaseInfo, hexA, fmtHM, fmtDateDE, dateStrOf, shiftDateStr, calendarGrid, monthLabel, buildSearchUrls, dedupeOrtResults, nominatimSub, photonLabel, normalizeQuery, stripLeadingWs, queryVariants, levenshtein, similarity, rankOrtResults, usStateToken, detectCountryToken, EU_COUNTRIES, COUNTRY_ALIASES, CH_CANTONS, tzName, TIME_SOURCES, compass, localDayStart, escHtml, tzOffsetMs, dayStartUtc, fmtUtcOffset, viewTz, viewOffsetMs, dayStartView, TZ_CITY_LIST, TZ_CITY_MAP, TZ_CITY_ALIASES, parseTzInput, normalizeTzKey, tzZoneList };')();  const pc = [
     ['46.5225, 6.6325', 46.5225, 6.6325],
     ['46.5225 6.6325', 46.5225, 6.6325],
     ['-33.8688, 151.2093', -33.8688, 151.2093],
@@ -563,7 +565,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   const pages = {
     'index.html': fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8'),
     'gpx-reduce.html': fs.readFileSync(path.join(__dirname, '..', 'gpx-reduce.html'), 'utf8'),
-    'sonne-mond.html': fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8'),
+    'sonne-mond.html': fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'sonne-mond.js'), 'utf8'),
     'koordinaten/index.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8'),
     'koordinaten/datenschutz.html': fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'datenschutz.html'), 'utf8'),
   };
@@ -605,7 +607,7 @@ function rawHeader(b, magicLo, magicHi, ifd0) {
   ok('js/i18n.js: ladeTexte() l\u00e4dt js/texte-<lang>.js on-demand (setzeSprache + Init bei gespeicherter Sprache)', i18n.indexOf('function ladeTexte(lang, cb)') >= 0 && i18n.indexOf("sc.src = 'js/texte-' + lang + '.js'") >= 0 && i18n.indexOf('ladeTexte(neu, function ()') >= 0 && i18n.indexOf("ladeTexte(sprache, function () { i18nAnwenden(); })") >= 0);
   const konv2 = fs.readFileSync(path.join(__dirname, '..', 'koordinaten', 'index.html'), 'utf8');
   ok('koordinaten/index.html: TEXTE inline nur noch de; en/fr/it/es in js/konv-texte-*.js (lazy via ladeKonvTexte)', konv2.indexOf('  en: {') < 0 && konv2.indexOf('  fr: {') < 0 && konv2.indexOf('  es: {') < 0 && konv2.indexOf('  de: {') >= 0 && konv2.indexOf('function ladeKonvTexte(lang, cb)') >= 0 && konv2.indexOf("sc.src = 'js/konv-texte-' + lang + '.js'") >= 0 && konv2.indexOf("KONV_LANGS = ['de', 'en', 'fr', 'it', 'es']") >= 0 && konv2.indexOf('ladeKonvTexte(lang, function () { applyLang(lang); })') >= 0 && ['en','fr','it','es'].every(l => { const f = path.join(__dirname, '..', 'js', 'konv-texte-' + l + '.js'); return fs.existsSync(f) && fs.readFileSync(f, 'utf8').indexOf('window.TEXTE.' + l + ' = {') >= 0; }));
-  const sm2 = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8');
+  const sm2 = fs.readFileSync(path.join(__dirname, '..', 'sonne-mond.html'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'js', 'sonne-mond.js'), 'utf8');
   ok('sonne-mond.html: Ortssuche-Daten (US_STATES/EU_COUNTRIES/CH_CANTONS) nicht mehr inline, sondern js/ort-suche-data.js lazy (loadOrtData, Fokus auf #ort, searchOrt l\u00e4dt nach, Guards)', (function () { const f = path.join(__dirname, '..', 'js', 'ort-suche-data.js'); if (!fs.existsSync(f)) { return false; } const d = fs.readFileSync(f, 'utf8'); return d.indexOf('var US_STATES = {') >= 0 && d.indexOf('var EU_COUNTRIES = {') >= 0 && d.indexOf('var CH_CANTONS = {') >= 0 && sm2.indexOf('var US_STATES = {') < 0 && sm2.indexOf('var EU_COUNTRIES = {') < 0 && sm2.indexOf('var CH_CANTONS = {') < 0 && sm2.indexOf('function loadOrtData(cb)') >= 0 && sm2.indexOf("sc.src = 'js/ort-suche-data.js'") >= 0 && sm2.indexOf('function ortDataLoaded()') >= 0 && sm2.indexOf('loadOrtData(function () { searchOrt(q); })') >= 0 && sm2.indexOf("addEventListener('focus', function () { loadOrtData(") >= 0 && sm2.indexOf("typeof US_STATE_NAMES === 'undefined'") >= 0 && sm2.indexOf("typeof COUNTRY_ALIASES === 'undefined'") >= 0; })());
 }
 

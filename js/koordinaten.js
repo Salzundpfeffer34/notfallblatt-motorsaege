@@ -14,6 +14,7 @@ var TEXTE = {
     ariaFormat: 'Format',
     ariaTarget: 'Zielformat',
     ariaGpxDatum: 'Datumsformat im Standardnamen',
+    ariaGpxType: 'GPX-Typ (Art der Route/des Tracks auf dem Garmin-Gerät)',
     optAuto: 'Automatisch erkennen',
     optWgs84: 'WGS84 · Dezimalgrad',
     optDms: 'Grad / Minuten / Sekunden',
@@ -52,6 +53,7 @@ var TEXTE = {
     lblGpxGeo: 'Dateiname automatisch nach dem Ort der ersten Koordinate benennen (OpenStreetMap)',
     gpxGeoWait: 'Ort wird gesucht …',
     lblGpxSort: 'Punkte nach Nähe sortieren (sinnvolle Abfolge; Start bleibt der erste Punkt)',
+    lblGpxType: 'GPX-Typ (Art auf dem Garmin-Gerät, z. B. Wandern statt Standard-Profil wie Geländewagen)',
     lblBild: 'Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken',
     ariaBild: 'Bild mit GPS-Daten auswählen',
     noteBildGps: 'GPS aus Bild übernommen: {a}, {b}',
@@ -1207,6 +1209,18 @@ function buildResults(lat, lon, forceLv95) {
       try { localStorage.setItem('konverter-gpxsort', gpxSortEl.checked ? '1' : '0'); } catch (e) {}
     });
   }
+  var gpxTypeEl = document.getElementById('gpxType');
+  try {
+    var savedGpxType = localStorage.getItem('konverter-gpxtype');
+    if (gpxTypeEl && savedGpxType) {
+      for (var oi = 0; oi < gpxTypeEl.options.length; oi++) { if (gpxTypeEl.options[oi].value === savedGpxType) { gpxTypeEl.value = savedGpxType; break; } }
+    }
+  } catch (e) {}
+  if (gpxTypeEl) {
+    gpxTypeEl.addEventListener('change', function () {
+      try { localStorage.setItem('konverter-gpxtype', gpxTypeEl.value); } catch (e) {}
+    });
+  }
   var spracheEl = document.getElementById('sprache');
   var lang = 'de';
   try {
@@ -1723,7 +1737,8 @@ function buildResults(lat, lon, forceLv95) {
     for (var i = 0; i < usePts.length; i++) {
       pts += '<trkpt lat="' + formatNum(usePts[i].lat, 6) + '" lon="' + formatNum(usePts[i].lon, 6) + '"></trkpt>';
     }
-    var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Koordinaten-Konverter" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>' + esc(name) + '</name><trkseg>' + pts + '</trkseg></trk>\n</gpx>\n';
+    var gpxType = gpxTypeEl ? gpxTypeEl.value : '';
+    var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Koordinaten-Konverter" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>' + esc(name) + '</name>' + (gpxType ? '<type>' + esc(gpxType) + '</type>' : '') + '<trkseg>' + pts + '</trkseg></trk>\n</gpx>\n';
     var blob = new Blob([gpx], { type: 'application/gpx+xml' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

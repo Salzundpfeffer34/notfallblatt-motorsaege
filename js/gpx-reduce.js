@@ -118,12 +118,13 @@ function buildGpx(orig, keptPts, opts) {
   out += '<gpx version="1.1" creator="gpx-reduce.html" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n';
   out += '<metadata><name>' + esc((orig.trkName || 'Tour') + ' (reduziert auf ' + keptPts.length + ' Punkte)') + '</name><time>' + new Date().toISOString() + '</time></metadata>\n';
   orig.wpts.forEach(function (w) { out += ptXml(w, 'wpt', opts.keepMeta) + '\n'; });
+  var typeXml = opts.gpxType ? '<type>' + esc(opts.gpxType) + '</type>\n' : '';
   if (opts.asRoute) {
-    out += '<rte><name>' + esc(orig.trkName || 'Tour') + '</name>\n';
+    out += '<rte><name>' + esc(orig.trkName || 'Tour') + '</name>\n' + typeXml;
     keptPts.forEach(function (p) { out += ptXml(p, 'rtept', opts.keepMeta) + '\n'; });
     out += '</rte>\n';
   }
-  out += '<trk><name>' + esc(orig.trkName || 'Tour') + '</name><trkseg>\n';
+  out += '<trk><name>' + esc(orig.trkName || 'Tour') + '</name>\n' + typeXml + '<trkseg>\n';
   keptPts.forEach(function (p) { out += ptXml(p, 'trkpt', opts.keepMeta) + '\n'; });
   out += '</trkseg></trk>\n';
   out += '</gpx>\n';
@@ -221,7 +222,7 @@ if (typeof document !== 'undefined') {
   }
   document.getElementById('dl').addEventListener('click', function () {
     if (!reduced || !gpx) { return; }
-    var opts = { keepMeta: document.getElementById('keepEle').checked, asRoute: document.getElementById('asRoute').checked };
+    var opts = { keepMeta: document.getElementById('keepEle').checked, asRoute: document.getElementById('asRoute').checked, gpxType: document.getElementById('gpxType').value };
     var xml = buildGpx(gpx, reduced.pts, opts);
     var name = (gpx.trkName || 'tour').replace(/[^\w\-]+/g, '-').replace(/^-+|-+$/g, '') || 'tour';
     var blob = new Blob([xml], { type: 'application/gpx+xml' });

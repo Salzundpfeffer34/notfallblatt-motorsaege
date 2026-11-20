@@ -444,29 +444,47 @@ function dayLengthSeries(lat, lon, fromStr, toStr, maxDays) {
   }
   return { days: days, truncated: truncated };
 }
+function fmtDurHM(ms) {
+  var m = Math.max(0, Math.round(ms / 60000));
+  return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60);
+}
 function dayLengthChartSvg(days) {
   var pts = days.filter(function (d) { return d.len != null; });
   if (!pts.length) { return ''; }
   var min = Infinity, max = -Infinity;
   pts.forEach(function (d) { if (d.len < min) { min = d.len; } if (d.len > max) { max = d.len; } });
   if (max - min < 60000) { var mid = (min + max) / 2; min = mid - 60000; max = mid + 60000; }
-  var W = 640, H = 160, padL = 48, padR = 10, padT = 12, padB = 20, n = days.length;
+  var W = 720, H = 200, padL = 56, padR = 14, padT = 26, padB = 34, n = days.length;
   function x(i) { return padL + (n === 1 ? (W - padL - padR) / 2 : i * (W - padL - padR) / (n - 1)); }
   function y(v) { return padT + (1 - (v - min) / (max - min)) * (H - padT - padB); }
-  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:720px;height:auto;background:#fbfbf9;border:1px solid var(--line);border-radius:10px" role="img" aria-label="Liniendiagramm: Tageslänge pro Tag im Zeitraum">';
-  s += '<line x1="' + padL + '" y1="' + y(max).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(max).toFixed(1) + '" stroke="var(--line)"/>';
-  s += '<text x="' + (padL - 6) + '" y="' + (y(max) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + escHtml(fmtDur(max)) + '</text>';
-  s += '<line x1="' + padL + '" y1="' + y(min).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(min).toFixed(1) + '" stroke="var(--line)"/>';
-  s += '<text x="' + (padL - 6) + '" y="' + (y(min) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + escHtml(fmtDur(min)) + '</text>';
-  s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="#c8c8c0"/>';
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:760px;height:auto;background:#fbfbf9;border:1px solid var(--line);border-radius:10px" role="img" aria-label="Liniendiagramm: Tageslänge pro Tag im Zeitraum">';
+  s += '<text x="' + padL + '" y="14" font-size="11" font-weight="600" fill="var(--muted)">Tageslänge</text>';
+  s += '<text x="' + ((W + padL) / 2).toFixed(0) + '" y="' + (H - 2) + '" text-anchor="middle" font-size="11" font-weight="600" fill="var(--muted)">Datum</text>';
+  var STEPS = 4, g, v, gy;
+  for (g = 0; g <= STEPS; g++) {
+    v = min + (max - min) * g / STEPS;
+    gy = y(v);
+    s += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="' + (g === 0 || g === STEPS ? '#c8c8c0' : 'var(--line)') + '"/>';
+    s += '<text x="' + (padL - 6) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + escHtml(fmtDurHM(v)) + '</text>';
+  }
+  var step = n <= 15 ? 1 : Math.ceil(n / 10);
+  for (var i = 0; i < n; i += step) {
+    s += '<line x1="' + x(i).toFixed(1) + '" y1="' + padT + '" x2="' + x(i).toFixed(1) + '" y2="' + (H - padB) + '" stroke="var(--line)"/>';
+    s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - padB + 14) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + escHtml(n > 31 ? fmtDateDE(days[i].date).slice(0, 5) : fmtDateDE(days[i].date)) + '</text>';
+  }
+  if ((n - 1) % step !== 0) {
+    s += '<text x="' + x(n - 1).toFixed(1) + '" y="' + (H - padB + 14) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + escHtml(n > 31 ? fmtDateDE(days[n - 1].date).slice(0, 5) : fmtDateDE(days[n - 1].date)) + '</text>';
+  }
   var pl = [];
   days.forEach(function (d, i) { if (d.len != null) { pl.push(x(i).toFixed(1) + ',' + y(d.len).toFixed(1)); } });
-  if (pl.length > 1) { s += '<polyline points="' + pl.join(' ') + '" fill="none" stroke="#e98a3c" stroke-width="2"/>'; }
+  if (pl.length > 1) {
+    s += '<polygon points="' + padL + ',' + (H - padB) + ' ' + pl.join(' ') + ' ' + (W - padR) + ',' + (H - padB) + '" fill="rgba(233,138,60,0.12)"/>';
+    s += '<polyline points="' + pl.join(' ') + '" fill="none" stroke="#e98a3c" stroke-width="2.2"/>';
+  }
   days.forEach(function (d, i) {
-    if (d.len != null) { s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(d.len).toFixed(1) + '" r="2.6" fill="#e98a3c"><title>' + escHtml(fmtDateDE(d.date) + ': ' + fmtDur(d.len)) + '</title></circle>'; }
-  });
-  [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i) {
-    s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + escHtml(fmtDateDE(days[i].date).slice(0, 5)) + '</text>';
+    if (d.len != null) {
+      s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(d.len).toFixed(1) + '" r="3" fill="#e98a3c"><title>' + escHtml(fmtDateDE(d.date) + ': ' + fmtDur(d.len)) + '</title></circle>';
+    }
   });
   return s + '</svg>';
 }

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+<script src="js/framebust.js"></script>
+<title>Schärfentiefe &amp; Bokeh · Blende, Abstand, Objektiv</title>
+<link rel="icon" type="image/svg+xml" href="img/motorsaege.svg">
+<link rel="stylesheet" href="css/sonne-mond.css">
+<link rel="stylesheet" href="css/bokeh.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>🎯 Schärfentiefe &amp; Bokeh</h1>
+    <p class="sub">Wie Blende, Abstand, Brennweite und Sensor das Bild scharf/unscharf machen – interaktiv mit Linsen-Datenbank. Alles lokal im Browser, auch offline.</p>
+  </div>
+  <a class="back" href="index.html">← Notfallblatt</a>
+</header>
+
+<div class="card">
+  <h2>Objektiv &amp; Sensor</h2>
+  <div class="row">
+    <div class="field"><label for="lens">Objektiv (aus Datenbank)</label><select id="lens"></select></div>
+    <div class="field"><label for="sensor">Sensor / Format</label><select id="sensor"></select></div>
+  </div>
+  <p id="lensInfo" class="hint"></p>
+</div>
+
+<div class="card">
+  <h2>Blende &amp; Abstand</h2>
+  <div class="ctl">
+    <label for="ap">Blende</label>
+    <input type="range" id="ap" min="0" max="13" step="1" value="0" aria-label="Blende">
+    <output id="apOut">f/1.8</output>
+  </div>
+  <div class="ctl">
+    <label for="dist">Motiv-Abstand</label>
+    <input type="range" id="dist" min="0" max="1000" step="1" value="500" aria-label="Motiv-Abstand in Metern (logarithmisch)">
+    <output id="distOut">2 m</output>
+  </div>
+  <p class="hint">Kleine Blendenzahl (große Öffnung, z. B. f/1.8) = wenig Schärfentiefe, große weiche Bokeh-Kreise. Enger Abstand = weniger Schärfentiefe. Langes Tele = größere Bokeh-Kreise. Größerer Sensor = bei gleicher Blende etwas mehr Schärfentiefe (kleinerer Zerstreuungskreis relativ zum Bild).</p>
+</div>
+
+<div class="card">
+  <h2>Grafik</h2>
+  <div id="scene"></div>
+  <div id="dofbar"></div>
+  <p id="dofOut" class="hint"></p>
+</div>
+
+<footer>
+  <span>← <a href="koordinaten/index.html">Koordinaten-Konverter</a></span>
+  <span><a href="gpx-reduce.html">GPX-Reduktion für Garmin</a></span>
+  <span><a href="sonne-mond.html">Sonne &amp; Mond für Fotografen</a></span>
+  <span><a href="index.html">Notfallblatt Motorsäge</a></span>
+  <span><a href="koordinaten/datenschutz.html">Datenschutz</a></span>
+  <span>Reine lokale HTML-Seite – keine Server, keine Cookies, keine Übertragung. Physik: Näherung über Zerstreuungskreis (Sensor-Diagonale/1500).</span>
+  <span>Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr.</span>
+</footer>
+</div>
+
+<script src="js/bokeh-linsen.js"></script>
+<script src="js/bokeh.js"></script>
+</body>
+</html>

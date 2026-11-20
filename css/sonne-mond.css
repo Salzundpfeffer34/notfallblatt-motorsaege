@@ -6,6 +6,8 @@
   .sky-bg { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
   .dltab { border-collapse:collapse; width:100%; font-size:.88rem; }
   .dltab th, .dltab td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .dltab thead th { position:sticky; top:0; background:var(--card); z-index:1; }
+  .dltab .dlmonth td { background:var(--bg); font-weight:600; color:var(--muted); }
   .dltab td:nth-child(2), .dltab td:nth-child(3), .dltab td:nth-child(4), .dltab td:nth-child(5) { text-align:right; font-variant-numeric:tabular-nums; }
   .bg-sun, .bg-moon { position:absolute; top:0; left:0; width:110px; height:110px; opacity:.22; }
   .bg-sun { animation:bgSunArc 70s linear infinite; filter:drop-shadow(0 0 22px rgba(247,173,36,.55)); }

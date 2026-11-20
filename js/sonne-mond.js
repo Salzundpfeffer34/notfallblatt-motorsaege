@@ -498,15 +498,45 @@ function visibleDays(days, showAll, limit) {
   }
   return { list: list, hidden: n - list.length };
 }
-function dayLenCsv(days) {
-  var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta_min'];
+function fmtDeltaCsv(delta, deltaMs) {
+  if (delta == null) { return ''; }
+  if (delta !== 0) { return String(delta); }
+  var s = Math.round(deltaMs / 1000);
+  return (s > 0 ? '+' : '') + s + 's';
+}
+function dayLenCsv(days, meta) {
+  meta = meta || {};
+  var hasLL = (typeof meta.lat === 'number' && typeof meta.lon === 'number' && isFinite(meta.lat) && isFinite(meta.lon));
+  var hasTZ = (typeof meta.tz === 'string' && !!meta.tz);
+  var out = [];
+  if (meta.name || hasLL || hasTZ || meta.from || meta.to) {
+    var parts = [];
+    if (meta.name) { parts.push('Ort: ' + String(meta.name).replace(/[;\r\n]/g, ',')); }
+    if (hasLL) { parts.push('Lat: ' + meta.lat + '; Lon: ' + meta.lon); }
+    if (hasTZ) { parts.push('TZ: ' + meta.tz); }
+    if (meta.from || meta.to) { parts.push('Zeitraum: ' + (meta.from || '') + ' bis ' + (meta.to || '')); }
+    parts.push('Export: ' + (meta.export || new Date().toISOString()));
+    out.push('# ' + parts.join('; '));
+  }
+  out.push('Datum;Aufgang;Untergang;Tageslaenge_min;Tageslaenge_h;Delta' + (hasLL ? ';Lat;Lon' : '') + (hasTZ ? ';TZ' : ''));
   var prev = null;
   days.forEach(function (d) {
-    var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : '';
-    out.push([d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', delta].join(';'));
+    var deltaMs = (prev && d.len != null && prev.len != null) ? (d.len - prev.len) : null;
+    var delta = deltaMs != null ? Math.round(deltaMs / 60000) : null;
+    var row = [d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', d.len != null ? (d.len / 3600000).toFixed(2).replace('.', ',') : '', fmtDeltaCsv(delta, deltaMs)];
+    if (hasLL) { row.push(String(meta.lat), String(meta.lon)); }
+    if (hasTZ) { row.push(meta.tz); }
+    out.push(row.join(';'));
     if (d.len != null) { prev = d; }
   });
   return out.join('\n') + '\n';
+}
+function dayLenChartSvgFile(days) {
+  var svg = dayLengthChartSvg(days);
+  if (!svg) { return ''; }
+  return svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')
+    .replace(/var\(--line\)/g, '#e3e3dd')
+    .replace(/var\(--muted\)/g, '#6b6b64');
 }
 
 function dayRowsWithDelta(days) {
@@ -1709,6 +1739,7 @@ if (typeof document !== 'undefined') {
     var fromEl = $('dayLenFrom'), toEl = $('dayLenTo');
     if (!el || !fromEl || !toEl) { return; }
     var from = String(fromEl.value || '').trim(), to = String(toEl.value || '').trim();
+    var slug = String(state.name || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 30);
     var r = dayLengthSeries(state.lat, state.lon, from, to);
     if (r.error) { el.innerHTML = '<p class="help">' + escHtml(r.error) + '</p>'; return; }
     var max = 0, min = Infinity, maxD = null, minD = null;
@@ -1724,6 +1755,7 @@ if (typeof document !== 'undefined') {
     html += '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 6px">'
       + '<label style="font-size:.9rem;display:flex;gap:6px;align-items:center"><input type="checkbox" id="dlShowAll"' + (showAll ? ' checked' : '') + '> alle Tage anzeigen</label>'
       + '<button type="button" id="dlCsv" class="secondary">CSV exportieren</button>'
+      + '<button type="button" id="dlSvg" class="secondary">Diagramm (SVG)</button>'
       + (vis.hidden > 0 ? '<span class="help">' + vis.list.length + ' von ' + r.days.length + ' Tagen angezeigt (Anfang + Ende + gleichmäßig verteilt)</span>' : '')
       + '</div>';
     function sortTh(key, label) {
@@ -1764,10 +1796,23 @@ if (typeof document !== 'undefined') {
     var csvBtn = $('dlCsv');
     if (csvBtn) {
       csvBtn.addEventListener('click', function () {
-        var blob = new Blob(['\uFEFF' + dayLenCsv(r.days)], { type: 'text/csv;charset=utf-8' });
+        var blob = new Blob(['\uFEFF' + dayLenCsv(r.days, { lat: state.lat, lon: state.lon, tz: viewTz(), name: state.name, from: from, to: to })], { type: 'text/csv;charset=utf-8' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'tageslaengen_' + from + '_' + to + '.csv';
+        a.download = 'tageslaengen_' + (slug ? slug + '_' : '') + from + '_' + to + '.csv';
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+      });
+    }
+    var svgBtn = $('dlSvg');
+    if (svgBtn) {
+      svgBtn.addEventListener('click', function () {
+        var svg = dayLenChartSvgFile(r.days);
+        if (!svg) { return; }
+        var blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'tageslaengen-diagramm_' + (slug ? slug + '_' : '') + from + '_' + to + '.svg';
         document.body.appendChild(a); a.click();
         setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
       });

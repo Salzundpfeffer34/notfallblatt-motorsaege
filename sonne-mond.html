@@ -126,7 +126,13 @@
     <span><span class="sw" style="background:#2c3a63"></span>Astronomisch (−18°…−12°)</span>
     <span><span class="sw" style="background:#161d36"></span>Nacht</span>
   </div>
-  <details class="hint shdw" style="font-size:.9rem;margin-top:8px"><summary>☀️ <strong>Tageslängen</strong>: <span id="dayLenInfo">–</span></summary><div style="margin-top:4px">Längster Tag ≈ Sommersonnenwende (ca. 21.06.), kürzester ≈ Wintersonnenwende (ca. 21.12.); Tageslänge = Sonnenaufgang bis -untergang am gewählten Ort. Gelten für das Jahr des gewählten Datums.</div></details>
+  <details class="hint shdw" style="font-size:.9rem;margin-top:8px"><summary>☀️ <strong>Tageslängen</strong>: <span id="dayLenInfo">–</span></summary><div style="margin-top:4px">Längster Tag ≈ Sommersonnenwende (ca. 21.06.), kürzester ≈ Wintersonnenwende (ca. 21.12.); Tageslänge = Sonnenaufgang bis -untergang am gewählten Ort. Gelten für das Jahr des gewählten Datums.</div>
+  <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+    <div class="field"><label for="dlVon">Zeitraum von</label><input type="date" id="dlVon"></div>
+    <div class="field"><label for="dlBis">bis</label><input type="date" id="dlBis"></div>
+    <button type="button" id="dlGo" class="secondary">Tabelle + Grafik anzeigen</button>
+  </div>
+  <div id="dlOut" style="margin-top:8px"></div></details>
 </div>
 
 <div class="card">

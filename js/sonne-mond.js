@@ -448,6 +448,77 @@ function dayLengthExtremes(lat, lon, year, todayStr) {
   return out;
 }
 
+function parseDateStr(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s == null ? '' : s).trim());
+  if (!m) { return null; }
+  var y = +m[1], mo = +m[2] - 1, d = +m[3];
+  var dt = new Date(Date.UTC(y, mo, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo || dt.getUTCDate() !== d) { return null; }
+  return { y: y, m: mo, d: d };
+}
+
+var DL_MAX_DAYS = 366;
+function dayLenSeries(lat, lon, vonStr, bisStr) {
+  var v = parseDateStr(vonStr), b = parseDateStr(bisStr);
+  if (!v || !b) { return { error: 'Bitte beide Daten (von/bis) im Format JJJJ-MM-TT angeben.' }; }
+  var vMs = Date.UTC(v.y, v.m, v.d, 12, 0, 0), bMs = Date.UTC(b.y, b.m, b.d, 12, 0, 0);
+  if (bMs < vMs) { return { error: '„bis“ liegt vor „von“.' }; }
+  var n = Math.round((bMs - vMs) / 86400000) + 1;
+  if (n > DL_MAX_DAYS) { return { error: 'Zeitraum zu gross – maximal ' + DL_MAX_DAYS + ' Tage.' }; }
+  var rows = [], min = Infinity, max = -Infinity;
+  for (var t = vMs; t <= bMs; t += 86400000) {
+    var ev = sunEventsForDay(lat, lon, t);
+    var len = ev.dayLength;
+    if (len != null) { if (len < min) { min = len; } if (len > max) { max = len; } }
+    rows.push({ dayStart: t, dateStr: dateStrOf(t), sunrise: ev.sunrise, sunset: ev.sunset, len: len, polar: len == null ? (ev.noonAlt > 0 ? 'tag' : 'nacht') : null });
+  }
+  return { rows: rows, min: min === Infinity ? null : min, max: max === -Infinity ? null : max };
+}
+
+function dayLenChartSvg(series) {
+  var rows = series.rows;
+  if (!rows.length || series.min == null || series.max == null) { return ''; }
+  var W = 640, H = 170, padL = 48, padR = 10, padT = 14, padB = 22;
+  var n = rows.length, min = series.min, max = series.max;
+  if (max - min < 60000) { var mid = (min + max) / 2; min = mid - 60000; max = mid + 60000; }
+  function x(i) { return padL + (n === 1 ? (W - padL - padR) / 2 : i * (W - padL - padR) / (n - 1)); }
+  function y(v) { return padT + (1 - (v - min) / (max - min)) * (H - padT - padB); }
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;background:#fbfbf9;border:1px solid #e3e3dd;border-radius:10px" role="img" aria-label="Tageslänge pro Tag im Zeitraum">';
+  s += '<line x1="' + padL + '" y1="' + y(max).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(max).toFixed(1) + '" stroke="#e3e3dd"/>';
+  s += '<text x="' + (padL - 6) + '" y="' + (y(max) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#6b6b64">' + escHtml(fmtDur(max)) + '</text>';
+  s += '<line x1="' + padL + '" y1="' + y(min).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(min).toFixed(1) + '" stroke="#e3e3dd"/>';
+  s += '<text x="' + (padL - 6) + '" y="' + (y(min) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="#6b6b64">' + escHtml(fmtDur(min)) + '</text>';
+  s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="#c8c8c0"/>';
+  var pts = [];
+  rows.forEach(function (r, i) { if (r.len != null) { pts.push(x(i).toFixed(1) + ',' + y(r.len).toFixed(1)); } });
+  if (pts.length) { s += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="#e98a3c" stroke-width="2"/>'; }
+  rows.forEach(function (r, i) {
+    if (r.len != null) { s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(r.len).toFixed(1) + '" r="2.6" fill="#e98a3c"><title>' + escHtml(fmtDateDE(r.dateStr) + ': ' + fmtDur(r.len)) + '</title></circle>'; }
+  });
+  [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i) {
+    s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="#6b6b64">' + escHtml(fmtDateDE(rows[i].dateStr).slice(0, 5)) + '</text>';
+  });
+  return s + '</svg>';
+}
+
+function fmtDeltaMin(ms) {
+  var m = Math.round(ms / 60000);
+  var sign = m >= 0 ? '+' : '−';
+  var a = Math.abs(m);
+  return sign + Math.floor(a / 60) + ' h ' + pad2(a % 60) + ' min';
+}
+function dayLenTableHtml(series) {
+  var h = '<table style="width:100%;border-collapse:collapse;font-size:.9rem;margin-top:8px"><tr><th style="text-align:left;border-bottom:1px solid #e3e3dd;padding:4px 6px 4px 0">Datum</th><th style="border-bottom:1px solid #e3e3dd;padding:4px 6px">Aufgang</th><th style="border-bottom:1px solid #e3e3dd;padding:4px 6px">Untergang</th><th style="border-bottom:1px solid #e3e3dd;padding:4px 6px">Tageslänge</th><th style="border-bottom:1px solid #e3e3dd;padding:4px 6px">Δ Vortag</th></tr>';
+  var prev = null;
+  series.rows.forEach(function (r) {
+    var lenTxt = r.len != null ? fmtDur(r.len) : (r.polar === 'tag' ? 'Polartag' : 'Polarnacht');
+    var dTxt = (r.len != null && prev != null) ? fmtDeltaMin(r.len - prev) : '–';
+    h += '<tr><td style="padding:3px 6px 3px 0">' + escHtml(fmtDateDE(r.dateStr)) + '</td><td style="padding:3px 6px">' + (r.sunrise != null ? escHtml(fmtHM(r.sunrise)) : '–') + '</td><td style="padding:3px 6px">' + (r.sunset != null ? escHtml(fmtHM(r.sunset)) : '–') + '</td><td style="padding:3px 6px">' + escHtml(lenTxt) + '</td><td style="padding:3px 6px">' + escHtml(dTxt) + '</td></tr>';
+    if (r.len != null) { prev = r.len; }
+  });
+  return h + '</table>';
+}
+
 var MOON_TERMS_LR = [
   [0,0,1,0,6288774,-20905355], [2,0,-1,0,1274027,-3699111], [2,0,0,0,658314,-2955968], [0,0,2,0,213618,-569925],
   [0,1,0,0,-185116,48888], [0,0,0,2,-114332,-3149], [2,0,-2,0,58793,246158], [2,-1,-1,0,57066,-152138],
@@ -1364,6 +1435,18 @@ if (typeof document !== 'undefined') {
     renderAll();
   }
   $('datum').addEventListener('change', function () { applyDatum(trimField($('datum'))); });
+  function renderDlDefaults() {
+    if (!$('dlVon').value) { $('dlVon').value = state.datum; }
+    if (!$('dlBis').value) { $('dlBis').value = shiftDateStr(state.datum, 6); }
+  }
+  renderDlDefaults();
+  $('dlGo').addEventListener('click', function () {
+    renderDlDefaults();
+    var out = $('dlOut');
+    var s = dayLenSeries(state.lat, state.lon, trimField($('dlVon')), trimField($('dlBis')));
+    if (s.error) { out.innerHTML = '<p style="color:#b3261e;font-size:.9rem">' + escHtml(s.error) + '</p>'; return; }
+    out.innerHTML = dayLenChartSvg(s) + dayLenTableHtml(s) + '<p style="color:#6b6b64;font-size:.8rem;margin:6px 0 0">Ort: ' + escHtml((state.name ? state.name + ' · ' : '') + state.lat.toFixed(4) + ', ' + state.lon.toFixed(4)) + ' · ' + s.rows.length + ' Tage</p>';
+  });
   $('dayMinus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, -1)); });
   $('dayPlus').addEventListener('click', function () { applyDatum(shiftDateStr(state.datum, 1)); });
   function downloadIcs(sel) {

@@ -504,13 +504,16 @@ function fmtDeltaCsv(delta, deltaMs) {
   var s = Math.round(deltaMs / 1000);
   return (s > 0 ? '+' : '') + s + 's';
 }
-function dayLenCsv(days) {
-  var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta'];
+function dayLenCsv(days, lat, lon) {
+  var hasLL = (typeof lat === 'number' && typeof lon === 'number' && isFinite(lat) && isFinite(lon));
+  var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta' + (hasLL ? ';Lat;Lon' : '')];
   var prev = null;
   days.forEach(function (d) {
     var deltaMs = (prev && d.len != null && prev.len != null) ? (d.len - prev.len) : null;
     var delta = deltaMs != null ? Math.round(deltaMs / 60000) : null;
-    out.push([d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', fmtDeltaCsv(delta, deltaMs)].join(';'));
+    var row = [d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', fmtDeltaCsv(delta, deltaMs)];
+    if (hasLL) { row.push(String(lat), String(lon)); }
+    out.push(row.join(';'));
     if (d.len != null) { prev = d; }
   });
   return out.join('\n') + '\n';
@@ -1771,10 +1774,11 @@ if (typeof document !== 'undefined') {
     var csvBtn = $('dlCsv');
     if (csvBtn) {
       csvBtn.addEventListener('click', function () {
-        var blob = new Blob(['\uFEFF' + dayLenCsv(r.days)], { type: 'text/csv;charset=utf-8' });
+        var blob = new Blob(['\uFEFF' + dayLenCsv(r.days, state.lat, state.lon)], { type: 'text/csv;charset=utf-8' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = 'tageslaengen_' + from + '_' + to + '.csv';
+        var slug = String(state.name || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 30);
+        a.download = 'tageslaengen_' + (slug ? slug + '_' : '') + from + '_' + to + '.csv';
         document.body.appendChild(a); a.click();
         setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
       });

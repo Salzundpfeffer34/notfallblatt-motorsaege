@@ -483,7 +483,7 @@ function dayLengthChartSvg(days) {
   }
   days.forEach(function (d, i) {
     if (d.len != null) {
-      s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(d.len).toFixed(1) + '" r="3" fill="#e98a3c"><title>' + escHtml(fmtDateDE(d.date) + ': ' + fmtDur(d.len)) + '</title></circle>';
+      s += '<circle class="dlpt" data-i="' + i + '" cx="' + x(i).toFixed(1) + '" cy="' + y(d.len).toFixed(1) + '" r="3" fill="#e98a3c"><title>' + escHtml(fmtDateDE(d.date) + ': ' + fmtDur(d.len)) + '</title></circle>';
     }
   });
   return s + '</svg>';
@@ -503,6 +503,29 @@ function dayLenCsv(days) {
   return out.join('\n') + '\n';
 }
 
+function dayRowsWithDelta(days) {
+  var prev = null, out = [];
+  days.forEach(function (d, i) {
+    var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : null;
+    out.push({ d: d, delta: delta, i: i });
+    if (d.len != null) { prev = d; }
+  });
+  return out;
+}
+function sortDayRows(rows, key, dir) {
+  var kf = ({ datum: function (r) { return r.d.date; }, auf: function (r) { return r.d.sunrise; }, unter: function (r) { return r.d.sunset; }, laenge: function (r) { return r.d.len; }, delta: function (r) { return r.delta; } })[key] || function (r) { return r.d.date; };
+  var s = rows.slice();
+  s.sort(function (a, b) {
+    var x = kf(a), y = kf(b);
+    if (x == null && y == null) { return 0; }
+    if (x == null) { return 1; }
+    if (y == null) { return -1; }
+    if (x < y) { return -dir; }
+    if (x > y) { return dir; }
+    return a.i - b.i;
+  });
+  return s;
+}
 function dayLengthExtremes(lat, lon, year, todayStr) {
   function scan(mo0, d0, mo1, d1, pickMax) {
     var best = null;
@@ -1666,6 +1689,7 @@ if (typeof document !== 'undefined') {
   renderAll();
   reverseGeocode();
   fetchOrtsZeitzone();
+  var dlSort = { key: 'datum', dir: 1 };
   function renderDayLenRange() {
     var el = $('dayLenRange');
     var fromEl = $('dayLenFrom'), toEl = $('dayLenTo');
@@ -1676,7 +1700,8 @@ if (typeof document !== 'undefined') {
     var max = 0, min = Infinity, maxD = null, minD = null;
     r.days.forEach(function (d) { if (d.len != null) { if (d.len > max) { max = d.len; maxD = d; } if (d.len < min) { min = d.len; minD = d; } } });
     var showAll = !!($('dlShowAll') && $('dlShowAll').checked);
-    var vis = visibleDays(r.days, showAll, 10);
+    var rows = sortDayRows(dayRowsWithDelta(r.days), dlSort.key, dlSort.dir);
+    var vis = visibleDays(rows, showAll, 10);
     var html = '';
     if (maxD && minD) {
       html += '<p class="help" style="margin:2px 0 8px">Im Zeitraum: längster Tag <b>' + fmtDateDE(maxD.date) + '</b> (' + fmtDur(maxD.len) + '), kürzester <b>' + fmtDateDE(minD.date) + '</b> (' + fmtDur(minD.len) + ').</p>';
@@ -1687,21 +1712,39 @@ if (typeof document !== 'undefined') {
       + '<button type="button" id="dlCsv" class="secondary">CSV exportieren</button>'
       + (vis.hidden > 0 ? '<span class="help">' + vis.list.length + ' von ' + r.days.length + ' Tagen angezeigt</span>' : '')
       + '</div>';
-    html += '<div style="max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px"><table class="dltab"><thead><tr><th>Datum</th><th>Aufgang</th><th>Untergang</th><th>Tageslänge</th><th>Δ</th></tr></thead><tbody>';
-    var prev = null, lastMonth = null;
-    vis.list.forEach(function (d) {
-      var mk = d.date.slice(0, 7);
-      if (mk !== lastMonth) {
-        html += '<tr class="dlmonth"><td colspan="5">' + escHtml(monthLabel(+mk.slice(0, 4), +mk.slice(5, 7) - 1)) + '</td></tr>';
-        lastMonth = mk;
+    function sortTh(key, label) {
+      return '<th class="dlsort' + (dlSort.key === key ? ' on' : '') + '" data-key="' + key + '">' + label + '<span class="sarr">' + (dlSort.key === key ? (dlSort.dir === 1 ? '▲' : '▼') : '') + '</span></th>';
+    }
+    html += '<div style="max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px"><table class="dltab"><thead><tr>' + sortTh('datum', 'Datum') + sortTh('auf', 'Aufgang') + sortTh('unter', 'Untergang') + sortTh('laenge', 'Tageslänge') + sortTh('delta', 'Δ') + '</tr></thead><tbody>';
+    var lastMonth = null;
+    vis.list.forEach(function (row, pos) {
+      var d = row.d;
+      if (dlSort.key === 'datum') {
+        var mk = d.date.slice(0, 7);
+        if (mk !== lastMonth) {
+          html += '<tr class="dlmonth"><td colspan="5">' + escHtml(monthLabel(+mk.slice(0, 4), +mk.slice(5, 7) - 1)) + '</td></tr>';
+          lastMonth = mk;
+        }
       }
-      var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : null;
-      html += '<tr><td>' + fmtDateDE(d.date) + '</td><td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td><td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td><td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td><td>' + (delta == null ? '–' : (delta > 0 ? '+' : '') + delta + ' min') + '</td></tr>';
-      prev = d;
+      var isToday = d.date === state.datum;
+      html += '<tr class="dlrow' + (pos % 2 ? ' alt' : '') + (isToday ? ' today' : '') + '" data-i="' + row.i + '">'
+        + '<td>' + fmtDateDE(d.date) + (isToday ? ' <span class="dltoday">heute</span>' : '') + '</td>'
+        + '<td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td>'
+        + '<td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td>'
+        + '<td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td>'
+        + '<td>' + (row.delta == null ? '–' : '<span class="d' + (row.delta > 0 ? 'up' : row.delta < 0 ? 'dn' : 'eq') + '">' + (row.delta > 0 ? '▲ +' : row.delta < 0 ? '▼ ' : '') + row.delta + ' min</span>') + '</td>'
+        + '</tr>';
     });
     html += '</tbody></table></div>';
     if (r.truncated) { html += '<p class="help">Zeitraum auf ' + r.days.length + ' Tage gekürzt (max. 400).</p>'; }
     el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll('th.dlsort'), function (th) {
+      th.addEventListener('click', function () {
+        var k = th.getAttribute('data-key');
+        if (dlSort.key === k) { dlSort.dir = -dlSort.dir; } else { dlSort = { key: k, dir: 1 }; }
+        renderDayLenRange();
+      });
+    });
     var cb = $('dlShowAll');
     if (cb) { cb.addEventListener('change', renderDayLenRange); }
     var csvBtn = $('dlCsv');
@@ -1725,6 +1768,32 @@ if (typeof document !== 'undefined') {
     fromEl.addEventListener('change', rerender);
     toEl.addEventListener('change', rerender);
     det.addEventListener('toggle', function () { if (det.open) { renderDayLenRange(); } });
+    var rangeEl = $('dayLenRange');
+    if (rangeEl) {
+      var dlHot = function (i, on) {
+        if (i == null) { return; }
+        var c = rangeEl.querySelector('circle.dlpt[data-i="' + i + '"]');
+        if (c) { c.classList.toggle('hot', on); c.setAttribute('r', on ? '6' : '3'); }
+        var tr = rangeEl.querySelector('tr.dlrow[data-i="' + i + '"]');
+        if (tr) { tr.classList.toggle('hot', on); }
+      };
+      rangeEl.addEventListener('mouseover', function (e) {
+        var t = e.target;
+        if (!t || !t.closest) { return; }
+        var tr = t.closest('tr.dlrow');
+        if (tr) { dlHot(tr.getAttribute('data-i'), true); return; }
+        var c = t.closest('circle.dlpt');
+        if (c) { dlHot(c.getAttribute('data-i'), true); }
+      });
+      rangeEl.addEventListener('mouseout', function (e) {
+        var t = e.target;
+        if (!t || !t.closest) { return; }
+        var tr = t.closest('tr.dlrow');
+        if (tr) { dlHot(tr.getAttribute('data-i'), false); return; }
+        var c = t.closest('circle.dlpt');
+        if (c) { dlHot(c.getAttribute('data-i'), false); }
+      });
+    }
   })();
   function buildTzMan() {
     loadTzCities(function () {

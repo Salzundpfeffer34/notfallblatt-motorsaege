@@ -8,6 +8,18 @@
   .dltab th, .dltab td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
   .dltab thead th { position:sticky; top:0; background:var(--card); z-index:1; }
   .dltab .dlmonth td { background:var(--bg); font-weight:600; color:var(--muted); }
+  .dltab th.dlsort { cursor:pointer; user-select:none; }
+  .dltab th.dlsort:hover, .dltab th.dlsort.on { color:var(--accent); }
+  .dltab th.dlsort .sarr { font-size:.72em; margin-left:3px; }
+  .dltab tbody tr.dlrow.alt td { background:rgba(127,127,127,.08); }
+  .dltab tbody tr.dlrow:hover td, .dltab tbody tr.dlrow.hot td { background:rgba(233,138,60,.14); }
+  .dltab tbody tr.today td:first-child { box-shadow:inset 3px 0 0 var(--accent); }
+  .dltab .dltoday { font-size:.68rem; font-weight:600; background:var(--accent); color:#fff; border-radius:6px; padding:1px 6px; margin-left:5px; }
+  .dltab td .dup { color:#3d9e5f; font-weight:600; }
+  .dltab td .ddn { color:#c0392b; font-weight:600; }
+  .dltab td .deq { color:var(--muted); }
+  #dayLenRange circle.dlpt { cursor:pointer; }
+  #dayLenRange circle.dlpt.hot { stroke:var(--ink); stroke-width:2; }
   .dltab td:nth-child(2), .dltab td:nth-child(3), .dltab td:nth-child(4), .dltab td:nth-child(5) { text-align:right; font-variant-numeric:tabular-nums; }
   .bg-sun, .bg-moon { position:absolute; top:0; left:0; width:110px; height:110px; opacity:.22; }
   .bg-sun { animation:bgSunArc 70s linear infinite; filter:drop-shadow(0 0 22px rgba(247,173,36,.55)); }
@@ -123,6 +135,8 @@
     :root { --line:#33363f; --muted:#9aa0ab; --accent:#7fb0e8; --accent2:#a5c6ef; --bg:#141519; --card:#1e2027; --ink:#e9e9e3; --spec-blue:#7fb0e8; --spec-red:#e06055; --spec-shade:#c9a183; --spec-faint:#93a1b8; --spec-micro:#9aa0ab; --spec-super:#e08a3c; }
     input[type=text], input[type=date], a.back, button.secondary, .chip, #ortResults button, .cal-day, .calpop, .stat { background:#262a33; color:var(--ink); border-color:var(--line); }
     .chip:hover, #ortResults button:hover, .cal-day:hover, button.secondary:hover { background:#2d323d; }
+    .dltab td .dup { color:#6fce8f; }
+    .dltab td .ddn { color:#e06055; }
     svg#sky, svg#bar { background:#191b21; }
     .error { background:#3a2226; border-color:#5c3038; color:#f0a8a8; }
     .help code { background:#2a2d35; }

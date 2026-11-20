@@ -1739,6 +1739,7 @@ if (typeof document !== 'undefined') {
     var fromEl = $('dayLenFrom'), toEl = $('dayLenTo');
     if (!el || !fromEl || !toEl) { return; }
     var from = String(fromEl.value || '').trim(), to = String(toEl.value || '').trim();
+    if (!from || !to) { el.innerHTML = ''; return; }
     var slug = String(state.name || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 30);
     var r = dayLengthSeries(state.lat, state.lon, from, to);
     if (r.error) { el.innerHTML = '<p class="help">' + escHtml(r.error) + '</p>'; return; }
@@ -1831,8 +1832,8 @@ if (typeof document !== 'undefined') {
     var resetBtn = $('dlReset');
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
-        fromEl.value = state.datum;
-        toEl.value = shiftDateStr(state.datum, 30);
+        fromEl.value = '';
+        toEl.value = '';
         renderDayLenRange();
       });
     }

@@ -512,11 +512,19 @@ function dayLenCsv(days) {
 function dayRowsWithDelta(days) {
   var prev = null, out = [];
   days.forEach(function (d, i) {
-    var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : null;
-    out.push({ d: d, delta: delta, i: i });
+    var deltaMs = (prev && d.len != null && prev.len != null) ? (d.len - prev.len) : null;
+    out.push({ d: d, delta: deltaMs != null ? Math.round(deltaMs / 60000) : null, deltaMs: deltaMs, i: i });
     if (d.len != null) { prev = d; }
   });
   return out;
+}
+function fmtDayDelta(delta, deltaMs) {
+  if (delta == null) { return '–'; }
+  if (delta === 0) {
+    var s = Math.round(deltaMs / 1000);
+    return '<span class="d' + (deltaMs > 0 ? 'up' : deltaMs < 0 ? 'dn' : 'eq') + '">' + (deltaMs > 0 ? '▲ +' : deltaMs < 0 ? '▼ ' : '') + s + ' s</span>';
+  }
+  return '<span class="d' + (delta > 0 ? 'up' : 'dn') + '">' + (delta > 0 ? '▲ +' : '▼ ') + delta + ' min</span>';
 }
 function sortDayRows(rows, key, dir) {
   var kf = ({ datum: function (r) { return r.d.date; }, auf: function (r) { return r.d.sunrise; }, unter: function (r) { return r.d.sunset; }, laenge: function (r) { return r.d.len; }, delta: function (r) { return r.delta; } })[key] || function (r) { return r.d.date; };
@@ -1738,7 +1746,7 @@ if (typeof document !== 'undefined') {
         + '<td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td>'
         + '<td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td>'
         + '<td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td>'
-        + '<td>' + (row.delta == null ? '–' : '<span class="d' + (row.delta > 0 ? 'up' : row.delta < 0 ? 'dn' : 'eq') + '">' + (row.delta > 0 ? '▲ +' : row.delta < 0 ? '▼ ' : '') + row.delta + ' min</span>') + '</td>'
+        + '<td>' + fmtDayDelta(row.delta, row.deltaMs) + '</td>'
         + '</tr>';
     });
     html += '</tbody></table></div>';

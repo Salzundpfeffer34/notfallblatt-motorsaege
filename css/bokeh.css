@@ -1,0 +1,22 @@
+/* bokeh.css – nur die seiten-spezifischen Regeln; Basis (body, .card, .row, .field, button) kommt aus css/sonne-mond.css */
+  select, input[type=text], input[type=date] { font:inherit; padding:7px 9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); width:100%; }
+  .ctl { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .ctl label { font-size:.8rem; color:var(--muted); font-weight:600; white-space:nowrap; }
+  .ctl input[type=range] { flex:1 1 220px; accent-color:var(--accent); }
+  .ctl output { min-width:86px; text-align:right; font-weight:600; font-variant-numeric:tabular-nums; }
+  #lensInfo { font-size:.8rem; color:var(--muted); margin-top:6px; }
+  #scene svg { width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:10px; }
+  .dofbar { position:relative; height:46px; margin-top:10px; background:var(--card); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .dofbar .zone { position:absolute; top:8px; height:14px; background:rgba(61,158,95,.28); border:1px solid #3d9e5f; border-radius:4px; }
+  .dofbar .zone span { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:.66rem; font-weight:700; color:#2c7a4b; white-space:nowrap; }
+  .dofbar .mark { position:absolute; top:2px; height:26px; width:2px; background:var(--accent); }
+  .dofbar .hmark { background:var(--muted); }
+  .dofbar .mlab { position:absolute; top:30px; transform:translateX(-50%); font-size:.66rem; color:var(--muted); white-space:nowrap; }
+  #dofOut { font-size:.88rem; }
+  footer { margin-top:22px; padding-top:12px; border-top:1px solid var(--line); font-size:.8rem; color:var(--muted); display:flex; flex-wrap:wrap; gap:6px 16px; }
+  footer a { color:var(--accent); text-decoration:none; }
+  @media (prefers-color-scheme: dark) {
+    .dofbar .zone { background:rgba(111,206,143,.20); border-color:#6fce8f; }
+    .dofbar .zone span { color:#6fce8f; }
+    select, input[type=text], input[type=date] { background:#262a33; color:var(--ink); border-color:var(--line); }
+  }

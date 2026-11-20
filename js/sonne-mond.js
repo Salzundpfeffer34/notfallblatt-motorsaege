@@ -444,6 +444,32 @@ function dayLengthSeries(lat, lon, fromStr, toStr, maxDays) {
   }
   return { days: days, truncated: truncated };
 }
+function dayLengthChartSvg(days) {
+  var pts = days.filter(function (d) { return d.len != null; });
+  if (!pts.length) { return ''; }
+  var min = Infinity, max = -Infinity;
+  pts.forEach(function (d) { if (d.len < min) { min = d.len; } if (d.len > max) { max = d.len; } });
+  if (max - min < 60000) { var mid = (min + max) / 2; min = mid - 60000; max = mid + 60000; }
+  var W = 640, H = 160, padL = 48, padR = 10, padT = 12, padB = 20, n = days.length;
+  function x(i) { return padL + (n === 1 ? (W - padL - padR) / 2 : i * (W - padL - padR) / (n - 1)); }
+  function y(v) { return padT + (1 - (v - min) / (max - min)) * (H - padT - padB); }
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:720px;height:auto;background:#fbfbf9;border:1px solid var(--line);border-radius:10px" role="img" aria-label="Liniendiagramm: Tageslänge pro Tag im Zeitraum">';
+  s += '<line x1="' + padL + '" y1="' + y(max).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(max).toFixed(1) + '" stroke="var(--line)"/>';
+  s += '<text x="' + (padL - 6) + '" y="' + (y(max) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + escHtml(fmtDur(max)) + '</text>';
+  s += '<line x1="' + padL + '" y1="' + y(min).toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y(min).toFixed(1) + '" stroke="var(--line)"/>';
+  s += '<text x="' + (padL - 6) + '" y="' + (y(min) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + escHtml(fmtDur(min)) + '</text>';
+  s += '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="#c8c8c0"/>';
+  var pl = [];
+  days.forEach(function (d, i) { if (d.len != null) { pl.push(x(i).toFixed(1) + ',' + y(d.len).toFixed(1)); } });
+  if (pl.length > 1) { s += '<polyline points="' + pl.join(' ') + '" fill="none" stroke="#e98a3c" stroke-width="2"/>'; }
+  days.forEach(function (d, i) {
+    if (d.len != null) { s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(d.len).toFixed(1) + '" r="2.6" fill="#e98a3c"><title>' + escHtml(fmtDateDE(d.date) + ': ' + fmtDur(d.len)) + '</title></circle>'; }
+  });
+  [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i) {
+    s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + escHtml(fmtDateDE(days[i].date).slice(0, 5)) + '</text>';
+  });
+  return s + '</svg>';
+}
 function dayLengthExtremes(lat, lon, year, todayStr) {
   function scan(mo0, d0, mo1, d1, pickMax) {
     var best = null;
@@ -1620,12 +1646,12 @@ if (typeof document !== 'undefined') {
     if (maxD && minD) {
       html += '<p class="help" style="margin:2px 0 8px">Im Zeitraum: längster Tag <b>' + fmtDateDE(maxD.date) + '</b> (' + fmtDur(maxD.len) + '), kürzester <b>' + fmtDateDE(minD.date) + '</b> (' + fmtDur(minD.len) + ').</p>';
     }
-    html += '<div style="overflow-x:auto"><table class="dltab"><tr><th>Datum</th><th>Aufgang</th><th>Untergang</th><th>Tageslänge</th><th>Grafik</th><th>Δ</th></tr>';
+    html += dayLengthChartSvg(r.days);
+    html += '<div style="overflow-x:auto"><table class="dltab"><tr><th>Datum</th><th>Aufgang</th><th>Untergang</th><th>Tageslänge</th><th>Δ</th></tr>';
     var prev = null;
     r.days.forEach(function (d) {
-      var w = (max > 0 && d.len != null) ? Math.max(2, Math.round(d.len / max * 100)) : 0;
       var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : null;
-      html += '<tr><td>' + fmtDateDE(d.date) + '</td><td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td><td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td><td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td><td><div class="dlbar"><span style="width:' + w + '%"></span></div></td><td>' + (delta == null ? '–' : (delta > 0 ? '+' : '') + delta + ' min') + '</td></tr>';
+      html += '<tr><td>' + fmtDateDE(d.date) + '</td><td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td><td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td><td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td><td>' + (delta == null ? '–' : (delta > 0 ? '+' : '') + delta + ' min') + '</td></tr>';
       prev = d;
     });
     html += '</table></div>';

@@ -488,6 +488,21 @@ function dayLengthChartSvg(days) {
   });
   return s + '</svg>';
 }
+function visibleDays(days, showAll, limit) {
+  if (showAll || days.length <= limit) { return { list: days, hidden: 0 }; }
+  return { list: days.slice(0, limit), hidden: days.length - limit };
+}
+function dayLenCsv(days) {
+  var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta_min'];
+  var prev = null;
+  days.forEach(function (d) {
+    var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : '';
+    out.push([d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', delta].join(';'));
+    if (d.len != null) { prev = d; }
+  });
+  return out.join('\n') + '\n';
+}
+
 function dayLengthExtremes(lat, lon, year, todayStr) {
   function scan(mo0, d0, mo1, d1, pickMax) {
     var best = null;
@@ -1660,21 +1675,46 @@ if (typeof document !== 'undefined') {
     if (r.error) { el.innerHTML = '<p class="help">' + escHtml(r.error) + '</p>'; return; }
     var max = 0, min = Infinity, maxD = null, minD = null;
     r.days.forEach(function (d) { if (d.len != null) { if (d.len > max) { max = d.len; maxD = d; } if (d.len < min) { min = d.len; minD = d; } } });
+    var showAll = !!($('dlShowAll') && $('dlShowAll').checked);
+    var vis = visibleDays(r.days, showAll, 10);
     var html = '';
     if (maxD && minD) {
       html += '<p class="help" style="margin:2px 0 8px">Im Zeitraum: längster Tag <b>' + fmtDateDE(maxD.date) + '</b> (' + fmtDur(maxD.len) + '), kürzester <b>' + fmtDateDE(minD.date) + '</b> (' + fmtDur(minD.len) + ').</p>';
     }
     html += dayLengthChartSvg(r.days);
-    html += '<div style="overflow-x:auto"><table class="dltab"><tr><th>Datum</th><th>Aufgang</th><th>Untergang</th><th>Tageslänge</th><th>Δ</th></tr>';
-    var prev = null;
-    r.days.forEach(function (d) {
+    html += '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 6px">'
+      + '<label style="font-size:.9rem;display:flex;gap:6px;align-items:center"><input type="checkbox" id="dlShowAll"' + (showAll ? ' checked' : '') + '> alle Tage anzeigen</label>'
+      + '<button type="button" id="dlCsv" class="secondary">CSV exportieren</button>'
+      + (vis.hidden > 0 ? '<span class="help">' + vis.list.length + ' von ' + r.days.length + ' Tagen angezeigt</span>' : '')
+      + '</div>';
+    html += '<div style="max-height:340px;overflow-y:auto;border:1px solid var(--line);border-radius:8px"><table class="dltab"><thead><tr><th>Datum</th><th>Aufgang</th><th>Untergang</th><th>Tageslänge</th><th>Δ</th></tr></thead><tbody>';
+    var prev = null, lastMonth = null;
+    vis.list.forEach(function (d) {
+      var mk = d.date.slice(0, 7);
+      if (mk !== lastMonth) {
+        html += '<tr class="dlmonth"><td colspan="5">' + escHtml(monthLabel(+mk.slice(0, 4), +mk.slice(5, 7) - 1)) + '</td></tr>';
+        lastMonth = mk;
+      }
       var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : null;
       html += '<tr><td>' + fmtDateDE(d.date) + '</td><td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td><td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td><td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td><td>' + (delta == null ? '–' : (delta > 0 ? '+' : '') + delta + ' min') + '</td></tr>';
       prev = d;
     });
-    html += '</table></div>';
+    html += '</tbody></table></div>';
     if (r.truncated) { html += '<p class="help">Zeitraum auf ' + r.days.length + ' Tage gekürzt (max. 400).</p>'; }
     el.innerHTML = html;
+    var cb = $('dlShowAll');
+    if (cb) { cb.addEventListener('change', renderDayLenRange); }
+    var csvBtn = $('dlCsv');
+    if (csvBtn) {
+      csvBtn.addEventListener('click', function () {
+        var blob = new Blob(['\uFEFF' + dayLenCsv(r.days)], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'tageslaengen_' + from + '_' + to + '.csv';
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 500);
+      });
+    }
   }
   (function initDayLenRange() {
     var fromEl = $('dayLenFrom'), toEl = $('dayLenTo'), det = $('dayLenRangeDet');

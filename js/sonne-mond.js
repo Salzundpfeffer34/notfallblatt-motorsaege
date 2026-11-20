@@ -1828,6 +1828,14 @@ if (typeof document !== 'undefined') {
     fromEl.addEventListener('change', rerender);
     toEl.addEventListener('change', rerender);
     det.addEventListener('toggle', function () { if (det.open) { renderDayLenRange(); } });
+    var resetBtn = $('dlReset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        fromEl.value = state.datum;
+        toEl.value = shiftDateStr(state.datum, 30);
+        renderDayLenRange();
+      });
+    }
     var rangeEl = $('dayLenRange');
     if (rangeEl) {
       var dlHot = function (i, on) {

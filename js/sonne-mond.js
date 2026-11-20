@@ -490,7 +490,13 @@ function dayLengthChartSvg(days) {
 }
 function visibleDays(days, showAll, limit) {
   if (showAll || days.length <= limit) { return { list: days, hidden: 0 }; }
-  return { list: days.slice(0, limit), hidden: days.length - limit };
+  if (limit <= 1) { return { list: days.slice(0, 1), hidden: days.length - 1 }; }
+  var n = days.length, seen = {}, list = [];
+  for (var i = 0; i < limit; i++) {
+    var p = Math.round(i * (n - 1) / (limit - 1));
+    if (!seen[p]) { seen[p] = 1; list.push(days[p]); }
+  }
+  return { list: list, hidden: n - list.length };
 }
 function dayLenCsv(days) {
   var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta_min'];
@@ -1710,7 +1716,7 @@ if (typeof document !== 'undefined') {
     html += '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 6px">'
       + '<label style="font-size:.9rem;display:flex;gap:6px;align-items:center"><input type="checkbox" id="dlShowAll"' + (showAll ? ' checked' : '') + '> alle Tage anzeigen</label>'
       + '<button type="button" id="dlCsv" class="secondary">CSV exportieren</button>'
-      + (vis.hidden > 0 ? '<span class="help">' + vis.list.length + ' von ' + r.days.length + ' Tagen angezeigt</span>' : '')
+      + (vis.hidden > 0 ? '<span class="help">' + vis.list.length + ' von ' + r.days.length + ' Tagen angezeigt (Anfang + Ende + gleichmäßig verteilt)</span>' : '')
       + '</div>';
     function sortTh(key, label) {
       return '<th class="dlsort' + (dlSort.key === key ? ' on' : '') + '" data-key="' + key + '">' + label + '<span class="sarr">' + (dlSort.key === key ? (dlSort.dir === 1 ? '▲' : '▼') : '') + '</span></th>';

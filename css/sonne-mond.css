@@ -7,7 +7,7 @@
   .dltab { border-collapse:collapse; width:100%; font-size:.88rem; }
   .dltab th, .dltab td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
   .dltab thead th { position:sticky; top:0; background:var(--card); z-index:1; }
-  .dltab .dlmonth td { background:var(--bg); font-weight:600; color:var(--muted); }
+  .dltab .dlmonth td { background:hsl(var(--dlmh,210) 55% 89%); color:hsl(var(--dlmh,210) 60% 28%); font-weight:700; font-size:.78rem; letter-spacing:.05em; text-transform:uppercase; border-top:2px solid var(--line); }
   .dltab th.dlsort { cursor:pointer; user-select:none; }
   .dltab th.dlsort:hover, .dltab th.dlsort.on { color:var(--accent); }
   .dltab th.dlsort .sarr { font-size:.72em; margin-left:3px; }
@@ -137,6 +137,7 @@
     .chip:hover, #ortResults button:hover, .cal-day:hover, button.secondary:hover { background:#2d323d; }
     .dltab td .dup { color:#6fce8f; }
     .dltab td .ddn { color:#e06055; }
+    .dltab .dlmonth td { background:hsl(var(--dlmh,210) 40% 24%); color:hsl(var(--dlmh,210) 65% 78%); }
     svg#sky, svg#bar { background:#191b21; }
     .error { background:#3a2226; border-color:#5c3038; color:#f0a8a8; }
     .help code { background:#2a2d35; }

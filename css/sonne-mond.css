@@ -4,6 +4,11 @@
   body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; margin:0; padding:0 16px 40px; color:var(--ink); background:var(--bg); }
   .wrap { max-width:920px; margin:0 auto; position:relative; z-index:1; }
   .sky-bg { position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+  .dltab { border-collapse:collapse; width:100%; font-size:.88rem; }
+  .dltab th, .dltab td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .dltab td:nth-child(2), .dltab td:nth-child(3), .dltab td:nth-child(4), .dltab td:nth-child(6) { text-align:right; font-variant-numeric:tabular-nums; }
+  .dlbar { background:var(--line); border-radius:4px; height:12px; min-width:120px; overflow:hidden; }
+  .dlbar span { display:block; height:100%; background:linear-gradient(90deg,#ef9412,#ffd54a); border-radius:4px; }
   .bg-sun, .bg-moon { position:absolute; top:0; left:0; width:110px; height:110px; opacity:.22; }
   .bg-sun { animation:bgSunArc 70s linear infinite; filter:drop-shadow(0 0 22px rgba(247,173,36,.55)); }
   .bg-moon { opacity:.18; animation:bgMoonArc 70s linear infinite; animation-delay:-35s; filter:drop-shadow(0 0 16px rgba(157,180,208,.5)); }

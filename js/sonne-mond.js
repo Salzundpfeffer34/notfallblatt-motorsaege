@@ -426,6 +426,24 @@ function shadowWindows(lat, lon, dayStartMs) {
   return { morning: [ev.sunrise, solarNoon - half], evening: [solarNoon + half, ev.sunset] };
 }
 
+function dayLengthSeries(lat, lon, fromStr, toStr, maxDays) {
+  var a = localDayStart(fromStr), b = localDayStart(toStr);
+  if (a == null || b == null) { return { error: 'Ungültiges Datum (Format JJJJ-MM-TT)' }; }
+  if (b < a) { return { error: '«Bis» liegt vor «Von»' }; }
+  var max = maxDays || 400;
+  var n = Math.floor((b - a) / DAY_MS) + 1;
+  var truncated = false;
+  if (n > max) { n = max; truncated = true; }
+  var days = [];
+  for (var i = 0; i < n; i++) {
+    var date = shiftDateStr(fromStr, i);
+    var ds = dayStartView(date);
+    if (ds == null) { continue; }
+    var ev = sunEventsForDay(lat, lon, ds);
+    days.push({ date: date, sunrise: ev.sunrise, sunset: ev.sunset, len: (ev.sunrise != null && ev.sunset != null) ? ev.sunset - ev.sunrise : null });
+  }
+  return { days: days, truncated: truncated };
+}
 function dayLengthExtremes(lat, lon, year, todayStr) {
   function scan(mo0, d0, mo1, d1, pickMax) {
     var best = null;
@@ -1307,6 +1325,8 @@ if (typeof document !== 'undefined') {
     renderStatus();
     save();
     updateUrl();
+    var drd0 = $('dayLenRangeDet');
+    if (drd0 && drd0.open) { renderDayLenRange(); }
   }
   function applyCoords(lat, lon, name) {
     checkLatLon(lat, lon);
@@ -1587,6 +1607,41 @@ if (typeof document !== 'undefined') {
   renderAll();
   reverseGeocode();
   fetchOrtsZeitzone();
+  function renderDayLenRange() {
+    var el = $('dayLenRange');
+    var fromEl = $('dayLenFrom'), toEl = $('dayLenTo');
+    if (!el || !fromEl || !toEl) { return; }
+    var from = String(fromEl.value || '').trim(), to = String(toEl.value || '').trim();
+    var r = dayLengthSeries(state.lat, state.lon, from, to);
+    if (r.error) { el.innerHTML = '<p class="help">' + escHtml(r.error) + '</p>'; return; }
+    var max = 0, min = Infinity, maxD = null, minD = null;
+    r.days.forEach(function (d) { if (d.len != null) { if (d.len > max) { max = d.len; maxD = d; } if (d.len < min) { min = d.len; minD = d; } } });
+    var html = '';
+    if (maxD && minD) {
+      html += '<p class="help" style="margin:2px 0 8px">Im Zeitraum: längster Tag <b>' + fmtDateDE(maxD.date) + '</b> (' + fmtDur(maxD.len) + '), kürzester <b>' + fmtDateDE(minD.date) + '</b> (' + fmtDur(minD.len) + ').</p>';
+    }
+    html += '<div style="overflow-x:auto"><table class="dltab"><tr><th>Datum</th><th>Aufgang</th><th>Untergang</th><th>Tageslänge</th><th>Grafik</th><th>Δ</th></tr>';
+    var prev = null;
+    r.days.forEach(function (d) {
+      var w = (max > 0 && d.len != null) ? Math.max(2, Math.round(d.len / max * 100)) : 0;
+      var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : null;
+      html += '<tr><td>' + fmtDateDE(d.date) + '</td><td>' + (d.sunrise != null ? fmtHM(d.sunrise) : '–') + '</td><td>' + (d.sunset != null ? fmtHM(d.sunset) : '–') + '</td><td>' + (d.len != null ? fmtDur(d.len) : '–') + '</td><td><div class="dlbar"><span style="width:' + w + '%"></span></div></td><td>' + (delta == null ? '–' : (delta > 0 ? '+' : '') + delta + ' min') + '</td></tr>';
+      prev = d;
+    });
+    html += '</table></div>';
+    if (r.truncated) { html += '<p class="help">Zeitraum auf ' + r.days.length + ' Tage gekürzt (max. 400).</p>'; }
+    el.innerHTML = html;
+  }
+  (function initDayLenRange() {
+    var fromEl = $('dayLenFrom'), toEl = $('dayLenTo'), det = $('dayLenRangeDet');
+    if (!fromEl || !toEl || !det) { return; }
+    fromEl.value = state.datum;
+    toEl.value = shiftDateStr(state.datum, 30);
+    var rerender = function () { renderDayLenRange(); };
+    fromEl.addEventListener('change', rerender);
+    toEl.addEventListener('change', rerender);
+    det.addEventListener('toggle', function () { if (det.open) { renderDayLenRange(); } });
+  })();
   function buildTzMan() {
     loadTzCities(function () {
       var dl = $('tzCityList');

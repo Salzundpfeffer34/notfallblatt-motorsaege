@@ -1728,7 +1728,8 @@ if (typeof document !== 'undefined') {
       if (dlSort.key === 'datum') {
         var mk = d.date.slice(0, 7);
         if (mk !== lastMonth) {
-          html += '<tr class="dlmonth"><td colspan="5">' + escHtml(monthLabel(+mk.slice(0, 4), +mk.slice(5, 7) - 1)) + '</td></tr>';
+          var mh = ((+mk.slice(5, 7) - 1) * 30 + 210) % 360;
+          html += '<tr class="dlmonth" style="--dlmh:' + mh + '"><td colspan="5">' + escHtml(monthLabel(+mk.slice(0, 4), +mk.slice(5, 7) - 1)) + '</td></tr>';
           lastMonth = mk;
         }
       }

@@ -498,12 +498,19 @@ function visibleDays(days, showAll, limit) {
   }
   return { list: list, hidden: n - list.length };
 }
+function fmtDeltaCsv(delta, deltaMs) {
+  if (delta == null) { return ''; }
+  if (delta !== 0) { return String(delta); }
+  var s = Math.round(deltaMs / 1000);
+  return (s > 0 ? '+' : '') + s + 's';
+}
 function dayLenCsv(days) {
-  var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta_min'];
+  var out = ['Datum;Aufgang;Untergang;Tageslaenge_min;Delta'];
   var prev = null;
   days.forEach(function (d) {
-    var delta = (prev && d.len != null && prev.len != null) ? Math.round((d.len - prev.len) / 60000) : '';
-    out.push([d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', delta].join(';'));
+    var deltaMs = (prev && d.len != null && prev.len != null) ? (d.len - prev.len) : null;
+    var delta = deltaMs != null ? Math.round(deltaMs / 60000) : null;
+    out.push([d.date, d.sunrise != null ? fmtHM(d.sunrise) : '', d.sunset != null ? fmtHM(d.sunset) : '', d.len != null ? Math.round(d.len / 60000) : '', fmtDeltaCsv(delta, deltaMs)].join(';'));
     if (d.len != null) { prev = d; }
   });
   return out.join('\n') + '\n';

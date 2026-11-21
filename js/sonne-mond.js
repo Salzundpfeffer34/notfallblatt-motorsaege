@@ -1589,14 +1589,33 @@ if (typeof document !== 'undefined') {
       })['catch'](function () {});
     } catch (e) {}
   }
-  function ortDbFallback() {
-    if (!state.locKnown) { return; }
-    if (!ortDbLoaded()) { loadOrtDb(function (ok) { if (ok) { ortDbFallback(); } }); return; }
-    var hit = ortDbLookup(ORT_DB, state.lat, state.lon, 60);
+  function ortDbApply(hit) {
     if (hit) {
       state.name = '≈ ' + hit.name + (hit.distKm < 1 ? '' : ' (ca. ' + Math.round(hit.distKm) + ' km)');
       renderCoordInfo(); save();
     }
+  }
+  function ortDbLocal() {
+    if (!ortDbLoaded()) { loadOrtDb(function (ok) { if (ok) { ortDbLocal(); } }); return; }
+    ortDbApply(ortDbLookup(ORT_DB, state.lat, state.lon, 60));
+  }
+  function ortDbFallback() {
+    if (!state.locKnown) { return; }
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      try {
+        var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        var t = ctl ? setTimeout(function () { ctl.abort(); }, 4000) : null;
+        fetch('ort-db.php?lat=' + state.lat + '&lon=' + state.lon + '&maxkm=60', ctl ? { signal: ctl.signal } : {}).then(function (r) {
+          if (t) { clearTimeout(t); }
+          return r.ok ? r.json() : null;
+        }).then(function (j) {
+          if (j && j.name && isFinite(j.distKm)) { ortDbApply({ name: j.name, distKm: j.distKm }); }
+          else { ortDbLocal(); }
+        })['catch'](function () { if (t) { clearTimeout(t); } ortDbLocal(); });
+        return;
+      } catch (e) { /* lokal weiter */ }
+    }
+    ortDbLocal();
   }
   function reverseGeocode(force) {
     if (!state.locKnown) { return; }

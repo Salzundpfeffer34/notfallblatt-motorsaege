@@ -377,6 +377,22 @@ function shadowRatio(altDeg) {
   if (!(altDeg > 0.5)) { return null; }
   return 1 / Math.tan(altDeg * RAD);
 }
+function calIconSvg(day) {
+  day = Math.max(1, Math.min(31, parseInt(day, 10) || 1));
+  return '<svg viewBox="0 0 24 24" width="1.05em" height="1.05em" style="vertical-align:-0.15em">'
+    + '<rect x="3" y="5" width="18" height="16" rx="2.5" fill="#fff" stroke="#c33" stroke-width="1.6"/>'
+    + '<path d="M3 9.5h18" stroke="#c33" stroke-width="1.6"/>'
+    + '<rect x="3" y="5" width="18" height="4.5" rx="2.5" fill="#c33"/>'
+    + '<line x1="8" y1="3" x2="8" y2="6.5" stroke="#c33" stroke-width="1.8" stroke-linecap="round"/>'
+    + '<line x1="16" y1="3" x2="16" y2="6.5" stroke="#c33" stroke-width="1.8" stroke-linecap="round"/>'
+    + '<text x="12" y="18.6" text-anchor="middle" font-size="9.5" font-weight="700" fill="#33362f" font-family="system-ui,sans-serif">' + day + '</text></svg>';
+}
+function updateCalIcon() {
+  var el = $('calIcon');
+  if (!el) { return; }
+  var day = parseInt(dateStrOf(nowMs()).slice(8, 10), 10);
+  el.innerHTML = calIconSvg(day);
+}
 function sunEventsForDay(lat, lon, dayStartMs) {
   var d0 = new Date(dayStartMs);
   var utcMid = Date.UTC(d0.getFullYear(), d0.getMonth(), d0.getDate(), 0, 0, 0);
@@ -1457,6 +1473,7 @@ if (typeof document !== 'undefined') {
     });
   }
   function renderClockLine() {
+    updateCalIcon();
     var t = nowMs();
     var d = new Date(t);
     var pi = phaseInfo(sunPosition(state.lat, state.lon, t).alt);

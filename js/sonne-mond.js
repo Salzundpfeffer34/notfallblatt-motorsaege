@@ -351,18 +351,30 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * p) * Math.cos(lat2 * p) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
 }
-function ortDbLookup(db, lat, lon, maxKm) {
-  if (!db || !isFinite(lat) || !isFinite(lon)) { return null; }
-  if (!isFinite(maxKm) || maxKm <= 0) { maxKm = 60; }
-  var best = null, bd = maxKm;
-  String(db).split('\n').forEach(function (line) {
+var _ortDbCache = { db: null, list: null };
+function ortDbParse(db) {
+  if (_ortDbCache.db === db && _ortDbCache.list) { return _ortDbCache.list; }
+  var list = [];
+  String(db || '').split('\n').forEach(function (line) {
     var p = line.split('|');
     if (p.length < 3) { return; }
     var la = parseFloat(p[1]), lo = parseFloat(p[2]);
     if (!p[0] || !isFinite(la) || !isFinite(lo)) { return; }
-    var d = haversineKm(lat, lon, la, lo);
-    if (d <= bd) { bd = d; best = { name: p[0], lat: la, lon: lo, distKm: d, cc: p[3] || '' }; }
+    list.push({ name: p[0], lat: la, lon: lo, cc: p[3] || '' });
   });
+  _ortDbCache = { db: db, list: list };
+  return list;
+}
+function ortDbLookup(db, lat, lon, maxKm) {
+  if (!db || !isFinite(lat) || !isFinite(lon)) { return null; }
+  if (!isFinite(maxKm) || maxKm <= 0) { maxKm = 60; }
+  var best = null, bd = maxKm;
+  var list = ortDbParse(db);
+  for (var i = 0; i < list.length; i++) {
+    var e = list[i];
+    var d = haversineKm(lat, lon, e.lat, e.lon);
+    if (d <= bd) { bd = d; best = { name: e.name, lat: e.lat, lon: e.lon, distKm: d, cc: e.cc }; }
+  }
   return best;
 }
 function nominatimSub(f) {

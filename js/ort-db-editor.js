@@ -71,13 +71,16 @@ function applyOrtDbEdits(base, edits) {
   });
   return res;
 }
-function findOrtEntries(entries, q) {
+function findOrtEntries(entries, q, norms) {
   var nq = ortNorm(q);
   var list = entries || [];
   if (!nq) { return list.slice(); }
-  return list.filter(function (e) {
-    return ortNorm(e.name).indexOf(nq) >= 0 || String(e.cc || '').toLowerCase() === nq.toLowerCase();
-  });
+  var out = [];
+  for (var i = 0; i < list.length; i++) {
+    var n = norms ? norms[i] : ortNorm(list[i].name);
+    if (n.indexOf(nq) >= 0 || String(list[i].cc || '').toLowerCase() === nq.toLowerCase()) { out.push(list[i]); }
+  }
+  return out;
 }
 function ortDbFileContent(entries) {
   var n = (entries || []).length;
@@ -152,9 +155,6 @@ if (typeof document !== 'undefined') {
     } catch (e) {}
 
     function current() { return applyOrtDbEdits(base, edits); }
-    function saveEdits() {
-      try { localStorage.setItem(LS_KEY, JSON.stringify(edits)); } catch (e) {}
-    }
     function addedKeys() {
       var s = {};
       edits.added.forEach(function (e) { s[ortKeyOf(e)] = 1; });
@@ -173,9 +173,24 @@ if (typeof document !== 'undefined') {
       $('stats').textContent = 'Basis: ' + base.length + ' Einträge · +' + edits.added.length + ' hinzugefügt · −' + edits.removed.length + ' entfernt = ' + eff.length + ' effektiv';
     }
 
+    var editsVersion = 0;
+    var normedCache = { v: -1, entries: [], norms: [] };
+    function saveEdits() {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(edits)); } catch (e) {}
+      editsVersion++;
+    }
+    function normedCurrent() {
+      if (normedCache.v !== editsVersion) {
+        var eff = current();
+        normedCache = { v: editsVersion, entries: eff, norms: eff.map(function (e) { return ortNorm(e.name); }) };
+      }
+      return normedCache;
+    }
+
     function renderTable() {
       var q = String($('search').value || '').trim();
-      var list = findOrtEntries(current(), q);
+      var nc = normedCurrent();
+      var list = findOrtEntries(nc.entries, q, nc.norms);
       var ak = addedKeys();
       var tb = $('rows');
       tb.innerHTML = '';

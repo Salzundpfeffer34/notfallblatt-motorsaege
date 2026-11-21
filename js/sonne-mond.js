@@ -914,7 +914,7 @@ function renderMwWeather(lat, lon, dayStart, mw) {
   var key = dayStart + '|' + lat.toFixed(3) + '|' + lon.toFixed(3);
   if (state.mwWxKey === key && state.mwWx) { el.textContent = state.mwWx; return; }
   el.textContent = '…';
-  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&hourly=cloudcover&timezone=UTC&forecast_days=3';
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&hourly=cloudcover,temperature_2m&timezone=UTC&forecast_days=3';
   fetch(url).then(function (r) { return r.json(); }).then(function (j) {
     if (!j || !j.hourly || !j.hourly.time) { return; }
     var times = j.hourly.time, cc = j.hourly.cloudcover;
@@ -932,9 +932,15 @@ function renderMwWeather(lat, lon, dayStart, mw) {
     }
     if (!vals.length) { el.textContent = '–'; return; }
     var avg = vals.reduce(function (s2, v) { return s2 + v; }, 0) / vals.length;
+    var tempTxt = '';
+    if (mw.bestT != null && j.hourly.temperature_2m) {
+      var bt = Infinity, bi2 = -1;
+      for (var k2 = 0; k2 < times.length; k2++) { var d2 = Math.abs(Date.parse(times[k2] + 'Z') - mw.bestT); if (d2 < bt) { bt = d2; bi2 = k2; } }
+      if (bi2 >= 0 && isFinite(j.hourly.temperature_2m[bi2])) { tempTxt = ' · ' + j.hourly.temperature_2m[bi2].toFixed(0) + ' °C um ' + fmtHM(mw.bestT); }
+    }
     var moonUp = moonPosition(lat, lon, mw.bestT).alt > 0;
     var ph = moonPhaseInfo(dayStart + 43200000);
-    var txt = cloudIcon(avg) + ' ' + cloudLabel(avg) + (moonUp ? ' · ' + moonPhaseEmoji(ph.phase) : '');
+    var txt = cloudIcon(avg) + ' ' + cloudLabel(avg) + tempTxt + (moonUp ? ' · ' + moonPhaseEmoji(ph.phase) : '');
     state.mwWxKey = key; state.mwWx = txt;
     var el2 = $('mwWetter');
     if (el2) { el2.textContent = txt; }
@@ -1367,7 +1373,7 @@ if (typeof document !== 'undefined') {
     var mw = milkyWayInfo(state.lat, state.lon, dayStart, ev);
     row('🌌 Milchstrassen-Zentrum kulminiert', fmtHM(mw.transit), mw.alt.toFixed(1) + '°', mw.az.toFixed(0) + '° ' + compass(mw.az));
     row('🌌 Milchstrasse fotografieren?', mw.windowText, mw.verdict + ' · beste Zeit ' + fmtHM(mw.bestT) + ' (' + mw.bestAlt.toFixed(0) + '° ' + compass(mw.bestAz) + ')', '');
-    row('🌌 Wetter in der Nacht (Open-Meteo)', '<span id="mwWetter">–</span>', '', '');
+    row('🌌 Wetter in der Nacht (Open-Meteo, inkl. Temperatur zur besten Zeit)', '<span id="mwWetter">–</span>', '', '');
     var outRows = ['<tr><th>Ereignis</th><th>Zeit</th><th>Höhe</th><th>Azimut</th></tr>'];
     sections.forEach(function (s2) {
       if (s2.title == null) { outRows.push(s2.html.join('')); return; }

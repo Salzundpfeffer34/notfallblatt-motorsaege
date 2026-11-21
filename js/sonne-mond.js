@@ -257,10 +257,25 @@ function similarity(a, b) {
   });
   return hit / ta.length;
 }
+function isStrongOrtMatch(q, it) {
+  var qt = normalizeQuery(q).split(' ').filter(Boolean);
+  if (!qt.length) { return false; }
+  var lt = normalizeQuery(String(it.name || '') + ' ' + String(it.label || '')).split(' ').filter(Boolean);
+  if (!lt.length) { return false; }
+  return qt.every(function (t) {
+    return lt.some(function (u) {
+      return u === t || (t.length >= 2 && u.indexOf(t) === 0) || (u.length > 3 && t.indexOf(u) === 0);
+    });
+  });
+}
 function rankOrtResults(list, q) {
   return (list || []).map(function (it) {
-    return { it: it, s: similarity(q, String(it.name || '') + ' ' + String(it.label || '')) };
-  }).sort(function (a, b) { return b.s - a.s; }).map(function (x) { return x.it; });
+    var s = similarity(q, String(it.name || '') + ' ' + String(it.label || ''));
+    return { it: it, s: s, strong: isStrongOrtMatch(q, it) ? 1 : 0 };
+  }).sort(function (a, b) {
+    if (b.strong !== a.strong) { return b.strong - a.strong; }
+    return b.s - a.s;
+  }).map(function (x) { return x.it; });
 }
 function usStateToken(q) {
   if (typeof US_STATE_NAMES === 'undefined') { return null; }
@@ -1668,12 +1683,16 @@ if (typeof document !== 'undefined') {
       var variants = queryVariants(q);
       var all = [];
       var vi = 0;
+      var hasBias = isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
       var step = function () {
         if (vi >= variants.length || all.length >= 5) { return Promise.resolve(); }
         var v = variants[vi++];
-        var jobs = buildSearchUrls(v, lat, lon).map(function (u, i) {
+        var urls = buildSearchUrls(v, lat, lon);
+        if (hasBias) { urls = urls.concat(buildSearchUrls(v, NaN, NaN)); }
+        var jobs = urls.map(function (u, i) {
+          var src = i % 2;
           return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
-            if (i === 0) {
+            if (src === 0) {
               return (j || []).map(function (f) {
                 return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), name: String(f.display_name).split(',')[0], label: f.display_name, sub: nominatimSub(f) };
               });

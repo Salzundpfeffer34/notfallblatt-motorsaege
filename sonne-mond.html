@@ -63,11 +63,17 @@
     </div>
   </div>
   <div id="ortResults"></div>
-  <details class="hint"><summary>Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln») – ausklappen</summary><div>Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Ohne Geolokalisierung und ohne gesetzte Koordinate wird weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us). Europa/Länder: Land ans Ende anhängen (z. B. «Zermatt Schweiz», «Zermatt CH», «Paris Frankreich», «Lissabon Portugal») – die Suche wird automatisch auf dieses Land eingeschränkt (countrycodes=ch/fr/pt …); Schweiz: Kanton anhängen (z. B. «Küsnacht ZH», «Lausanne VD», «Genf GE») → countrycodes=ch. 2-Buchstaben-Codes bitte gross schreiben, sonst Land/Kanton voll ausschreiben («Berlin Deutschland»).</div></details>
+  <details class="hint"><summary>Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln») – ausklappen</summary><div>Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Zusätzlich wird immer auch weltweit ohne Bias gesucht – Treffer mit exakt passendem Namen (z. B. «Eiffelturm») stehen ganz oben vor rein lokalen Treffern. Ohne Geolokalisierung und ohne gesetzte Koordinate wird nur weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us). Europa/Länder: Land ans Ende anhängen (z. B. «Zermatt Schweiz», «Zermatt CH», «Paris Frankreich», «Lissabon Portugal») – die Suche wird automatisch auf dieses Land eingeschränkt (countrycodes=ch/fr/pt …); Schweiz: Kanton anhängen (z. B. «Küsnacht ZH», «Lausanne VD», «Genf GE») → countrycodes=ch. 2-Buchstaben-Codes bitte gross schreiben, sonst Land/Kanton voll ausschreiben («Berlin Deutschland»).</div></details>
   <div class="btnrow">
     <button type="button" id="posBtn" class="secondary">📍 Meine Position</button>
     <button type="button" id="heuteBtn" class="secondary">Heute</button>
     <button type="button" id="copyLink" class="secondary">🔗 Link kopieren</button>
+  </div>
+  <p class="coordinfo" id="coordInfo"></p>
+  <div id="tzManWrap" class="hint" style="display:none;margin-top:4px">
+    <label for="tzMan">Zeitzone manuell setzen (nur nötig ohne automatische Ermittlung, z. B. offline) – UTC±x oder Stadt:</label>
+    <input type="text" id="tzMan" list="tzCityList" placeholder="z. B. UTC+2, Paris, New York, Tenerife …" autocomplete="off">
+    <datalist id="tzCityList"></datalist>
   </div>
   <div class="chips" id="chips">
     <button type="button" class="chip" data-lat="46.0207" data-lon="7.7491" data-name="Matterhorn">Matterhorn</button>
@@ -79,12 +85,6 @@
     <button type="button" class="chip" data-lat="48.8584" data-lon="2.2945" data-name="Eiffelturm">Eiffelturm</button>
   </div>
   <div id="err" class="error hidden"></div>
-  <p class="coordinfo" id="coordInfo"></p>
-  <div id="tzManWrap" class="hint" style="display:none;margin-top:4px">
-    <label for="tzMan">Zeitzone manuell setzen (nur nötig ohne automatische Ermittlung, z. B. offline) – UTC±x oder Stadt:</label>
-    <input type="text" id="tzMan" list="tzCityList" placeholder="z. B. UTC+2, Paris, New York, Tenerife …" autocomplete="off">
-    <datalist id="tzCityList"></datalist>
-  </div>
 </div>
 
 <div class="card" id="statusCard">

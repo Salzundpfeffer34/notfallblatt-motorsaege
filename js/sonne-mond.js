@@ -373,6 +373,10 @@ var CROSS_NAMES = {
   '6': 'Grenze Goldene Stunde (Sonne +6°)'
 };
 
+function shadowRatio(altDeg) {
+  if (!(altDeg > 0.5)) { return null; }
+  return 1 / Math.tan(altDeg * RAD);
+}
 function sunEventsForDay(lat, lon, dayStartMs) {
   var d0 = new Date(dayStartMs);
   var utcMid = Date.UTC(d0.getFullYear(), d0.getMonth(), d0.getDate(), 0, 0, 0);
@@ -1216,6 +1220,20 @@ if (typeof document !== 'undefined') {
     s += '<circle cx="' + X(sp2.az).toFixed(1) + '" cy="' + Y(Math.max(sp2.alt, -20)).toFixed(1) + '" r="6.5" fill="#ffd76a" stroke="#b3261e" stroke-width="2"><title>Sonne ' + fmtHM(tm) + ' · Höhe ' + sp2.alt.toFixed(1) + '° · Azimut ' + sp2.az.toFixed(0) + '° ' + compass(sp2.az) + '</title></circle>';
     if (mp2.alt >= -20) {
       s += '<circle cx="' + X(mp2.az).toFixed(1) + '" cy="' + Y(mp2.alt).toFixed(1) + '" r="5.5" fill="#e8eef7" stroke="#33507e" stroke-width="2"><title>Mond ' + fmtHM(tm) + ' · Höhe ' + mp2.alt.toFixed(1) + '° · Azimut ' + mp2.az.toFixed(0) + '° ' + compass(mp2.az) + '</title></circle>';
+    }
+    var stickPx = 26;
+    var altNow = sp2.alt;
+    var ratio = shadowRatio(altNow);
+    if (ratio != null) {
+      var x0 = X(sp2.az);
+      var yH = Y(0);
+      var sgn = (sp2.az > 0 && sp2.az < 180) ? -1 : 1;
+      var maxShadow = pw * 0.42;
+      var shPx = Math.min(maxShadow, stickPx * ratio);
+      var xe = Math.max(padL + 6, Math.min(padL + pw - 6, x0 + sgn * shPx));
+      s += '<line x1="' + x0.toFixed(1) + '" y1="' + yH.toFixed(1) + '" x2="' + xe.toFixed(1) + '" y2="' + yH.toFixed(1) + '" stroke="#8a6f4d" stroke-width="7" stroke-linecap="round" opacity=".85"><title>Schatten ' + ratio.toFixed(1) + '× Stabhöhe (Sonne ' + fmtHM(tm) + ', Höhe ' + altNow.toFixed(1) + '°)</title></line>';
+      s += '<line x1="' + x0.toFixed(1) + '" y1="' + yH.toFixed(1) + '" x2="' + x0.toFixed(1) + '" y2="' + (yH - stickPx).toFixed(1) + '" stroke="#33362f" stroke-width="4" stroke-linecap="round"><title>Stab (1×) im Sonnen-Azimut ' + sp2.az.toFixed(0) + '°</title></line>';
+      s += '<text x="' + ((x0 + xe) / 2).toFixed(1) + '" y="' + (yH + 15).toFixed(1) + '" text-anchor="middle" font-size="10" fill="#6b6b64">Schatten ' + ratio.toFixed(1) + '×</text>';
     }
     svg.innerHTML = s;
   }

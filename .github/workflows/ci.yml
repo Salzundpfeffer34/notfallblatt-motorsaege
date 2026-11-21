@@ -34,3 +34,4 @@ jobs:
           php -l counter.php
           php -l koordinaten/counter.php
           php -l koordinaten/index.php
+          php -l ort-db.php

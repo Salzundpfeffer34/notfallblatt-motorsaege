@@ -113,6 +113,31 @@ function loadTzCities(cb) {
   }
 }
 
+/* Offline-Ortsdatenbank liegt in js/ort-db.js und wird erst bei Bedarf geladen (Reverse-Geocoding offline). */
+var _ortDbLoading = null;
+function ortDbLoaded() { return typeof ORT_DB !== 'undefined'; }
+function loadOrtDb(cb) {
+  if (ortDbLoaded()) { cb(true); return; }
+  if (_ortDbLoading) { _ortDbLoading.push(cb); return; }
+  _ortDbLoading = [cb];
+  try {
+    var sc = document.createElement('script');
+    sc.src = 'js/ort-db.js';
+    sc.onload = function () {
+      var cbs = _ortDbLoading; _ortDbLoading = null;
+      for (var i = 0; i < cbs.length; i++) { cbs[i](ortDbLoaded()); }
+    };
+    sc.onerror = function () {
+      var cbs = _ortDbLoading; _ortDbLoading = null;
+      for (var i = 0; i < cbs.length; i++) { cbs[i](false); }
+    };
+    document.head.appendChild(sc);
+  } catch (e) {
+    _ortDbLoading = null;
+    cb(false);
+  }
+}
+
 /* Ortssuche-Daten liegen in js/ort-suche-data.js und werden erst bei Bedarf geladen. */
 var _ortDataLoading = null;
 function ortDataLoaded() { return typeof EU_COUNTRIES !== 'undefined' && typeof CH_CANTONS !== 'undefined'; }
@@ -319,6 +344,38 @@ function dedupeOrtResults(list) {
     if (!seen[k]) { seen[k] = 1; out.push(it); }
   });
   return out;
+}
+function haversineKm(lat1, lon1, lat2, lon2) {
+  var R = 6371, p = Math.PI / 180;
+  var dLat = (lat2 - lat1) * p, dLon = (lon2 - lon1) * p;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * p) * Math.cos(lat2 * p) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+var _ortDbCache = { db: null, list: null };
+function ortDbParse(db) {
+  if (_ortDbCache.db === db && _ortDbCache.list) { return _ortDbCache.list; }
+  var list = [];
+  String(db || '').split('\n').forEach(function (line) {
+    var p = line.split('|');
+    if (p.length < 3) { return; }
+    var la = parseFloat(p[1]), lo = parseFloat(p[2]);
+    if (!p[0] || !isFinite(la) || !isFinite(lo)) { return; }
+    list.push({ name: p[0], lat: la, lon: lo, cc: p[3] || '' });
+  });
+  _ortDbCache = { db: db, list: list };
+  return list;
+}
+function ortDbLookup(db, lat, lon, maxKm) {
+  if (!db || !isFinite(lat) || !isFinite(lon)) { return null; }
+  if (!isFinite(maxKm) || maxKm <= 0) { maxKm = 60; }
+  var best = null, bd = maxKm;
+  var list = ortDbParse(db);
+  for (var i = 0; i < list.length; i++) {
+    var e = list[i];
+    var d = haversineKm(lat, lon, e.lat, e.lon);
+    if (d <= bd) { bd = d; best = { name: e.name, lat: e.lat, lon: e.lon, distKm: d, cc: e.cc }; }
+  }
+  return best;
 }
 function nominatimSub(f) {
   var a = (f && f.address) || {};
@@ -1176,7 +1233,11 @@ if (typeof document !== 'undefined') {
   try {
     var qs = new URLSearchParams(location.search);
     var qla = parseFloat(qs.get('lat')), qlo = parseFloat(qs.get('lon'));
-    if (isFinite(qla) && isFinite(qlo) && Math.abs(qla) <= 90 && Math.abs(qlo) <= 180) { state.lat = qla; state.lon = qlo; state.locKnown = true; }
+    if (isFinite(qla) && isFinite(qlo) && Math.abs(qla) <= 90 && Math.abs(qlo) <= 180) {
+      var sameAsSaved = state.locKnown && Math.abs(state.lat - qla) < 0.01 && Math.abs(state.lon - qlo) < 0.01;
+      state.lat = qla; state.lon = qlo; state.locKnown = true;
+      if (!sameAsSaved) { state.name = ''; }
+    }
     if (qs.get('datum') && localDayStart(qs.get('datum')) != null) { state.datum = qs.get('datum'); }
   } catch (e) { /* keine URL-Parameter */ }
 
@@ -1519,7 +1580,7 @@ if (typeof document !== 'undefined') {
   function applyCoords(lat, lon, name) {
     checkLatLon(lat, lon);
     state.lat = lat; state.lon = lon; state.locKnown = true;
-    if (name) { state.name = name; }
+    if (name != null) { state.name = String(name); }
     renderAll();
     fetchOrtsZeitzone();
   }
@@ -1540,23 +1601,55 @@ if (typeof document !== 'undefined') {
       })['catch'](function () {});
     } catch (e) {}
   }
-  function reverseGeocode() {
-    if (!state.locKnown || state.name) { return; }
+  function ortDbApply(hit) {
+    if (hit) {
+      state.name = '≈ ' + hit.name + (hit.distKm < 1 ? '' : ' (ca. ' + Math.round(hit.distKm) + ' km)');
+      renderCoordInfo(); save();
+    }
+  }
+  function ortDbLocal() {
+    if (!ortDbLoaded()) { loadOrtDb(function (ok) { if (ok) { ortDbLocal(); } }); return; }
+    ortDbApply(ortDbLookup(ORT_DB, state.lat, state.lon, 60));
+  }
+  function ortDbFallback() {
+    if (!state.locKnown) { return; }
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      try {
+        var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        var t = ctl ? setTimeout(function () { ctl.abort(); }, 4000) : null;
+        fetch('ort-db.php?lat=' + state.lat + '&lon=' + state.lon + '&maxkm=60', ctl ? { signal: ctl.signal } : {}).then(function (r) {
+          if (t) { clearTimeout(t); }
+          return r.ok ? r.json() : null;
+        }).then(function (j) {
+          if (j && j.name && isFinite(j.distKm)) { ortDbApply({ name: j.name, distKm: j.distKm }); }
+          else { ortDbLocal(); }
+        })['catch'](function () { if (t) { clearTimeout(t); } ortDbLocal(); });
+        return;
+      } catch (e) { /* lokal weiter */ }
+    }
+    ortDbLocal();
+  }
+  function reverseGeocode(force) {
+    if (!state.locKnown) { return; }
+    if (state.name && !force) { return; }
+    if (force) { state.name = ''; }
+    if (!(location.protocol === 'http:' || location.protocol === 'https:')) { ortDbFallback(); return; }
     try {
       var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=de&lat=' + state.lat + '&lon=' + state.lon;
       fetch(url).then(function (r) { return r.json(); }).then(function (j) {
         if (j && j.display_name) {
           state.name = String(j.display_name).split(',')[0];
           renderCoordInfo(); save();
-        }
-      })['catch'](function () {});
-    } catch (e) {}
+        } else { ortDbFallback(); }
+      })['catch'](function () { ortDbFallback(); });
+    } catch (e) { ortDbFallback(); }
   }
   $('coordForm').addEventListener('submit', function (e) {
     e.preventDefault();
     try {
       var r = parseCoordInput(trimField($('q')));
-      applyCoords(r.lat, r.lon, state.name);
+      applyCoords(r.lat, r.lon, '');
+      reverseGeocode();
       err(null);
     } catch (ex) {
       err(ex.message);
@@ -1719,6 +1812,7 @@ if (typeof document !== 'undefined') {
           b0.querySelector('span').textContent = devPos.lat.toFixed(4) + ', ' + devPos.lon.toFixed(4);
           b0.addEventListener('click', function () {
             applyCoords(devPos.lat, devPos.lon, '');
+            reverseGeocode();
             box.innerHTML = '';
             $('ort').value = '';
           });

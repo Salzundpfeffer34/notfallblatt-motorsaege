@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()">
+<script src="js/framebust.js"></script>
+<title>Ortsdatenbank bearbeiten &middot; Notfallblatt Motors&auml;ge</title>
+<link rel="icon" type="image/svg+xml" href="img/sonne-mond.svg">
+<meta name="description" content="Offline-Ortsdatenbank (js/ort-db.js / ort-db.sql) lokal bearbeiten: Orte suchen, hinzuf&uuml;gen, l&ouml;schen und als fertige Datei exportieren.">
+<link rel="stylesheet" href="css/ort-db-editor.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1><span class="brand-icon"><img src="img/sonne-mond.svg" alt="" width="34" height="34"></span> Ortsdatenbank bearbeiten</h1>
+    <p class="sub">Offline-Ortsdatenbank f&uuml;r die Ortsnamens-Anzeige auf <a href="sonne-mond.html">Sonne &amp; Mond</a>. &Auml;nderungen bleiben lokal in deinem Browser (localStorage) &ndash; exportiere am Ende die fertige Datei und lege sie als <code>js/ort-db.js</code> (bzw. <code>ort-db.sql</code>) ins Repo.</p>
+  </div>
+  <a class="back" href="sonne-mond.html">&larr; Sonne &amp; Mond</a>
+</header>
+
+<div class="card">
+  <p class="stats" id="stats">&ndash;</p>
+
+  <form id="addForm" class="addform">
+    <div class="field"><label for="fName">Name</label><input type="text" id="fName" placeholder="z. B. Playa Paraiso" autocomplete="off" spellcheck="false"></div>
+    <div class="field small"><label for="fLat">Lat (&plusmn;90)</label><input type="text" id="fLat" placeholder="28.199" inputmode="decimal" autocomplete="off"></div>
+    <div class="field small"><label for="fLon">Lon (&plusmn;180)</label><input type="text" id="fLon" placeholder="-16.775" inputmode="decimal" autocomplete="off"></div>
+    <div class="field tiny"><label for="fCc">CC</label><input type="text" id="fCc" placeholder="ES" maxlength="2" autocomplete="off"></div>
+    <div class="field btn"><label>&nbsp;</label><button type="submit">+ Hinzuf&uuml;gen</button></div>
+  </form>
+  <div id="addErr" class="error hidden"></div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Suchen (Name oder Land, z. B. «tenerife» oder «ES») &hellip;" autocomplete="off" spellcheck="false">
+    <button type="button" id="expJs" class="secondary">js/ort-db.js exportieren</button>
+    <button type="button" id="expSql" class="secondary">ort-db.sql exportieren</button>
+    <button type="button" id="expCsv" class="secondary">CSV exportieren</button>
+    <label class="secondary importlbl">Import&hellip; <input type="file" id="importFile" accept=".js,.sql,.csv,.txt,.tsv"></label>
+    <button type="button" id="resetEdits" class="secondary danger">Änderungen zurücksetzen</button>
+  </div>
+  <div id="impMsg" class="hint"></div>
+
+  <div class="tablewrap">
+  <table class="dltab" id="tab">
+    <thead><tr><th>Name</th><th>Lat</th><th>Lon</th><th>CC</th><th></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+  <p class="hint" id="more"></p>
+</div>
+
+<footer class="foot"><p>Format pro Zeile: <code>Name|lat|lon|CC</code> (CC = ISO2). Quellen/Lizenz siehe Header von <code>js/ort-db.js</code> (GeoNames CC BY 4.0, Natural Earth public domain).</p></footer>
+</div>
+<script src="js/ort-db.js"></script>
+<script src="js/ort-db-editor.js"></script>
+</body>
+</html>

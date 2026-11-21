@@ -81,6 +81,7 @@
   .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:.82rem; color:var(--muted); margin-top:8px; }
   .legend .sw { display:inline-block; width:18px; height:10px; border-radius:3px; vertical-align:middle; margin-right:6px; border:1px solid rgba(0,0,0,.12); }
   .legend .ln { display:inline-block; width:18px; height:0; border-top:3px solid #f5a623; vertical-align:middle; margin-right:6px; }
+  #calIcon svg { display:block; }
   .legend .ln.sh { background:#8a6f4d; height:7px; border-top:0; }
   .legend .ln.m { border-top:2px dashed #9db4d0; }
   table { border-collapse:collapse; width:100%; font-size:.92rem; margin-top:4px; }

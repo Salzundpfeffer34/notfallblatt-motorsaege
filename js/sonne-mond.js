@@ -1228,12 +1228,18 @@ if (typeof document !== 'undefined') {
       var x0 = X(sp2.az);
       var yH = Y(0);
       var sgn = (sp2.az > 0 && sp2.az < 180) ? -1 : 1;
-      var maxShadow = pw * 0.42;
+      var maxShadow = pw * 0.35;
       var shPx = Math.min(maxShadow, stickPx * ratio);
-      var xe = Math.max(padL + 6, Math.min(padL + pw - 6, x0 + sgn * shPx));
-      s += '<line x1="' + x0.toFixed(1) + '" y1="' + yH.toFixed(1) + '" x2="' + xe.toFixed(1) + '" y2="' + yH.toFixed(1) + '" stroke="#8a6f4d" stroke-width="7" stroke-linecap="round" opacity=".85"><title>Schatten ' + ratio.toFixed(1) + '× Stabhöhe (Sonne ' + fmtHM(tm) + ', Höhe ' + altNow.toFixed(1) + '°)</title></line>';
+      /* Stab steht an der Horizontlinie im Sonnen-Azimut … */
       s += '<line x1="' + x0.toFixed(1) + '" y1="' + yH.toFixed(1) + '" x2="' + x0.toFixed(1) + '" y2="' + (yH - stickPx).toFixed(1) + '" stroke="#33362f" stroke-width="4" stroke-linecap="round"><title>Stab (1×) im Sonnen-Azimut ' + sp2.az.toFixed(0) + '°</title></line>';
-      s += '<text x="' + ((x0 + xe) / 2).toFixed(1) + '" y="' + (yH + 15).toFixed(1) + '" text-anchor="middle" font-size="10" fill="#6b6b64">Schatten ' + ratio.toFixed(1) + '×</text>';
+      /* … der Schatten liegt im "unterirdischen" Band darunter, gegen das Azimut, gedeckelt */
+      if (shPx >= 5) {
+        var xe = Math.max(padL + 6, Math.min(padL + pw - 6, x0 + sgn * shPx));
+        var yS = yH + 10;
+        s += '<line x1="' + x0.toFixed(1) + '" y1="' + yS.toFixed(1) + '" x2="' + xe.toFixed(1) + '" y2="' + yS.toFixed(1) + '" stroke="#8a6f4d" stroke-width="5" stroke-linecap="round" opacity=".8"><title>Schatten ' + ratio.toFixed(1) + '× Stabhöhe (Sonne ' + fmtHM(tm) + ', Höhe ' + altNow.toFixed(1) + '°)</title></line>';
+        var lx = Math.max(padL + 30, Math.min(padL + pw - 30, (x0 + xe) / 2));
+        s += '<text x="' + lx.toFixed(1) + '" y="' + (yH + 24).toFixed(1) + '" text-anchor="middle" font-size="10" fill="#6b6b64">Schatten ' + ratio.toFixed(1) + '×</text>';
+      }
     }
     svg.innerHTML = s;
   }

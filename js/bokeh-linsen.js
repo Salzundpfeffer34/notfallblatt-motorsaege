@@ -19,6 +19,7 @@ var BOKEH_LINSEN = [
   // Weitwinkel
   { id: 'l1635', group: 'Weitwinkel',        name: '16–35 mm f/2.8 (Zoom)',         f: 35,  n: 2.8, note: 'Zoom – gerechnet bei 35 mm (Tele-Ende)' },
   { id: 'l20',   group: 'Weitwinkel',        name: '20 mm f/1.8',                   f: 20,  n: 1.8 },
+  { id: 'l2014', group: 'Weitwinkel',        name: '20 mm f/1.4',                   f: 20,  n: 1.4 },
   { id: 'l24',   group: 'Weitwinkel',        name: '24 mm f/1.4',                   f: 24,  n: 1.4 },
   { id: 'l28',   group: 'Weitwinkel',        name: '28 mm f/2',                     f: 28,  n: 2   },
   { id: 'l2470', group: 'Weitwinkel',        name: '24–70 mm f/2.8 (Zoom)',         f: 70,  n: 2.8, note: 'Zoom – gerechnet bei 70 mm' },

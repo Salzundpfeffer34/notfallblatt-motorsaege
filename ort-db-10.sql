@@ -14,7 +14,7 @@ CREATE TABLE orte (
   lat DECIMAL(8,5) NOT NULL,
   lon DECIMAL(9,5) NOT NULL,
   cc CHAR(2) NOT NULL,
-  dem SMALLINT NULL,
+  dem SMALLINT NOT NULL,
   KEY idx_cc (cc),
   KEY idx_lat (lat),
   KEY idx_lon (lon)

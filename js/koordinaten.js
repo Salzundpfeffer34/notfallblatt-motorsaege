@@ -86,7 +86,13 @@ var TEXTE = {
     copied: 'Kopiert ✓',
     fmtUnknown: 'Format unbekannt',
     noLines: 'Keine Zeilen eingegeben.',
-    cap1000: 'Auf 1000 Zeilen begrenzt.',
+    cap1000: 'Auf 5000 Zeilen begrenzt.',
+    capShown: 'Erste {a} von {b} Zeilen angezeigt.',
+    lblBatchFiles: 'Fotos mit GPS laden (Stapel, z. B. 2000 Bilder)',
+    batchFilesHint: 'Liest EXIF-GPS + Aufnahmezeit aus jedem Bild (pro Datei nur die ersten 256 KB), sortiert nach Aufnahmezeit und übernimmt die Punkte in den Stapel darunter → „GPX herunterladen“ erzeugt die Route (bei sehr vielen Punkten evtl. danach auf gpx-reduce reduzieren). Bilder ohne GPS werden übersprungen.',
+    noteFotosStart: 'Fotos werden gelesen … ({b})',
+    noteFotosFortschritt: '{a} / {b} Fotos gelesen …',
+    noteFotosFertig: '{a} von {b} Fotos mit GPS – nach Aufnahmezeit sortiert in den Stapel übernommen. „GPX herunterladen“ klicken für die Route.',
     min2: 'Min. 2 Punkte nötig',
     promptName: 'Name der GPX-Datei (ohne .gpx):',
     promptBildName: 'Name der neuen Bild-Datei:',
@@ -551,6 +557,21 @@ function pairToLatLon(c) {
   throw new Error(t('errUnknown'));
 }
 
+function parseExifTimeStr(s) {
+  if (typeof s !== 'string') { return null; }
+  var m = s.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (!m) { return null; }
+  var ms = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  return isFinite(ms) ? ms : null;
+}
+function sortPhotoPoints(pts) {
+  return pts.slice().sort(function (a, b) {
+    var ta = (a.time == null ? Infinity : a.time), tb = (b.time == null ? Infinity : b.time);
+    if (ta !== tb) { return ta - tb; }
+    return String(a.name || '').localeCompare(String(b.name || ''));
+  });
+}
+function photoPointLine(p) { return p.lat.toFixed(6) + ', ' + p.lon.toFixed(6); }
 function exifGps(buf) {
   var v = new DataView(buf);
   if (v.byteLength < 12) { return null; }
@@ -582,7 +603,13 @@ function exifGps(buf) {
     if (saneIfd(8)) { ifd0 = 8; } else if (saneIfd(16)) { ifd0 = 16; }
   }
   if (!saneIfd(ifd0)) { return exifGpsXmp(v, xmpRanges); }
-  var gpsPtr = -1, exifPtr = -1, xmpOff = -1, xmpCnt = 0;
+  var gpsPtr = -1, exifPtr = -1, xmpOff = -1, xmpCnt = 0, timeStr = '';
+  function asciiAt(e) {
+    var typ = u16(e + 2), cnt = u32(e + 4), vo = cnt > 4 ? u32(e + 8) : e + 8, s = '', k;
+    if ((typ !== 2 && typ !== 1) || vo < 0 || vo + cnt > v.byteLength - tiff) { return ''; }
+    for (k = 0; k < cnt; k++) { s += String.fromCharCode(v.getUint8(tiff + vo + k)); }
+    return s.replace(/\0[\s\S]*$/, '');
+  }
   function scanIfd(off) {
     var n = u16(off), i, e;
     for (i = 0; i < n; i++) {
@@ -592,6 +619,8 @@ function exifGps(buf) {
       if (tag === 0x8825 && gpsPtr < 0) { gpsPtr = u32(e + 8); }
       else if (tag === 0x8769 && exifPtr < 0) { exifPtr = u32(e + 8); }
       else if (tag === 0x02BC && xmpOff < 0) { xmpOff = u32(e + 8); xmpCnt = cnt; }
+      else if (tag === 0x9003 && !timeStr) { timeStr = asciiAt(e); }
+      else if (tag === 0x0132 && !timeStr) { timeStr = asciiAt(e); }
     }
   }
   scanIfd(ifd0);
@@ -665,7 +694,7 @@ function exifGps(buf) {
   if (lat !== null && lon !== null && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0)) {
     if (latRef === 'S') { lat = -lat; }
     if (lonRef === 'W') { lon = -lon; }
-    return { lat: lat, lon: lon };
+    return { lat: lat, lon: lon, time: parseExifTimeStr(timeStr) };
   }
   return exifGpsXmp(v, xmpRanges);
 }
@@ -1628,14 +1657,17 @@ function buildResults(lat, lon, forceLv95) {
       var q = lines[i].trim();
       if (q === '') { continue; }
       count++;
-      if (count > 1000) { break; }
+      if (count > 5000) { break; }
       var val = null;
       try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(val); batchPoints.push({ lat: ll.lat, lon: ll.lon }); } catch (e) { val = null; }
-      html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
-        '<div class="val">' + (val === null ? '<span class="batcherr">' + t('fmtUnknown') + '</span>' : esc(val)) + '</div>' +
-        (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">' + t('copyBtn') + '</button>') + '</div>';
+      if (count <= 300) {
+        html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
+          '<div class="val">' + (val === null ? '<span class="batcherr">' + t('fmtUnknown') + '</span>' : esc(val)) + '</div>' +
+          (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">' + t('copyBtn') + '</button>') + '</div>';
+      }
     }
-    if (count > 1000) { html += '<p class="help">' + t('cap1000') + '</p>'; }
+    if (count > 5000) { html += '<p class="help">' + t('cap1000') + '</p>'; }
+    if (count > 300) { html += '<p class="help">' + t('capShown').replace('{a}', '300').replace('{b}', String(count)) + '</p>'; }
     out.innerHTML = (html === '') ? '<p class="help">' + t('noLines') + '</p>' : html;
     var copies = out.querySelectorAll('.copy');
     for (var j = 0; j < copies.length; j++) {
@@ -1649,6 +1681,47 @@ function buildResults(lat, lon, forceLv95) {
     }
   }
   document.getElementById('batchGo').addEventListener('click', runBatch);
+  var batchFilesEl = document.getElementById('batchFiles');
+  var fotosMsgEl = document.getElementById('fotosMsg');
+  function fotosHandle(files) {
+    var list = Array.prototype.slice.call(files || []);
+    if (!list.length || !fotosMsgEl) { return; }
+    var pts = [], done = 0, withGps = 0;
+    fotosMsgEl.classList.remove('hidden');
+    fotosMsgEl.textContent = t('noteFotosStart').replace('{b}', String(list.length));
+    function step() {
+      if (done >= list.length) {
+        var sorted = sortPhotoPoints(pts);
+        if (batchInputEl && sorted.length) {
+          batchInputEl.value = sorted.map(photoPointLine).join('\n');
+          runBatch();
+        }
+        fotosMsgEl.textContent = t('noteFotosFertig').replace('{a}', String(withGps)).replace('{b}', String(list.length));
+        if (sorted.length >= 2) { document.getElementById('batchGpx').click(); }
+        return;
+      }
+      var f = list[done];
+      done++;
+      var reader = new FileReader();
+      reader.onerror = function () { step(); };
+      reader.onload = function () {
+        try {
+          var g = exifGps(reader.result);
+          if (g && isFinite(g.lat) && isFinite(g.lon) && Math.abs(g.lat) <= 90 && Math.abs(g.lon) <= 180) {
+            withGps++;
+            pts.push({ lat: g.lat, lon: g.lon, time: (g.time != null && isFinite(g.time)) ? g.time : null, name: f.name });
+          }
+        } catch (e) {}
+        fotosMsgEl.textContent = t('noteFotosFortschritt').replace('{a}', String(done)).replace('{b}', String(list.length));
+        step();
+      };
+      reader.readAsArrayBuffer(f.slice(0, 262144));
+    }
+    step();
+  }
+  if (batchFilesEl) {
+    batchFilesEl.addEventListener('change', function () { fotosHandle(batchFilesEl.files); batchFilesEl.value = ''; });
+  }
   document.getElementById('batchCopy').addEventListener('click', function () {
     if (navigator.clipboard && batchLines.length) {
       navigator.clipboard.writeText(batchLines.join('\n')).then(function () { copyFeedback(this); }.bind(this));

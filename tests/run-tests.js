@@ -20,7 +20,7 @@ const code = extract('function utmZoneFromLon', 'function parseInput')   // Konv
   + '\n' + extract('function parseInput', 'function formatNum')
   + '\nfunction t(k){return k;}\n';
 
-const F = new Function(code + '\nreturn { parseInput, exifGps, latlonToUtm, utmToLatLon, latlonToMgrs, mgrsToLatLon, latlonToLv95, lv95ToLatLon, latlonToMercator, mercatorToLatLon };')();
+const F = new Function(code + '\nreturn { parseInput, exifGps, parseExifTimeStr, sortPhotoPoints, photoPointLine, latlonToUtm, utmToLatLon, latlonToMgrs, mgrsToLatLon, latlonToLv95, lv95ToLatLon, latlonToMercator, mercatorToLatLon };')();
 
 let failures = 0;
 function ok(name, cond) {
@@ -137,6 +137,38 @@ function jpegWrap(payload) {
   const payload = Buffer.concat([Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'binary'), Buffer.from(xmp, 'utf8')]);
   const r = F.exifGps(toAB(jpegWrap(payload)));
   ok('exifGps JPEG+XMP only', r && near(r.lat, 47.376895, 1e-6) && near(r.lon, 8.541694, 1e-6));
+
+{
+  const t0 = F.parseExifTimeStr('2026:11:20 14:03:05');
+  ok('parseExifTimeStr: gültig -> UTC-ms; leer/kaputt -> null', t0 === Date.UTC(2026, 10, 20, 14, 3, 5) && F.parseExifTimeStr('') === null && F.parseExifTimeStr('20.11.2026 14:03') === null && F.parseExifTimeStr(null) === null);
+  const pts = [{ lat: 1, lon: 1, time: 300, name: 'c.jpg' }, { lat: 2, lon: 2, time: null, name: 'z.jpg' }, { lat: 3, lon: 3, time: 100, name: 'a.jpg' }, { lat: 4, lon: 4, time: 100, name: 'b.jpg' }];
+  const sp = F.sortPhotoPoints(pts);
+  ok('sortPhotoPoints: Zeit aufsteigend, ohne Zeit zuletzt, Namens-Tiebreak; photoPointLine', sp.map(p => p.name).join(',') === 'a.jpg,b.jpg,c.jpg,z.jpg' && F.photoPointLine({ lat: 47.3768889, lon: 8.5416944 }) === '47.376889, 8.541694');
+}
+{
+  const b = Buffer.alloc(256);
+  b.write('II', 0, 'ascii'); b.writeUInt8(0x2A, 2); b.writeUInt8(0, 3); b.writeUInt32LE(8, 4);
+  b.writeUInt16LE(2, 8);
+  b.writeUInt16LE(0x8825, 10); b.writeUInt16LE(4, 12); b.writeUInt32LE(1, 14); b.writeUInt32LE(60, 18);
+  b.writeUInt16LE(0x8769, 22); b.writeUInt16LE(4, 24); b.writeUInt32LE(1, 26); b.writeUInt32LE(120, 30);
+  b.writeUInt32LE(0, 34);
+  b.writeUInt16LE(4, 60);
+  b.writeUInt16LE(1, 62); b.writeUInt16LE(2, 64); b.writeUInt32LE(2, 66); b.write('N', 70, 'ascii');
+  b.writeUInt16LE(2, 74); b.writeUInt16LE(5, 76); b.writeUInt32LE(3, 78); b.writeUInt32LE(170, 82);
+  b.writeUInt16LE(3, 86); b.writeUInt16LE(2, 88); b.writeUInt32LE(2, 90); b.write('E', 94, 'ascii');
+  b.writeUInt16LE(4, 98); b.writeUInt16LE(5, 100); b.writeUInt32LE(3, 102); b.writeUInt32LE(194, 106);
+  b.writeUInt32LE(0, 110);
+  b.writeUInt16LE(1, 120);
+  b.writeUInt16LE(0x9003, 122); b.writeUInt16LE(2, 124); b.writeUInt32LE(20, 126); b.writeUInt32LE(140, 130);
+  b.writeUInt32LE(0, 134);
+  b.write('2026:11:20 14:03:05\0', 140, 'ascii');
+  const rats = [[47, 1], [22, 1], [368, 10], [8, 1], [32, 1], [301, 10]];
+  let off = 170;
+  for (const [n, d] of rats) { b.writeUInt32LE(n, off); b.writeUInt32LE(d, off + 4); off += 8; }
+  const r = F.exifGps(toAB(b));
+  ok('exifGps liefert time (DateTimeOriginal 0x9003) als UTC-ms', r && near(r.lat, 47.3768889, 1e-4) && near(r.lon, 8.5416944, 1e-4) && r.time === Date.UTC(2026, 10, 20, 14, 3, 5));
+}
+ok('koordinaten Foto-Stapel: #batchFiles multiple + accept, #fotosMsg, JS (fotosHandle, slice 256KB, count>5000, capShown, 0x9003, time im exifGps-Return), i18n-Keys in de+en+fr+it+es mit cap 5000', html.indexOf('id="batchFiles"') >= 0 && html.indexOf('multiple') >= 0 && html.indexOf('id="fotosMsg"') >= 0 && html.indexOf('function fotosHandle') >= 0 && html.indexOf('f.slice(0, 262144)') >= 0 && html.indexOf('count > 5000') >= 0 && html.indexOf("t('capShown')") >= 0 && html.indexOf('0x9003') >= 0 && html.indexOf('time: parseExifTimeStr(timeStr)') >= 0 && ['js/koordinaten.js','js/konv-texte-en.js','js/konv-texte-fr.js','js/konv-texte-it.js','js/konv-texte-es.js'].every(f => { const s = fs.readFileSync(path.join(__dirname, '..', f), 'utf8'); return s.indexOf('noteFotosFertig') >= 0 && s.indexOf('capShown') >= 0 && s.indexOf('lblBatchFiles') >= 0 && s.indexOf('5000') >= 0; }));
 }
 {
   const plain = Buffer.from([0xFF, 0xD8, 0xFF, 0xD9]);

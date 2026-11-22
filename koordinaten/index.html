@@ -213,6 +213,12 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <button class="go" type="button" id="batchGo" data-i18n="batchGo">Stapel umrechnen</button>
 <button type="button" class="copy" id="batchCopy" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="copyAll">Alle kopieren</button>
 <button type="button" class="copy" id="batchGpx" style="flex:0 0 auto;padding:12px 18px;font-size:1rem" data-i18n="batchGpx">GPX herunterladen</button>
+<div class="row" style="margin-top:10px">
+  <div class="field"><label for="batchFiles" data-i18n="lblBatchFiles">Fotos mit GPS laden (Stapel, z. B. 2000 Bilder)</label>
+  <input type="file" id="batchFiles" multiple accept="image/jpeg,image/tiff,.dng,.cr2,.nef,.arw,.orf,.rw2"></div>
+</div>
+<p class="batchhint" data-i18n="batchFilesHint">Liest EXIF-GPS + Aufnahmezeit aus jedem Bild (pro Datei nur die ersten 256 KB), sortiert nach Aufnahmezeit und übernimmt die Punkte in den Stapel → „GPX herunterladen“ erzeugt die Route. Bilder ohne GPS werden übersprungen.</p>
+<p id="fotosMsg" class="note hidden"></p>
 </div>
 <h3 class="batchhint" data-i18n="linkGpxReduceHint">GPX hat zu viele Punkte für Garmin?</h3>
 <p class="batchhint"><a class="btn" href="../gpx-reduce.html" data-i18n="linkGpxReduce">→ Hier reduzieren</a></p>

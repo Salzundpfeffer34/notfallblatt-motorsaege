@@ -138,6 +138,36 @@ function loadOrtDb(cb) {
   }
 }
 
+/* ETOPO1-Hoehenmodell: js/etopo1.js und das bin-Gitter werden erst bei Bedarf geladen (Hoehenanzeige). */
+var _etopo1Loading = null;
+var _etopo1Grid = null;
+function etopo1Loaded() { return typeof etopo1Elev === 'function'; }
+function etopo1GridReady() { return _etopo1Grid !== null; }
+function loadEtopo1(cb) {
+  if (etopo1GridReady()) { cb(true); return; }
+  if (_etopo1Loading) { _etopo1Loading.push(cb); return; }
+  _etopo1Loading = [cb];
+  var done = function (ok) {
+    var cbs = _etopo1Loading; _etopo1Loading = null;
+    for (var i = 0; i < cbs.length; i++) { cbs[i](ok); }
+  };
+  try {
+    var go = function () {
+      if (!etopo1Loaded()) { done(false); return; }
+      etopo1Load('etopo1_ice_g_i2.bin', function (buf) { _etopo1Grid = buf; done(true); }, function () { done(false); });
+    };
+    if (etopo1Loaded()) { go(); return; }
+    var sc = document.createElement('script');
+    sc.src = 'js/etopo1.js';
+    sc.onload = go;
+    sc.onerror = function () { done(false); };
+    document.head.appendChild(sc);
+  } catch (e) {
+    _etopo1Loading = null;
+    cb(false);
+  }
+}
+
 /* Ortssuche-Daten liegen in js/ort-suche-data.js und werden erst bei Bedarf geladen. */
 var _ortDataLoading = null;
 function ortDataLoaded() { return typeof EU_COUNTRIES !== 'undefined' && typeof CH_CANTONS !== 'undefined'; }
@@ -1605,7 +1635,18 @@ if (typeof document !== 'undefined') {
     if (hit) {
       state.name = '≈ ' + hit.name + (hit.distKm < 1 ? '' : ' (ca. ' + Math.round(hit.distKm) + ' km)');
       renderCoordInfo(); save();
+      applyElevation();
     }
+  }
+  function applyElevation() {
+    if (!state.locKnown) { return; }
+    loadEtopo1(function (ok) {
+      if (!ok) { return; }
+      var m = etopo1Elev(state.lat, state.lon, _etopo1Grid);
+      if (typeof m !== 'number') { return; }
+      state.name = String(state.name || '').replace(/ · -?\d+ m ü\. M\.$/, '') + ' · ' + m + ' m ü. M.';
+      renderCoordInfo(); save();
+    });
   }
   function ortDbLocal() {
     if (!ortDbLoaded()) { loadOrtDb(function (ok) { if (ok) { ortDbLocal(); } }); return; }

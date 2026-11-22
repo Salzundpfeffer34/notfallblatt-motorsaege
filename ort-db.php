@@ -6,7 +6,8 @@ declare(strict_types=1);
  *
  * Aufruf (nur same-origin, von sonne-mond.html):
  *   ort-db.php?lat=47.3779&lon=8.5403&maxkm=60
- *   -> 200 JSON {"name":"Zuerich","lat":47.377,"lon":8.542,"cc":"CH","distKm":0.16}
+ *   -> 200 JSON {"name":"Zuerich","lat":47.377,"lon":8.542,"cc":"CH","distKm":0.16,"dem":457}
+ *      (dem = Meereshoehe in m; null wenn unbekannt / alte ort-db.sql ohne dem-Spalte)
  *   -> 404 JSON {"error":"..."} wenn kein Ort im Umkreis
  *   -> 400/500 JSON {"error":"..."} bei falschen Parametern / DB-Fehler
  *   ort-db.php?count=1  -> 200 JSON {"count":65076} (Kontrolle nach dem Import)
@@ -93,10 +94,17 @@ if (isset($_GET['count'])) {
     }
 }
 
+// dem-Spalte optional: ort-db-10.sql hat sie, die alte ort-db.sql nicht
+$hasDem = false;
+try {
+    $hasDem = ((int) $pdo->query("SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'orte' AND COLUMN_NAME = 'dem'")->fetchColumn()) > 0;
+} catch (Throwable $e) {}
+$demSel = $hasDem ? 'dem' : 'CAST(NULL AS SIGNED)';
+
 // Bounding-Box als Vorfilter (Index auf lat/lon), dann Haversine (6371 km Erdradius)
 $dLat = $maxkm / 111.0;
 $dLon = $maxkm / (111.0 * max(0.01, cos(deg2rad($lat))));
-$sql = 'SELECT name, lat, lon, cc,
+$sql = 'SELECT name, lat, lon, cc, ' . $demSel . ' AS dem,
           6371.0 * ACOS(LEAST(1.0,
             COS(RADIANS(?)) * COS(RADIANS(lat)) * COS(RADIANS(?) - RADIANS(lon))
             + SIN(RADIANS(?)) * SIN(RADIANS(lat))
@@ -127,4 +135,5 @@ ortDbOut(200, [
     'lon' => (float) $row['lon'],
     'cc' => (string) $row['cc'],
     'distKm' => round((float) $row['distKm'], 2),
+    'dem' => $row['dem'] === null ? null : (int) $row['dem'],
 ]);

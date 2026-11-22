@@ -94,6 +94,8 @@ window.TEXTE.en = {
     noteFotosStart: 'Reading photos … ({b})',
     noteFotosFortschritt: '{a} / {b} photos read …',
     noteFotosFertig: '{a} of {b} photos with GPS – sorted by capture time into the batch. Click “Download GPX” for the route.',
+    lblFotoMinDist: 'Minimum distance for route points (0 = every point)',
+    noteFotosDup: '{c} points closer than {d} m removed (near-duplicates merged).',
     min2: 'Min. 2 points needed',
     promptName: 'Name of the GPX file (without .gpx):',
     promptBildName: 'Name of the new image file:',

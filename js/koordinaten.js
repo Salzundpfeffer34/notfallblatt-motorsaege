@@ -93,6 +93,8 @@ var TEXTE = {
     noteFotosStart: 'Fotos werden gelesen … ({b})',
     noteFotosFortschritt: '{a} / {b} Fotos gelesen …',
     noteFotosFertig: '{a} von {b} Fotos mit GPS – nach Aufnahmezeit sortiert in den Stapel übernommen. „GPX herunterladen“ klicken für die Route.',
+    lblFotoMinDist: 'Mindestabstand für Routenpunkte (0 = jeder Punkt)',
+    noteFotosDup: '{c} Punkte näher als {d} m entfernt (nah beieinanderliegende zusammengefasst).',
     min2: 'Min. 2 Punkte nötig',
     promptName: 'Name der GPX-Datei (ohne .gpx):',
     promptBildName: 'Name der neuen Bild-Datei:',
@@ -572,6 +574,23 @@ function sortPhotoPoints(pts) {
   });
 }
 function photoPointLine(p) { return p.lat.toFixed(6) + ', ' + p.lon.toFixed(6); }
+function distM(lat1, lon1, lat2, lon2) {
+  var R = 6371000, rad = Math.PI / 180;
+  var dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function filterMinDist(pts, minM) {
+  if (!minM || minM <= 0) { return pts.slice(); }
+  var out = [];
+  for (var i = 0; i < pts.length; i++) {
+    var p = pts[i];
+    if (!out.length) { out.push(p); continue; }
+    var last = out[out.length - 1];
+    if (distM(last.lat, last.lon, p.lat, p.lon) >= minM) { out.push(p); }
+  }
+  return out;
+}
 function exifGps(buf) {
   var v = new DataView(buf);
   if (v.byteLength < 12) { return null; }
@@ -1692,12 +1711,16 @@ function buildResults(lat, lon, forceLv95) {
     function step() {
       if (done >= list.length) {
         var sorted = sortPhotoPoints(pts);
-        if (batchInputEl && sorted.length) {
-          batchInputEl.value = sorted.map(photoPointLine).join('\n');
+        var minDEl = document.getElementById('fotoMinDist');
+        var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 5;
+        var kept = filterMinDist(sorted, minD);
+        if (batchInputEl && kept.length) {
+          batchInputEl.value = kept.map(photoPointLine).join('\n');
           runBatch();
         }
-        fotosMsgEl.textContent = t('noteFotosFertig').replace('{a}', String(withGps)).replace('{b}', String(list.length));
-        if (sorted.length >= 2) { document.getElementById('batchGpx').click(); }
+        fotosMsgEl.textContent = t('noteFotosFertig').replace('{a}', String(withGps)).replace('{b}', String(list.length))
+          + (sorted.length - kept.length > 0 ? ' ' + t('noteFotosDup').replace('{c}', String(sorted.length - kept.length)).replace('{d}', String(minD)) : '');
+        if (kept.length >= 2) { document.getElementById('batchGpx').click(); }
         return;
       }
       var f = list[done];

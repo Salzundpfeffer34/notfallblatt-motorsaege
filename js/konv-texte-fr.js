@@ -94,6 +94,8 @@ window.TEXTE.fr = {
     noteFotosStart: 'Lecture des photos … ({b})',
     noteFotosFortschritt: '{a} / {b} photos lues …',
     noteFotosFertig: '{a} photos avec GPS sur {b} – triées par date dans le lot. Cliquez sur « Télécharger GPX » pour l’itinéraire.',
+    lblFotoMinDist: 'Distance minimale entre points de l’itinéraire (0 = chaque point)',
+    noteFotosDup: '{c} points à moins de {d} m supprimés (doublons proches fusionnés).',
     min2: 'Min. 2 points requis',
     promptName: 'Nom du fichier GPX (sans .gpx) :',
     promptBildName: 'Nom du nouveau fichier image :',

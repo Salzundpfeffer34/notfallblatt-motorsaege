@@ -20,7 +20,7 @@ const code = extract('function utmZoneFromLon', 'function parseInput')   // Konv
   + '\n' + extract('function parseInput', 'function formatNum')
   + '\nfunction t(k){return k;}\n';
 
-const F = new Function(code + '\nreturn { parseInput, exifGps, parseExifTimeStr, sortPhotoPoints, photoPointLine, latlonToUtm, utmToLatLon, latlonToMgrs, mgrsToLatLon, latlonToLv95, lv95ToLatLon, latlonToMercator, mercatorToLatLon };')();
+const F = new Function(code + '\nreturn { parseInput, exifGps, parseExifTimeStr, sortPhotoPoints, photoPointLine, distM, filterMinDist, latlonToUtm, utmToLatLon, latlonToMgrs, mgrsToLatLon, latlonToLv95, lv95ToLatLon, latlonToMercator, mercatorToLatLon };')();
 
 let failures = 0;
 function ok(name, cond) {
@@ -169,6 +169,14 @@ function jpegWrap(payload) {
   ok('exifGps liefert time (DateTimeOriginal 0x9003) als UTC-ms', r && near(r.lat, 47.3768889, 1e-4) && near(r.lon, 8.5416944, 1e-4) && r.time === Date.UTC(2026, 10, 20, 14, 3, 5));
 }
 ok('koordinaten Foto-Stapel: #batchFiles multiple + accept, #fotosMsg, JS (fotosHandle, slice 256KB, count>5000, capShown, 0x9003, time im exifGps-Return), i18n-Keys in de+en+fr+it+es mit cap 5000', html.indexOf('id="batchFiles"') >= 0 && html.indexOf('multiple') >= 0 && html.indexOf('id="fotosMsg"') >= 0 && html.indexOf('function fotosHandle') >= 0 && html.indexOf('f.slice(0, 262144)') >= 0 && html.indexOf('count > 5000') >= 0 && html.indexOf("t('capShown')") >= 0 && html.indexOf('0x9003') >= 0 && html.indexOf('time: parseExifTimeStr(timeStr)') >= 0 && ['js/koordinaten.js','js/konv-texte-en.js','js/konv-texte-fr.js','js/konv-texte-it.js','js/konv-texte-es.js'].every(f => { const s = fs.readFileSync(path.join(__dirname, '..', f), 'utf8'); return s.indexOf('noteFotosFertig') >= 0 && s.indexOf('capShown') >= 0 && s.indexOf('lblBatchFiles') >= 0 && s.indexOf('5000') >= 0; }));
+
+{
+  const d = F.distM(47.0, 8.0, 47.0, 8.0001);
+  const pts = [{ lat: 47, lon: 8, time: 1, name: 'a' }, { lat: 47, lon: 8.00005, time: 2, name: 'b' }, { lat: 47.001, lon: 8, time: 3, name: 'c' }, { lat: 47.001, lon: 8.00005, time: 4, name: 'd' }];
+  const f5 = F.filterMinDist(pts, 5);
+  ok('distM (Haversine, ~7,6 m bei 0,0001° Lon auf 47°N) + filterMinDist: Greedy gegen letzten behaltenen Punkt, minM=0 -> alle, leer ok', Math.abs(d - 7.58) < 0.2 && f5.map(p => p.name).join(',') === 'a,c' && F.filterMinDist(pts, 0).length === 4 && F.filterMinDist([], 5).length === 0 && F.filterMinDist(pts, 1000).length === 1);
+}
+ok('koordinaten Foto-Stapel Dedup: #fotoMinDist select (0/2/5/10/25/50 m, 5 m selected), filterMinDist+distM im JS, fotosHandle nutzt minD, i18n-Keys noteFotosDup+lblFotoMinDist in de/en/fr/it/es', html.indexOf('id="fotoMinDist"') >= 0 && html.indexOf('<option value="5" selected>5 m</option>') >= 0 && html.indexOf('function distM(') >= 0 && html.indexOf('function filterMinDist(') >= 0 && html.indexOf('filterMinDist(sorted, minD)') >= 0 && ['js/koordinaten.js','js/konv-texte-en.js','js/konv-texte-fr.js','js/konv-texte-it.js','js/konv-texte-es.js'].every(f => { const s = fs.readFileSync(path.join(__dirname, '..', f), 'utf8'); return s.indexOf('noteFotosDup') >= 0 && s.indexOf('lblFotoMinDist') >= 0; }));
 }
 {
   const plain = Buffer.from([0xFF, 0xD8, 0xFF, 0xD9]);

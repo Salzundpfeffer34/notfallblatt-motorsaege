@@ -216,6 +216,10 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 <div class="row" style="margin-top:10px">
   <div class="field"><label for="batchFiles" data-i18n="lblBatchFiles">Fotos mit GPS laden (Stapel, z. B. 2000 Bilder)</label>
   <input type="file" id="batchFiles" multiple accept="image/jpeg,image/tiff,.dng,.cr2,.nef,.arw,.orf,.rw2"></div>
+  <div class="field" style="flex:0 0 auto"><label for="fotoMinDist" data-i18n="lblFotoMinDist">Mindestabstand für Routenpunkte (0 = jeder Punkt)</label>
+  <select id="fotoMinDist"><option value="0">0 m</option><option value="2">2 m</option><option value="5" selected>5 m</option><option value="10">10 m</option><option value="25">25 m</option><option value="50">50 m</option></select></div>
+  <div class="field" style="flex:0 0 auto"><label for="fotoMinSec" data-i18n="lblFotoMinSec">Mindestens Zeitabstand (0 = aus)</label>
+  <select id="fotoMinSec"><option value="0">0 s</option><option value="15">15 s</option><option value="30">30 s</option><option value="60" selected>60 s</option><option value="120">120 s</option><option value="300">300 s</option></select></div>
 </div>
 <p class="batchhint" data-i18n="batchFilesHint">Liest EXIF-GPS + Aufnahmezeit aus jedem Bild (pro Datei nur die ersten 256 KB), sortiert nach Aufnahmezeit und übernimmt die Punkte in den Stapel → „GPX herunterladen“ erzeugt die Route. Bilder ohne GPS werden übersprungen.</p>
 <p id="fotosMsg" class="note hidden"></p>

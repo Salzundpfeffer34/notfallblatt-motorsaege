@@ -94,7 +94,8 @@ var TEXTE = {
     noteFotosFortschritt: '{a} / {b} Fotos gelesen …',
     noteFotosFertig: '{a} von {b} Fotos mit GPS – nach Aufnahmezeit sortiert in den Stapel übernommen. „GPX herunterladen“ klicken für die Route.',
     lblFotoMinDist: 'Mindestabstand für Routenpunkte (0 = jeder Punkt)',
-    noteFotosDup: '{c} Punkte näher als {d} m entfernt (nah beieinanderliegende zusammengefasst).',
+    lblFotoMinSec: 'Mindestens Zeitabstand (0 = aus)',
+    noteFotosDup: '{c} Punkte entfernt (näher als {d} m zu bisherigen Punkten UND < {e} s nach dem letzten Punkt).',
     min2: 'Min. 2 Punkte nötig',
     promptName: 'Name der GPX-Datei (ohne .gpx):',
     promptBildName: 'Name der neuen Bild-Datei:',
@@ -588,6 +589,23 @@ function filterMinDist(pts, minM) {
     if (!out.length) { out.push(p); continue; }
     var last = out[out.length - 1];
     if (distM(last.lat, last.lon, p.lat, p.lon) >= minM) { out.push(p); }
+  }
+  return out;
+}
+function filterMinDistTime(pts, minM, minSec) {
+  minM = minM > 0 ? minM : 0; minSec = minSec > 0 ? minSec : 0;
+  if (!minM && !minSec) { return pts.slice(); }
+  var out = [];
+  for (var i = 0; i < pts.length; i++) {
+    var p = pts[i];
+    if (!out.length) { out.push(p); continue; }
+    var last = out[out.length - 1], ok = false;
+    if (minM) {
+      ok = true;
+      for (var k = 0; k < out.length; k++) { if (distM(out[k].lat, out[k].lon, p.lat, p.lon) < minM) { ok = false; break; } }
+    }
+    if (!ok && minSec && (p.time == null || last.time == null || p.time - last.time >= minSec * 1000)) { ok = true; }
+    if (ok) { out.push(p); }
   }
   return out;
 }
@@ -1712,14 +1730,16 @@ function buildResults(lat, lon, forceLv95) {
       if (done >= list.length) {
         var sorted = sortPhotoPoints(pts);
         var minDEl = document.getElementById('fotoMinDist');
+        var minSEl = document.getElementById('fotoMinSec');
         var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 5;
-        var kept = filterMinDist(sorted, minD);
+        var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 60;
+        var kept = filterMinDistTime(sorted, minD, minS);
         if (batchInputEl && kept.length) {
           batchInputEl.value = kept.map(photoPointLine).join('\n');
           runBatch();
         }
         fotosMsgEl.textContent = t('noteFotosFertig').replace('{a}', String(withGps)).replace('{b}', String(list.length))
-          + (sorted.length - kept.length > 0 ? ' ' + t('noteFotosDup').replace('{c}', String(sorted.length - kept.length)).replace('{d}', String(minD)) : '');
+          + (sorted.length - kept.length > 0 ? ' ' + t('noteFotosDup').replace('{c}', String(sorted.length - kept.length)).replace('{d}', String(minD)).replace('{e}', String(minS)) : '');
         if (kept.length >= 2) { document.getElementById('batchGpx').click(); }
         return;
       }

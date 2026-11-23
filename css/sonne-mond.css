@@ -56,6 +56,17 @@
   button:hover, a.btn:hover { background:var(--accent2); }
   button.secondary { background:#fff; color:var(--ink); border:1px solid var(--line); }
   button.secondary:hover { border-color:var(--accent); color:var(--accent); background:#fff; }
+  button.glow { box-shadow: 0 0 0 2px var(--accent2), 0 0 14px 3px rgba(47,109,179,.55); box-shadow: 0 0 0 2px var(--accent2), 0 0 16px 4px color-mix(in srgb, var(--accent) 60%, transparent); animation: ortPulse 1.8s ease-in-out infinite; }
+  button.glow:hover { background: var(--accent2); }
+  @keyframes ortPulse {
+    0%, 100% { box-shadow: 0 0 0 2px var(--accent2), 0 0 10px 2px rgba(47,109,179,.40); }
+    50% { box-shadow: 0 0 0 3px var(--accent2), 0 0 20px 7px rgba(47,109,179,.70); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button.glow { animation: none; }
+  }
+  .ort-hint { font-size:.8rem; color:var(--muted); margin:6px 2px 0; }
+  .ort-hint kbd { background:var(--bg); border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:0 5px; font-family:inherit; font-size:.75rem; }
   .btnrow { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
   .btnrow > * { flex:0 0 auto; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }

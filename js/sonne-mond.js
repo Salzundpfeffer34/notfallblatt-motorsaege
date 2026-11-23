@@ -1363,9 +1363,8 @@ if (typeof document !== 'undefined') {
       s += '<text x="' + x.toFixed(1) + '" y="9" text-anchor="middle" font-size="10" fill="#33507e">' + (me.rise ? '☾↑' : '☾↓') + '<title>' + (me.rise ? 'Mondaufgang ' : 'Monduntergang ') + fmtHM(me.t) + '</title></text>';
     });
     if (state.datum === dateStrOf(nowMs())) {
-      var now = new Date(nowMs());
-      var x2 = now.getHours() * 60 + now.getMinutes();
-      s += '<line x1="' + x2 + '" x2="' + x2 + '" y1="4" y2="47" stroke="#b3261e" stroke-width="1.5"><title>Jetzt ' + fmtHM(now.getTime()) + '</title></line>';
+      var x2 = minutenJetztView();
+      s += '<line x1="' + x2 + '" x2="' + x2 + '" y1="4" y2="47" stroke="#b3261e" stroke-width="1.5"><title>Jetzt ' + fmtHM(dayStart + x2 * 60000) + '</title></line>';
     }
     svg.innerHTML = s;
   }
@@ -1594,6 +1593,8 @@ if (typeof document !== 'undefined') {
           state.tzMin = null;
           state.tzAuto = true;
           state.tzManualLabel = '';
+          state.minutes = minutenJetztView();
+          $('timeSlider').value = state.minutes;
           save();
           renderAll();
           renderCoordInfo();
@@ -1734,15 +1735,13 @@ if (typeof document !== 'undefined') {
   });
   $('nowBtn').addEventListener('click', function () {
     state.datum = dateStrOf(nowMs());
-    var now = new Date(nowMs());
-    state.minutes = now.getHours() * 60 + now.getMinutes();
+    state.minutes = minutenJetztView();
     $('timeSlider').value = state.minutes;
     renderAll();
   });
   $('heuteBtn').addEventListener('click', function () {
     state.datum = dateStrOf(nowMs());
-    var now = new Date(nowMs());
-    state.minutes = now.getHours() * 60 + now.getMinutes();
+    state.minutes = minutenJetztView();
     $('timeSlider').value = state.minutes;
     renderAll();
   });
@@ -1884,11 +1883,13 @@ if (typeof document !== 'undefined') {
       drawSky();
     }
   });
-  if (state.datum === dateStrOf(nowMs())) {
-    var ds0 = dayStartView(state.datum);
-    var now0ms = nowMs();
-    state.minutes = ds0 != null ? Math.max(0, Math.min(1439, Math.floor((now0ms - ds0) / 60000))) : 720;
+  function minutenJetztView() {
+    var heute = dateStrOf(nowMs());
+    var ds = dayStartView(heute);
+    if (ds == null) { return 720; }
+    return Math.max(0, Math.min(1439, Math.floor((nowMs() - ds) / 60000)));
   }
+  state.minutes = minutenJetztView();
   $('timeSlider').value = state.minutes;
   renderAll();
   reverseGeocode();

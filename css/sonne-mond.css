@@ -69,8 +69,8 @@
   .ort-hint kbd { background:var(--bg); border:1px solid var(--line); border-bottom-width:2px; border-radius:5px; padding:0 5px; font-family:inherit; font-size:.75rem; }
   .btnrow { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
   .btnrow > * { flex:0 0 auto; }
-  .beispiele { margin-top:14px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:#fafaf8; }
-  .beispiele-titel { margin:0; font-size:.8rem; font-weight:600; color:var(--muted); }
+  .beispiele { margin-top:14px; border:1px solid #c7d9e8; border-radius:10px; padding:10px 12px; background:#eef4f9; box-shadow:0 1px 3px rgba(16,24,40,.06); }
+  .beispiele-titel { margin:0 0 8px; font-size:1.05rem; font-weight:700; color:var(--ink); }
   .chips { margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; }
   .chip { font-size:.82rem; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:#f7f7f5; cursor:pointer; color:var(--ink); font-family:inherit; }
   .chip:hover { border-color:var(--accent); color:var(--accent); background:#fff; }
@@ -150,6 +150,7 @@
     :root { --line:#33363f; --muted:#9aa0ab; --accent:#7fb0e8; --accent2:#a5c6ef; --bg:#141519; --card:#1e2027; --ink:#e9e9e3; --spec-blue:#7fb0e8; --spec-red:#e06055; --spec-shade:#c9a183; --spec-faint:#93a1b8; --spec-micro:#9aa0ab; --spec-super:#e08a3c; }
     input[type=text], input[type=date], a.back, button.secondary, .chip, #ortResults button, .cal-day, .calpop, .stat, .beispiele { background:#262a33; color:var(--ink); border-color:var(--line); }
     .chip:hover, #ortResults button:hover, .cal-day:hover, button.secondary:hover { background:#2d323d; }
+    .beispiele { background:#1c2735; border-color:#2f4a66; }
     .dltab td .dup { color:#6fce8f; }
     .dltab td .ddn { color:#e06055; }
     .dltab .dlmonth td { background:hsl(var(--dlmh,210) 40% 24%); color:hsl(var(--dlmh,210) 65% 78%); }

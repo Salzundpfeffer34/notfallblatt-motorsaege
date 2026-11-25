@@ -42,6 +42,8 @@
   #msg { margin-top:12px; font-size:.92rem; min-height:1.2em; }
   .ok { color:#1a7f37; } .err { color:#b3261e; }
   .hint { color:var(--muted); font-size:.82rem; margin:10px 0 0; }
+  details.hint summary { cursor:pointer; font-weight:600; color:var(--ink); }
+  details.hint p { margin:8px 0 0; }
   table { border-collapse:collapse; width:100%; font-size:.92rem; margin-top:4px; }
   td, th { border-bottom:1px solid var(--line); padding:7px 10px 7px 0; text-align:left; }
   th { color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; }
@@ -113,7 +115,10 @@
     <div class="check"><input type="checkbox" id="keepEle" checked>Höhe (ele) und Zeit (time) mitnehmen</div>
     <div class="check"><input type="checkbox" id="showMap">Karte mit GPX-Punkten darunterlegen (Leaflet + OpenStreetMap werden erst beim Anhaken geladen)</div>
   </div>
-  <p class="hint">Routen erlauben meist max. 250 Punkte (ältere Geräte teils nur 50), Tracks deutlich mehr (2.000–10.000). Die Toleranz wird per Binärsuche automatisch so angepasst, dass das Limit genau eingehalten wird – es wird nie mehr entfernt als nötig. Über „GPX-Type“ lässt sich zusätzlich ein type-Eintrag in Route und Track schreiben – Garmin zeigt die Route dann z. B. als „Wandern“ an statt als Standard-Profil (z. B. „Geländewagen“). Standard ist „Direkt“: dabei wird pro Routenpunkt die Garmin-Erweiterung „trp:ViaPoint“ mit „trp:CalculationMode Direct“ geschrieben (BaseCamp: „Direkte Route aus Track“) – das Gerät routet dann gerade Linien zwischen den Punkten (Direktrouting: bis 250 statt 50 Punkte) statt über Straßen/Standard-Profil.</p>
+  <p class="hint">Routen erlauben meist max. 250 Punkte (ältere Geräte teils nur 50), Tracks deutlich mehr (2.000–10.000). Die Toleranz wird per Binärsuche automatisch so angepasst, dass das Limit genau eingehalten wird – es wird nie mehr entfernt als nötig.</p>
+  <details class="hint"><summary>GPX-Type &amp; Direktrouting im Detail</summary>
+  <p>Über „GPX-Type“ lässt sich zusätzlich ein type-Eintrag in Route und Track schreiben – Garmin zeigt die Route dann z. B. als „Wandern“ an statt als Standard-Profil (z. B. „Geländewagen“). Standard ist „Direkt“: dabei wird pro Routenpunkt die Garmin-Erweiterung „trp:ViaPoint“ mit „trp:CalculationMode Direct“ geschrieben (BaseCamp: „Direkte Route aus Track“) – das Gerät routet dann gerade Linien zwischen den Punkten (Direktrouting: bis 250 statt 50 Punkte) statt über Straßen/Standard-Profil.</p>
+  </details>
 </div>
 
 <div class="card" id="result" style="display:none">

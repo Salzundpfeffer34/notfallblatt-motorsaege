@@ -49,3 +49,40 @@
   .hub-suche input, .hub-card, .hub-chip { background: #26282a; color: #ececec; border-color: #3a3d42; }
   .hub-cd { color: #a9adb4; }
 }
+
+.hub-pepe { display: inline-flex; align-items: flex-end; gap: 12px; margin: 0 0 16px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.hub-pepe:focus-visible { outline: 2px solid var(--rot); outline-offset: 4px; border-radius: 14px; }
+.hub-pepe-img { display: block; width: 84px; height: 84px; transform-origin: 50% 90%; animation: hub-pepe-bob 3.2s ease-in-out infinite; }
+.hub-pepe-bubble {
+  position: relative; max-width: 280px; padding: 9px 14px; margin-bottom: 22px;
+  background: #fff; border: 2px solid var(--linie); border-radius: 14px; font-size: .95rem;
+}
+.hub-pepe-bubble::after {
+  content: ""; position: absolute; right: -10px; bottom: 14px; width: 14px; height: 14px;
+  background: inherit; border-right: 2px solid var(--linie); border-bottom: 2px solid var(--linie);
+  transform: rotate(-45deg);
+}
+.hub-pepe.wackel .hub-pepe-img { animation: hub-pepe-wackel .55s ease; }
+.hub-pepe.wackel .hub-pepe-bubble { animation: hub-pepe-pop .3s ease; }
+@keyframes hub-pepe-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-7px) rotate(3deg); }
+}
+@keyframes hub-pepe-wackel {
+  0% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-12deg) scale(1.08); }
+  50% { transform: rotate(9deg) scale(1.05); }
+  75% { transform: rotate(-6deg); }
+  100% { transform: rotate(0) scale(1); }
+}
+@keyframes hub-pepe-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-pepe-img { animation: none; }
+}
+@media (prefers-color-scheme: dark) {
+  .hub-pepe-bubble { background: #26282a; color: #ececec; border-color: #3a3d42; }
+}

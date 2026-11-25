@@ -77,8 +77,31 @@
       els[i].addEventListener('click', function () { merke(this.getAttribute('href')); });
     }
   }
+  var PEPE_KEYS = ['hubPepeQ1', 'hubPepeQ2', 'hubPepeQ3', 'hubPepeQ4'];
+  function initPepe() {
+    var pepe = document.getElementById('hubPepe');
+    var bubble = document.getElementById('hubPepeSpruch');
+    if (!pepe || !bubble) { return; }
+    pepe.setAttribute('aria-label', t('hubPepeAria'));
+    function sprich() {
+      var keys = PEPE_KEYS.filter(function (k) { return t(k) !== k; });
+      var pool = keys.length ? keys : PEPE_KEYS;
+      bubble.textContent = t(pool[Math.floor(Math.random() * pool.length)]);
+      pepe.classList.remove('wackel');
+      void pepe.offsetWidth;
+      pepe.classList.add('wackel');
+    }
+    pepe.addEventListener('click', sprich);
+    pepe.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sprich(); }
+    });
+    document.addEventListener('spracheGeaendert', function () {
+      pepe.setAttribute('aria-label', t('hubPepeAria'));
+    });
+  }
   function init() {
     setTitle();
+    initPepe();
     initSuche();
     initKlicks();
     renderZuletzt();

@@ -151,9 +151,9 @@ footer { margin-top:24px; font-size:.8rem; color:var(--muted); }
 </div>
 </div>
 <div class="bildbereich">
-<div class="bilddrop" id="bildDrop" tabindex="0" role="button" aria-label="Bild mit GPS-Daten auswählen" data-i18n-aria="ariaBild">
-<input type="file" id="bildFile" accept="image/jpeg,image/tiff,.dng,.cr2,.nef,.arw,.orf,.rw2" class="hidden">
-<span class="bildlabel"><svg class="bildicon" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M4.5 7.5h3.1l1.3-2.2h6.2l1.3 2.2h3.1c.7 0 1.2.5 1.2 1.2v9.6c0 .7-.5 1.2-1.2 1.2H4.5c-.7 0-1.2-.5-1.2-1.2V8.7c0-.7.5-1.2 1.2-1.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.6" cy="10" r=".9" fill="currentColor"/></svg><span data-i18n="lblBild">Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken</span></span>
+<div class="bilddrop" id="bildDrop" tabindex="0" role="button" aria-label="Bild(er) mit GPS-Daten auswählen" data-i18n-aria="ariaBild">
+<input type="file" id="bildFile" multiple accept="image/jpeg,image/tiff,.dng,.cr2,.nef,.arw,.orf,.rw2" class="hidden">
+<span class="bildlabel"><svg class="bildicon" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M4.5 7.5h3.1l1.3-2.2h6.2l1.3 2.2h3.1c.7 0 1.2.5 1.2 1.2v9.6c0 .7-.5 1.2-1.2 1.2H4.5c-.7 0-1.2-.5-1.2-1.2V8.7c0-.7.5-1.2 1.2-1.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.6" cy="10" r=".9" fill="currentColor"/></svg><span data-i18n="lblBild">Bild(er) mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken – einzeln oder gleich als Stapel</span></span>
 </div>
 <div id="bildMsg" class="note hidden"></div>
 <div id="bildManuell" class="hidden">

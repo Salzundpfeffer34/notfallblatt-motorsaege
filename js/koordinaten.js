@@ -1748,8 +1748,8 @@ function buildResults(lat, lon, forceLv95) {
         var sorted = sortPhotoPoints(pts);
         var minDEl = document.getElementById('fotoMinDist');
         var minSEl = document.getElementById('fotoMinSec');
-        var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 5;
-        var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 60;
+        var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 0;
+        var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 0;
         var kept = filterMinDistTime(sorted, minD, minS);
         if (batchInputEl && kept.length) {
           batchInputEl.value = kept.map(photoPointLine).join('\n');

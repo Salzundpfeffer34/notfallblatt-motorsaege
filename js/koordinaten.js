@@ -56,8 +56,8 @@ var TEXTE = {
     gpxGeoWait: 'Ort wird gesucht …',
     lblGpxSort: 'Punkte nach Nähe sortieren (sinnvolle Abfolge; Start bleibt der erste Punkt)',
     lblGpxType: 'GPX-Type (Art auf dem Garmin-Gerät, z. B. Wandern statt Standard-Profil wie Geländewagen)',
-    lblBild: 'Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken',
-    ariaBild: 'Bild mit GPS-Daten auswählen',
+    lblBild: 'Bild(er) mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken – einzeln oder gleich als Stapel',
+    ariaBild: 'Bild(er) mit GPS-Daten auswählen',
     noteBildGps: 'GPS aus Bild übernommen: {a}, {b}',
     noteBildKeinGps: 'Keine GPS-Daten im Bild. Koordinaten manuell eingeben (das Bild selbst wird nicht verändert).',
     noteBildManuell: 'Koordinaten übernommen (das Bild selbst wird nicht verändert).',
@@ -71,6 +71,7 @@ var TEXTE = {
     btnBildGpx: 'Zur Stapel-/GPX-Liste hinzufügen',
     btnBildReset: 'Bild-GPS zurücksetzen',
     noteBildBatch: 'Koordinate zur Stapel-Liste hinzugefügt – dort «Stapel umrechnen» oder «GPX herunterladen» klicken.',
+    noteBildStapel: '{a} Bilder übergeben – alle mit GPS landen nach Aufnahmezeit sortiert in der Stapel-/GPX-Liste unten (dort «GPX herunterladen» klicken).',
     errBildLesen: 'Das Bild konnte nicht gelesen werden.',
     helpH2: 'Erkannte Eingabeformate',
     helpP1: 'Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2\'624\'043</code>) ebenfalls.',
@@ -1399,12 +1400,26 @@ function buildResults(lat, lon, forceLv95) {
     };
     reader.readAsArrayBuffer(file);
   }
+  function bildHandleFiles(files) {
+    var list = Array.prototype.slice.call(files || []);
+    if (!list.length) { return; }
+    if (list.length === 1) { bildHandle(list[0]); return; }
+    bildKlick();
+    bildSnap();
+    bildMsgEl.textContent = t('noteBildStapel').replace('{a}', String(list.length));
+    bildMsgEl.classList.remove('hidden');
+    fotosHandle(list);
+    try {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      fotosMsgEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    } catch (e) {}
+  }
   bildDropEl.addEventListener('click', function () { bildFileEl.click(); });
   bildDropEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bildFileEl.click(); } });
-  bildFileEl.addEventListener('change', function () { if (bildFileEl.files[0]) { bildHandle(bildFileEl.files[0]); } bildFileEl.value = ''; });
+  bildFileEl.addEventListener('change', function () { bildHandleFiles(bildFileEl.files); bildFileEl.value = ''; });
   bildDropEl.addEventListener('dragover', function (e) { e.preventDefault(); bildDropEl.classList.add('drag'); });
   bildDropEl.addEventListener('dragleave', function () { bildDropEl.classList.remove('drag'); });
-  bildDropEl.addEventListener('drop', function (e) { e.preventDefault(); bildDropEl.classList.remove('drag'); if (e.dataTransfer.files[0]) { bildHandle(e.dataTransfer.files[0]); } });
+  bildDropEl.addEventListener('drop', function (e) { e.preventDefault(); bildDropEl.classList.remove('drag'); bildHandleFiles(e.dataTransfer.files); });
   window.addEventListener('dragover', function (e) { e.preventDefault(); });
   window.addEventListener('drop', function (e) { e.preventDefault(); });
   bildManuellBtnEl.addEventListener('click', function () {
@@ -1733,8 +1748,8 @@ function buildResults(lat, lon, forceLv95) {
         var sorted = sortPhotoPoints(pts);
         var minDEl = document.getElementById('fotoMinDist');
         var minSEl = document.getElementById('fotoMinSec');
-        var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 5;
-        var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 60;
+        var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 0;
+        var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 0;
         var kept = filterMinDistTime(sorted, minD, minS);
         if (batchInputEl && kept.length) {
           batchInputEl.value = kept.map(photoPointLine).join('\n');

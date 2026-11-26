@@ -14,6 +14,8 @@ var TEXTE = {
     ariaFormat: 'Format',
     ariaTarget: 'Zielformat',
     ariaGpxDatum: 'Datumsformat im Standardnamen',
+    gpxOptEu: 'Europäisch (13.11.2026)',
+    gpxOptAm: 'Amerikanisch (11-13-2026)',
     ariaGpxType: 'GPX-Type (Art der Route/des Tracks auf dem Garmin-Gerät)',
     optAuto: 'Automatisch erkennen',
     optWgs84: 'WGS84 · Dezimalgrad',
@@ -41,7 +43,7 @@ var TEXTE = {
     copyLink: 'Link kopieren',
     mapTitle: 'Kartenausschnitt',
     batchH2: 'Stapel-Umrechnung',
-    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Deutsch, English/US, Français, Italiano, Español)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>',
+    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Europäisch, Amerikanisch)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>',
     batchPlaceholder: 'z. B.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Stapel umrechnen',
     batchGpx: 'GPX herunterladen',
@@ -1783,6 +1785,7 @@ function buildResults(lat, lon, forceLv95) {
     }
     var d = new Date();
     var fm = gpxDatumEl ? gpxDatumEl.value : 'de';
+    if (fm !== 'de' && fm !== 'en') { fm = 'de'; }
     var sep = (fm === 'de') ? '.' : '-';
     var day;
     if (fm === 'en') { day = ('0' + (d.getMonth() + 1)).slice(-2) + sep + ('0' + d.getDate()).slice(-2) + sep + d.getFullYear(); }

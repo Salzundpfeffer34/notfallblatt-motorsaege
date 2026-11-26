@@ -1782,7 +1782,7 @@ function buildResults(lat, lon, forceLv95) {
       return;
     }
     var d = new Date();
-    var fm = gpxDatumEl ? gpxDatumEl.value : 'en';
+    var fm = gpxDatumEl ? gpxDatumEl.value : 'de';
     var sep = (fm === 'de') ? '.' : '-';
     var day;
     if (fm === 'en') { day = ('0' + (d.getMonth() + 1)).slice(-2) + sep + ('0' + d.getDate()).slice(-2) + sep + d.getFullYear(); }

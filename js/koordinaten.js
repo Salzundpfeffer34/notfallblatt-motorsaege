@@ -1752,12 +1752,13 @@ function buildResults(lat, lon, forceLv95) {
         var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 0;
         var kept = filterMinDistTime(sorted, minD, minS);
         if (batchInputEl && kept.length) {
-          batchInputEl.value = kept.map(photoPointLine).join('\n');
+          var curVal = batchInputEl.value.replace(/\s+$/, '');
+          var addLines = kept.map(photoPointLine).join('\n');
+          batchInputEl.value = curVal === '' ? addLines : curVal + '\n' + addLines;
           runBatch();
         }
         fotosMsgEl.textContent = t('noteFotosFertig').replace('{a}', String(withGps)).replace('{b}', String(list.length))
           + (sorted.length - kept.length > 0 ? ' ' + t('noteFotosDup').replace('{c}', String(sorted.length - kept.length)).replace('{d}', String(minD)).replace('{e}', String(minS)) : '');
-        if (kept.length >= 2) { document.getElementById('batchGpx').click(); }
         return;
       }
       var f = list[done];

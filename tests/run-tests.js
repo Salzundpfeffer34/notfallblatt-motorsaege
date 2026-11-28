@@ -810,7 +810,17 @@ ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy
       && G.parseExifTimeStr('2026:11:20 14:03:05') === Date.UTC(2026, 10, 20, 14, 3, 5)
       && G.parseExifTimeStr('kaputt') === null;
   })());
-  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum, Reset (#bkReset: resetAll, revoke, hidden, Default-Werte)', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'URL.revokeObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', 'function resetAll(', "$('bkReset')", "resetBtn.addEventListener('click', resetAll)", "addEventListener('drop'", "addEventListener('dragover'"].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum, Reset (#bkReset: resetAll, revoke, hidden, Default-Werte)', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'URL.revokeObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', 'function resetAll(', "$('bkReset')", "resetBtn.addEventListener('click', resetAll)", "addEventListener('drop'", "addEventListener('dragover'", 'function bereinigeName(', 'bereinigeName(cur.name'].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/bild-konv.js: bereinigeName entfernt UUID/Hash-Suffixe (auch 8_be0a8c7d-…), kollabiert --- zu -, behaelt normale Namen', (function () {
+    const m = bkSrc.match(/function bereinigeName[\s\S]*?\n    \}/);
+    if (!m) { return false; }
+    const f = new Function(m[0] + '; return bereinigeName;')();
+    return f('Cumbres---Toltec-8_be0a8c7d-5056-a36a-09b2a6b3d04a37c8') === 'Cumbres-Toltec'
+      && f('be0a8c7d-5056-a36a-09b2a6b3d04a37c8') === 'foto'
+      && f('IMG_1234') === 'IMG_1234'
+      && f('Foto - 2026-11-26') === 'Foto - 2026-11-26'
+      && f('Urlaub__2026__Barcelona') === 'Urlaub-2026-Barcelona';
+  })());
   ok('css/foto-konv.css: bk-Styles (bkdrop/bkprev/bkmeta) + select/number + Dark Mode', fkCss.indexOf('.bkdrop {') >= 0 && fkCss.indexOf('.bkprev img') >= 0 && fkCss.indexOf('select, input[type=number]') >= 0 && fkCss.indexOf('prefers-color-scheme: dark') >= 0);
   ok('Navi: foto-konv.html in Gruppe "Planung & Fotografie" auf allen 10 Seiten mit <navi> (href ggf. ../), aktiv nur auf foto-konv.html', (function () {
     const naviPages = ['index.html', 'notfallblatt.html', 'sonne-mond.html', 'gpx-reduce.html', 'bokeh.html', 'reitplatz.html', 'ort-db-editor.html', 'foto-konv.html', 'koordinaten/index.html', 'koordinaten/datenschutz.html'];

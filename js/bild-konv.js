@@ -22,6 +22,16 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       errEl.textContent = msg;
       errEl.classList.remove('hidden');
     }
+    function bereinigeName(name) {
+      var s = String(name || '');
+      s = s.replace(/(^|[^0-9a-z])([0-9a-f][0-9a-f-_]*[0-9a-f]|[0-9a-f])/gi, function (m, pre, tok) {
+        var hex = tok.replace(/[-_]/g, '');
+        return pre + ((hex.length >= 24 && (tok.match(/[-_]/g) || []).length >= 3) ? '' : tok);
+      });
+      s = s.replace(/[-_]{2,}/g, '-');
+      s = s.replace(/^[-_]+|[-_]+$/g, '');
+      return s || 'foto';
+    }
     function fmtBytes(n) {
       if (!isFinite(n)) { return '\u2013'; }
       if (n < 1024) { return n + ' B'; }
@@ -261,7 +271,7 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
         if (!blob) { err('Konvertierung fehlgeschlagen.'); return; }
         var realMime = blob.type || mime;
         var ext = realMime === 'image/png' ? 'png' : (realMime === 'image/webp' ? 'webp' : 'jpg');
-        var base = (cur.name.replace(/\.[^.]+$/, '') || 'foto');
+        var base = bereinigeName(cur.name.replace(/\.[^.]+$/, ''));
         var fname = base + '-' + t.w + 'x' + t.h + '.' + ext;
         if (outUrl) { URL.revokeObjectURL(outUrl); }
         outUrl = URL.createObjectURL(blob);

@@ -1,6 +1,16 @@
 window.NOTFALL_TEXTE = window.NOTFALL_TEXTE || {};
 window.NOTFALL_TEXTE.pt = {
   texte: {
+  naviLabel: "Navega\u00e7\u00e3o principal",
+  naviMarke: "Folha de emerg\u00eancia & ferramentas",
+  naviNotfallblatt: "Folha de emerg\u00eancia",
+  naviKoordinaten: "Coordenadas",
+  naviGpx: "Reduzir GPX",
+  naviSonneMond: "Sol & Lua",
+  naviBokeh: "Bokeh",
+  naviReitplatz: "Picadeiro",
+  naviOrtDb: "Locais",
+  naviDatenschutz: "Privacidade",
   btnUebersicht: "⌂ Visão geral",
   hubTitel: "Folha de emergência & ferramentas",
   hubUntertitel: "Todas as ferramentas para trabalhos com motosserra e fotografia – local, offline",

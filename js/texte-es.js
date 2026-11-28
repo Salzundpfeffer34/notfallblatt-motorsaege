@@ -1,6 +1,16 @@
 window.NOTFALL_TEXTE = window.NOTFALL_TEXTE || {};
 window.NOTFALL_TEXTE.es = {
   texte: {
+  naviLabel: "Navegaci\u00f3n principal",
+  naviMarke: "Hoja de emergencia & herramientas",
+  naviNotfallblatt: "Hoja de emergencia",
+  naviKoordinaten: "Coordenadas",
+  naviGpx: "Reducir GPX",
+  naviSonneMond: "Sol & Luna",
+  naviBokeh: "Bokeh",
+  naviReitplatz: "Picadero",
+  naviOrtDb: "Lugares",
+  naviDatenschutz: "Privacidad",
   btnUebersicht: "⌂ Vista general",
   hubTitel: "Hoja de emergencia & herramientas",
   hubUntertitel: "Todas las herramientas para trabajos con motosierra y fotografía – local, sin conexión",

@@ -1,6 +1,16 @@
 window.NOTFALL_TEXTE = window.NOTFALL_TEXTE || {};
 window.NOTFALL_TEXTE.it = {
   texte: {
+  naviLabel: "Navigazione principale",
+  naviMarke: "Foglio d\u2019emergenza & strumenti",
+  naviNotfallblatt: "Foglio d\u2019emergenza",
+  naviKoordinaten: "Coordinate",
+  naviGpx: "Riduci GPX",
+  naviSonneMond: "Sole & Luna",
+  naviBokeh: "Bokeh",
+  naviReitplatz: "Maneggio",
+  naviOrtDb: "Luoghi",
+  naviDatenschutz: "Privacy",
   btnUebersicht: "⌂ Panoramica",
   hubTitel: "Foglio d’emergenza & strumenti",
   hubUntertitel: "Tutti gli strumenti per interventi con motosega & fotografia – in locale, offline",

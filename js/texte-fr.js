@@ -1,6 +1,16 @@
 window.NOTFALL_TEXTE = window.NOTFALL_TEXTE || {};
 window.NOTFALL_TEXTE.fr = {
   texte: {
+  naviLabel: "Navigation principale",
+  naviMarke: "Feuille d\u2019urgence & outils",
+  naviNotfallblatt: "Feuille d\u2019urgence",
+  naviKoordinaten: "Coordonn\u00e9es",
+  naviGpx: "R\u00e9duire un GPX",
+  naviSonneMond: "Soleil & Lune",
+  naviBokeh: "Bokeh",
+  naviReitplatz: "Man\u00e8ge",
+  naviOrtDb: "Lieux",
+  naviDatenschutz: "Confidentialit\u00e9",
   btnUebersicht: "⌂ Vue d’ensemble",
   hubTitel: "Feuille d’urgence & outils",
   hubUntertitel: "Tous les outils pour interventions à la tronçonneuse & la photo – en local, hors ligne",

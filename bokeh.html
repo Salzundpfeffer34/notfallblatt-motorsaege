@@ -15,7 +15,40 @@
 <script src="js/navi.js" defer></script>
 </head>
 <body>
-<navi navi></navi>
+<navi navi>
+<nav class="navi-bar" aria-label="Hauptnavigation">
+  <div class="navi-inner">
+    <a class="navi-brand" href="index.html"><img src="img/motorsaege.svg" alt="" width="26" height="26"><span data-navi="naviMarke">Notfallblatt &amp; Werkzeuge</span></a>
+    <ul class="navi-links">
+      <li class="navi-gruppe"><details><summary data-navi="hubGrpEinsatz">Einsatz &amp; Rettung</summary>
+        <ul class="navi-untermenu">
+          <li><a href="notfallblatt.html" data-navi="naviNotfallblatt">Notfallblatt</a></li>
+          <li><a href="koordinaten/" data-navi="naviKoordinaten">Koordinaten</a></li>
+          <li><a href="gpx-reduce.html" data-navi="naviGpx">GPX reduzieren</a></li>
+        </ul>
+      </details></li>
+      <li class="navi-gruppe"><details><summary data-navi="hubGrpFoto" class="aktiv">Planung &amp; Fotografie</summary>
+        <ul class="navi-untermenu">
+          <li><a href="sonne-mond.html" data-navi="naviSonneMond">Sonne &amp; Mond</a></li>
+          <li><a href="bokeh.html" data-navi="naviBokeh" class="aktiv" aria-current="page">Bokeh</a></li>
+          <li><a href="reitplatz.html" data-navi="naviReitplatz">Reitplatz</a></li>
+        </ul>
+      </details></li>
+      <li class="navi-gruppe"><details><summary data-navi="hubGrpSonst">Werkzeuge &amp; Info</summary>
+        <ul class="navi-untermenu">
+          <li><a href="ort-db-editor.html" data-navi="naviOrtDb">Ort-DB</a></li>
+          <li><a href="koordinaten/datenschutz.html" data-navi="naviDatenschutz">Datenschutz</a></li>
+        </ul>
+      </details></li>
+    </ul>
+    <div class="navi-schrift" role="group" aria-label="Schriftgrösse">
+      <button type="button" data-font="-1" aria-label="Schrift verkleinern" title="Schrift verkleinern">A−</button>
+      <button type="button" data-font="0" class="aktiv" aria-label="Schrift zurücksetzen" title="Schrift zurücksetzen">A</button>
+      <button type="button" data-font="1" aria-label="Schrift vergrössern" title="Schrift vergrössern">A+</button>
+    </div>
+  </div>
+</nav>
+</navi>
 <div class="wrap">
 <header class="top">
   <div>

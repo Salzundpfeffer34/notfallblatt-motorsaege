@@ -1900,12 +1900,12 @@ function buildResults(lat, lon, forceLv95) {
   var FONT_SIZES = [90, 100, 115, 130, 150];
   var fontIdx = 1;
   try {
-    var savedFont = parseInt(localStorage.getItem('konverter-schrift'), 10);
+    var savedFont = parseInt(localStorage.getItem('schrift'), 10);
     if (savedFont >= 0 && savedFont < FONT_SIZES.length) { fontIdx = savedFont; }
   } catch (e) {}
   function applyFont() {
     document.documentElement.style.fontSize = (16 * FONT_SIZES[fontIdx] / 100) + 'px';
-    try { localStorage.setItem('konverter-schrift', String(fontIdx)); } catch (e) {}
+    try { localStorage.setItem('schrift', String(fontIdx)); } catch (e) {}
   }
   applyFont();
   document.getElementById('fontMinus').addEventListener('click', function () {

@@ -9,17 +9,14 @@ navi {
   box-shadow: 0 1px 4px rgba(0,0,0,.12);
 }
 navi:empty { display: none; }
-.navi-bar { height: 46px; }
 .navi-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 16px;
-  height: 100%;
+  padding: 6px 16px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .navi-brand {
   display: flex;
@@ -27,7 +24,7 @@ navi:empty { display: none; }
   gap: 8px;
   flex: 0 0 auto;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.875em;
   color: var(--ink, var(--text, #1c1c1c));
   text-decoration: none;
   white-space: nowrap;
@@ -44,27 +41,90 @@ navi:empty { display: none; }
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
   flex: 1 1 auto;
 }
-.navi-links a {
-  display: inline-block;
+.navi-gruppe { position: relative; }
+.navi-gruppe > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   padding: 7px 11px;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: 0.8125em;
+  white-space: nowrap;
+  color: var(--ink, var(--text, #1c1c1c));
+  user-select: none;
+}
+.navi-gruppe > summary::-webkit-details-marker { display: none; }
+.navi-gruppe > summary::after { content: "▾"; font-size: 0.625em; opacity: .7; }
+.navi-gruppe > summary:hover,
+.navi-gruppe[open] > summary { background: var(--bg, var(--grau, #f4f4f2)); }
+.navi-gruppe > summary.aktiv { color: var(--accent, var(--rot, #d52b1e)); font-weight: 600; }
+.navi-untermenu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 210px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--card, #fff);
+  border: 1px solid var(--line, var(--linie, #d8d8d4));
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0,0,0,.16);
+  z-index: 1300;
+}
+.navi-gruppe[open] .navi-untermenu { display: block; }
+.navi-untermenu a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-size: 0.8125em;
   color: var(--ink, var(--text, #1c1c1c));
   text-decoration: none;
   white-space: nowrap;
 }
-.navi-links a:hover { background: var(--bg, var(--grau, #f4f4f2)); }
-.navi-links a.aktiv {
+.navi-untermenu a:hover { background: var(--bg, var(--grau, #f4f4f2)); }
+.navi-untermenu a.aktiv {
   background: var(--accent, var(--rot, #d52b1e));
   color: #fff;
   font-weight: 600;
 }
-body.hat-navi .app-header { top: 46px; }
+body.hat-navi .app-header { top: var(--navi-hoehe, 46px); }
 @media (max-width: 640px) {
   .navi-brand span { display: none; }
 }
 @media print {
   navi { display: none !important; }
+}
+.navi-schrift {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.navi-schrift button {
+  font-size: 0.8125em;
+  line-height: 1.2;
+  padding: 4px 9px;
+  border: 1px solid var(--line, var(--linie, #d8d8d4));
+  border-radius: 7px;
+  background: var(--card, #fff);
+  color: var(--ink, var(--text, #1c1c1c));
+  cursor: pointer;
+  font-family: inherit;
+}
+.navi-schrift button:hover {
+  border-color: var(--accent, var(--rot, #d52b1e));
+  color: var(--accent, var(--rot, #d52b1e));
+}
+.navi-schrift button.aktiv {
+  background: var(--accent, var(--rot, #d52b1e));
+  border-color: var(--accent, var(--rot, #d52b1e));
+  color: #fff;
 }

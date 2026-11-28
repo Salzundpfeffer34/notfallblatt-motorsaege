@@ -241,9 +241,23 @@
     hoverBinden(el);
   }
 
+  /* Body-Einrueckung bei <fuss> ausgleichen (wie bei <navi>), damit der Footer vollbreit ist */
+  function fussBreite(el) {
+    if (window.getComputedStyle && document.body) {
+      var cs = getComputedStyle(document.body);
+      var pl = parseFloat(cs.paddingLeft) || 0;
+      var pr = parseFloat(cs.paddingRight) || 0;
+      if (pl) el.style.marginLeft = (-pl) + 'px';
+      if (pr) el.style.marginRight = (-pr) + 'px';
+    }
+  }
+
   function alleRendern() {
     var els = document.querySelectorAll('navi');
     for (var i = 0; i < els.length; i++) render(els[i]);
+    var fussEls = document.querySelectorAll('fuss');
+    for (var j = 0; j < fussEls.length; j++) fussBreite(fussEls[j]);
+    uebersetzen(document); /* i18n auch fuer den Footer ([data-navi] im ganzen Dokument) */
   }
 
   /* Schriftgroesse (A-/A/A+) – skaliert html{font-size}, alle em-basierten Groessen folgen.

@@ -13,6 +13,7 @@ window.NOTFALL_TEXTE.fr = {
   naviReitplatz: "Man\u00e8ge",
   naviOrtDb: "Lieux",
   naviDatenschutz: "Confidentialit\u00e9",
+  suvaHinweis: "Cette fiche ne remplace aucune formation ni instruction de s\u00e9curit\u00e9 (Suva).",
   naviReitplatzD: "Photo de man\u00e8ge avec r\u00e9glage interactif de l\u2019ouverture",
   btnUebersicht: "⌂ Vue d’ensemble",
   hubTitel: "Feuille d’urgence & outils",

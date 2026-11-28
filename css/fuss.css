@@ -1,0 +1,17 @@
+/* Gemeinsamer Seiten-Footer (<fuss fuss>…</fuss>) auf allen Seiten. */
+fuss { display: block; }
+.seiten-fuss {
+  margin-top: 40px;
+  padding: 18px 16px 26px;
+  border-top: 3px solid var(--accent, var(--rot, #d52b1e));
+  background: var(--card, #fff);
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--muted, var(--grau-dunkel, #6b6b6b));
+}
+.seiten-fuss p { margin: 4px 0; }
+.seiten-fuss a { color: var(--accent, var(--rot, #d52b1e)); text-decoration: none; }
+.seiten-fuss a:hover { text-decoration: underline; }
+@media print {
+  fuss, .seiten-fuss { display: none !important; }
+}

@@ -3,7 +3,10 @@
 // jede mit eigenem Unschärfekreis aus der Optik-Physik (bokeh.js-Globals). Alles lokal.
 var R_MAX_AP = 16;          // Blenden-Regler geht bis f/16
 var R_PHOTO_W = 3840;       // Breite des Fotos img/reiterin-dressurplatz-4k.jpg in px
-var R_PHOTO = 'img/reiterin-dressurplatz-4k.jpg';
+var R_PHOTOS = [
+  { full: 'img/reiterin-dressurplatz-4k.jpg',   thumb: 'img/reiterin-dressurplatz.jpg',   label: 'Bild 1 · Porträt' },
+  { full: 'img/reiterin-dressurplatz-2-4k.jpg', thumb: 'img/reiterin-dressurplatz-2.jpg', label: 'Bild 2 · sonniger Platz' }
+];
 // Tiefen-Ebenen: d = Faktor auf den Motiv-Abstand s; Blur = Unschärfekreis/2 in CSS-px (skaliert auf Darstellungsbreite)
 var R_LAYERS = [
   { cls: 'l-far', d: 8,   label: 'Bäume/Himmel' },
@@ -26,7 +29,7 @@ function effBlurMm(uMm, sMm, f, n) { var b = blurMm(uMm, sMm, f, n); var d = air
 
 if (typeof document !== 'undefined' && document.getElementById('chips')) {
   var $ = function (id) { return document.getElementById(id); };
-  var st = { lens: null, sensor: BOKEH_SENSORS[0], n: 1.4, s: 3 };
+  var st = { lens: null, sensor: BOKEH_SENSORS[0], n: 1.4, s: 3, photo: 0 };
 
   function rStops() { return stopsFor(st.lens).filter(function (x) { return x <= R_MAX_AP; }); }
   function aovDeg() { return 2 * Math.atan(st.sensor.w / (2 * st.lens.f)) * 180 / Math.PI; }
@@ -37,10 +40,11 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
   }
 
   function photoHtml() {
+    var src = R_PHOTOS[st.photo].full;
     return '<div class="photo">'
-      + '<img class="ph l-far" src="' + R_PHOTO + '" alt="" aria-hidden="true">'
-      + '<img class="ph l-mid" src="' + R_PHOTO + '" alt="" aria-hidden="true">'
-      + '<img class="ph l-fg" src="' + R_PHOTO + '" alt="Reiterin mit Samt-Showhelm, Reithose und Reitstiefeln am Pferd – im Hintergrund Dressurplatz mit Bande und zweiter Reiterin in der Versammlung">'
+      + '<img class="ph l-far" src="' + src + '" alt="" aria-hidden="true">'
+      + '<img class="ph l-mid" src="' + src + '" alt="" aria-hidden="true">'
+      + '<img class="ph l-fg" src="' + src + '" alt="Reiterin mit Samt-Showhelm, Reithose und Reitstiefeln am Pferd – im Hintergrund Dressurplatz mit Bande und zweiter Reiterin in der Versammlung">'
       + '</div>';
   }
 
@@ -113,6 +117,18 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
   }
 
   function buildControls() {
+    var ph = '';
+    R_PHOTOS.forEach(function (p, i) {
+      ph += '<button type="button" class="pchip" data-i="' + i + '" aria-pressed="' + (i === 0 ? 'true' : 'false') + '" title="' + escHtml(p.label) + '"><img src="' + p.thumb + '" alt="' + escHtml(p.label) + '"></button>';
+    });
+    $('pchips').innerHTML = ph;
+    Array.prototype.forEach.call($('pchips').children, function (btn) {
+      btn.addEventListener('click', function () {
+        st.photo = +btn.getAttribute('data-i');
+        Array.prototype.forEach.call($('pchips').children, function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+        render();
+      });
+    });
     var h = '';
     R_CHIPS.forEach(function (c) {
       h += '<button type="button" class="chip" data-id="' + c.id + '" aria-pressed="false">' + c.mm + '&nbsp;mm</button>';

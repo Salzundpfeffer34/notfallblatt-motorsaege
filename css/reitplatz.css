@@ -20,3 +20,9 @@
     -webkit-mask-image: radial-gradient(ellipse 48% 55% at 38% 45%, #000 52%, transparent 78%);
     mask-image: radial-gradient(ellipse 48% 55% at 38% 45%, #000 52%, transparent 78%); }
   .hicon { width:30px; height:30px; border-radius:8px; vertical-align:-6px; margin-right:6px; border:1px solid var(--line); }
+  .pchips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .pchip { font:inherit; border:2px solid var(--line); border-radius:8px; padding:2px; background:var(--card); cursor:pointer; }
+  .pchip:hover { border-color:var(--accent); }
+  .pchip[aria-pressed="true"] { border-color:var(--accent); }
+  .pchip img { width:110px; height:auto; display:block; border-radius:6px; }
+  @media (prefers-color-scheme: dark) { .pchip { background:#262a33; } }

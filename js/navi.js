@@ -235,6 +235,7 @@
     uebersetzen(el);
     anpassen(el);
     fontButtonsBinden(el);
+    hoverBinden(el);
   }
 
   function alleRendern() {
@@ -289,6 +290,31 @@
         }
         applyFont();
       });
+    }
+  }
+
+  /* Hover-Open nur auf Geraeten mit Maus (hover:hover) – Touch/Tastatur weiter per Klick auf summary */
+  function hoverBinden(el) {
+    if (!(window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches)) return;
+    if (!el.querySelectorAll) return;
+    var dets = el.querySelectorAll('details');
+    for (var i = 0; i < dets.length; i++) {
+      (function (details) {
+        if (details._hoverGebunden) return;
+        details._hoverGebunden = true;
+        var li = details.parentNode;
+        if (!li || !li.addEventListener) return;
+        var timer = null;
+        li.addEventListener('mouseenter', function () {
+          if (timer) { clearTimeout(timer); timer = null; }
+          menuesSchliessen(details);
+          details.setAttribute('open', '');
+        });
+        li.addEventListener('mouseleave', function () {
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(function () { details.removeAttribute('open'); }, 150);
+        });
+      })(dets[i]);
     }
   }
 

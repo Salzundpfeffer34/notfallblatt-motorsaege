@@ -1906,6 +1906,9 @@ if (typeof document !== 'undefined') {
       if (q) { searchOrt(q); }
     }
   });
+  $('ort').addEventListener('input', function () {
+    $('ortBtn').classList.toggle('aktiv', trimField($('ort')).length > 0);
+  });
   Array.prototype.forEach.call(document.querySelectorAll('#chips .chip'), function (chip) {
     chip.addEventListener('click', function () {
       applyCoords(parseFloat(chip.getAttribute('data-lat')), parseFloat(chip.getAttribute('data-lon')), chip.getAttribute('data-name'));

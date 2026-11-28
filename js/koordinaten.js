@@ -14,6 +14,8 @@ var TEXTE = {
     ariaFormat: 'Format',
     ariaTarget: 'Zielformat',
     ariaGpxDatum: 'Datumsformat im Standardnamen',
+    gpxOptEu: 'Europäisch (13.11.2026)',
+    gpxOptAm: 'Amerikanisch (11-13-2026)',
     ariaGpxType: 'GPX-Type (Art der Route/des Tracks auf dem Garmin-Gerät)',
     optAuto: 'Automatisch erkennen',
     optWgs84: 'WGS84 · Dezimalgrad',
@@ -41,7 +43,7 @@ var TEXTE = {
     copyLink: 'Link kopieren',
     mapTitle: 'Kartenausschnitt',
     batchH2: 'Stapel-Umrechnung',
-    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Deutsch, English/US, Français, Italiano, Español)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>',
+    batchHelp: 'Mehrere Koordinaten auf einmal umrechnen – das Format wird automatisch erkannt.<h3>So geht’s</h3><ul><li><strong>Eine Koordinate pro Zeile</strong> einfügen</li><li>Zielformat wählen</li><li><strong>«Stapel umrechnen»</strong> klicken</li></ul><h3>GPX für Garmin</h3><ul><li><strong>«GPX herunterladen»</strong> erzeugt eine Datei für Garmin Connect oder Garmin Explore</li><li>Die Reihenfolge der Zeilen entspricht der Route</li><li>Dafür sind <strong>mindestens zwei gültige Zeilen</strong> nötig</li><li>Checkbox <strong>«Punkte nach Nähe sortieren»</strong>: Reihenfolge wird automatisch optimiert (jeweils der nächstgelegene Punkt; der erste Punkt bleibt der Start)</li></ul><h3>Dateiname</h3><ul><li>Checkbox <strong>«Dateiname automatisch nach dem Ort benennen»</strong> (Standard): benannt nach dem Ort der ersten Koordinate (via OpenStreetMap), z.&nbsp;B. <code>Green-River.gpx</code></li><li>Sonst: <code>route-DATUM_NPUNKTE.gpx</code> (z. B. <code>route-13.11.2026_7punkte.gpx</code>; Datumsformat umschaltbar: Europäisch, Amerikanisch)</li><li>Checkbox <strong>«Beim Herunterladen nach dem Dateinamen fragen»</strong>: eigener Name beim Download</li></ul><p class="batchhint">Hinweis: LV95 wird nur für Koordinaten im Schweiz-Bereich angezeigt (sonst «–»).</p>',
     batchPlaceholder: 'z. B.\n48.8566, 2.3522\n41° 54\' 10.1" N, 12° 29\' 47" E\n30U 699316 5710164',
     batchGo: 'Stapel umrechnen',
     batchGpx: 'GPX herunterladen',
@@ -54,8 +56,8 @@ var TEXTE = {
     gpxGeoWait: 'Ort wird gesucht …',
     lblGpxSort: 'Punkte nach Nähe sortieren (sinnvolle Abfolge; Start bleibt der erste Punkt)',
     lblGpxType: 'GPX-Type (Art auf dem Garmin-Gerät, z. B. Wandern statt Standard-Profil wie Geländewagen)',
-    lblBild: 'Bild mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken',
-    ariaBild: 'Bild mit GPS-Daten auswählen',
+    lblBild: 'Bild(er) mit GPS-Daten (JPEG/TIFF/RAW) hierher ziehen oder klicken – einzeln oder gleich als Stapel',
+    ariaBild: 'Bild(er) mit GPS-Daten auswählen',
     noteBildGps: 'GPS aus Bild übernommen: {a}, {b}',
     noteBildKeinGps: 'Keine GPS-Daten im Bild. Koordinaten manuell eingeben (das Bild selbst wird nicht verändert).',
     noteBildManuell: 'Koordinaten übernommen (das Bild selbst wird nicht verändert).',
@@ -69,6 +71,7 @@ var TEXTE = {
     btnBildGpx: 'Zur Stapel-/GPX-Liste hinzufügen',
     btnBildReset: 'Bild-GPS zurücksetzen',
     noteBildBatch: 'Koordinate zur Stapel-Liste hinzugefügt – dort «Stapel umrechnen» oder «GPX herunterladen» klicken.',
+    noteBildStapel: '{a} Bilder übergeben – alle mit GPS landen nach Aufnahmezeit sortiert in der Stapel-/GPX-Liste unten (dort «GPX herunterladen» klicken).',
     errBildLesen: 'Das Bild konnte nicht gelesen werden.',
     helpH2: 'Erkannte Eingabeformate',
     helpP1: 'Als Trennzeichen funktionieren Komma, Semikolon, Leerzeichen oder Schrägstrich. Dezimalpunkt oder Dezimalkomma sind erlaubt, Schweizer Tausendertrennung mit Apostroph (<code>2\'624\'043</code>) ebenfalls.',
@@ -86,7 +89,16 @@ var TEXTE = {
     copied: 'Kopiert ✓',
     fmtUnknown: 'Format unbekannt',
     noLines: 'Keine Zeilen eingegeben.',
-    cap1000: 'Auf 1000 Zeilen begrenzt.',
+    cap1000: 'Auf 5000 Zeilen begrenzt.',
+    capShown: 'Erste {a} von {b} Zeilen angezeigt.',
+    lblBatchFiles: 'Fotos mit GPS laden (Stapel, z. B. 2000 Bilder)',
+    batchFilesHint: 'Liest EXIF-GPS + Aufnahmezeit aus jedem Bild (pro Datei nur die ersten 256 KB), sortiert nach Aufnahmezeit und übernimmt die Punkte in den Stapel darunter → „GPX herunterladen“ erzeugt die Route (bei sehr vielen Punkten evtl. danach auf gpx-reduce reduzieren). Bilder ohne GPS werden übersprungen.',
+    noteFotosStart: 'Fotos werden gelesen … ({b})',
+    noteFotosFortschritt: '{a} / {b} Fotos gelesen …',
+    noteFotosFertig: '{a} von {b} Fotos mit GPS – nach Aufnahmezeit sortiert in den Stapel übernommen. „GPX herunterladen“ klicken für die Route.',
+    lblFotoMinDist: 'Mindestabstand für Routenpunkte (0 = jeder Punkt)',
+    lblFotoMinSec: 'Mindestens Zeitabstand (0 = aus)',
+    noteFotosDup: '{c} Punkte entfernt (näher als {d} m zu bisherigen Punkten UND < {e} s nach dem letzten Punkt).',
     min2: 'Min. 2 Punkte nötig',
     promptName: 'Name der GPX-Datei (ohne .gpx):',
     promptBildName: 'Name der neuen Bild-Datei:',
@@ -551,6 +563,55 @@ function pairToLatLon(c) {
   throw new Error(t('errUnknown'));
 }
 
+function parseExifTimeStr(s) {
+  if (typeof s !== 'string') { return null; }
+  var m = s.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if (!m) { return null; }
+  var ms = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+  return isFinite(ms) ? ms : null;
+}
+function sortPhotoPoints(pts) {
+  return pts.slice().sort(function (a, b) {
+    var ta = (a.time == null ? Infinity : a.time), tb = (b.time == null ? Infinity : b.time);
+    if (ta !== tb) { return ta - tb; }
+    return String(a.name || '').localeCompare(String(b.name || ''));
+  });
+}
+function photoPointLine(p) { return p.lat.toFixed(6) + ', ' + p.lon.toFixed(6); }
+function distM(lat1, lon1, lat2, lon2) {
+  var R = 6371000, rad = Math.PI / 180;
+  var dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function filterMinDist(pts, minM) {
+  if (!minM || minM <= 0) { return pts.slice(); }
+  var out = [];
+  for (var i = 0; i < pts.length; i++) {
+    var p = pts[i];
+    if (!out.length) { out.push(p); continue; }
+    var last = out[out.length - 1];
+    if (distM(last.lat, last.lon, p.lat, p.lon) >= minM) { out.push(p); }
+  }
+  return out;
+}
+function filterMinDistTime(pts, minM, minSec) {
+  minM = minM > 0 ? minM : 0; minSec = minSec > 0 ? minSec : 0;
+  if (!minM && !minSec) { return pts.slice(); }
+  var out = [];
+  for (var i = 0; i < pts.length; i++) {
+    var p = pts[i];
+    if (!out.length) { out.push(p); continue; }
+    var last = out[out.length - 1], ok = false;
+    if (minM) {
+      ok = true;
+      for (var k = 0; k < out.length; k++) { if (distM(out[k].lat, out[k].lon, p.lat, p.lon) < minM) { ok = false; break; } }
+    }
+    if (!ok && minSec && (p.time == null || last.time == null || p.time - last.time >= minSec * 1000)) { ok = true; }
+    if (ok) { out.push(p); }
+  }
+  return out;
+}
 function exifGps(buf) {
   var v = new DataView(buf);
   if (v.byteLength < 12) { return null; }
@@ -582,7 +643,13 @@ function exifGps(buf) {
     if (saneIfd(8)) { ifd0 = 8; } else if (saneIfd(16)) { ifd0 = 16; }
   }
   if (!saneIfd(ifd0)) { return exifGpsXmp(v, xmpRanges); }
-  var gpsPtr = -1, exifPtr = -1, xmpOff = -1, xmpCnt = 0;
+  var gpsPtr = -1, exifPtr = -1, xmpOff = -1, xmpCnt = 0, timeStr = '';
+  function asciiAt(e) {
+    var typ = u16(e + 2), cnt = u32(e + 4), vo = cnt > 4 ? u32(e + 8) : e + 8, s = '', k;
+    if ((typ !== 2 && typ !== 1) || vo < 0 || vo + cnt > v.byteLength - tiff) { return ''; }
+    for (k = 0; k < cnt; k++) { s += String.fromCharCode(v.getUint8(tiff + vo + k)); }
+    return s.replace(/\0[\s\S]*$/, '');
+  }
   function scanIfd(off) {
     var n = u16(off), i, e;
     for (i = 0; i < n; i++) {
@@ -592,6 +659,8 @@ function exifGps(buf) {
       if (tag === 0x8825 && gpsPtr < 0) { gpsPtr = u32(e + 8); }
       else if (tag === 0x8769 && exifPtr < 0) { exifPtr = u32(e + 8); }
       else if (tag === 0x02BC && xmpOff < 0) { xmpOff = u32(e + 8); xmpCnt = cnt; }
+      else if (tag === 0x9003 && !timeStr) { timeStr = asciiAt(e); }
+      else if (tag === 0x0132 && !timeStr) { timeStr = asciiAt(e); }
     }
   }
   scanIfd(ifd0);
@@ -665,7 +734,7 @@ function exifGps(buf) {
   if (lat !== null && lon !== null && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0)) {
     if (latRef === 'S') { lat = -lat; }
     if (lonRef === 'W') { lon = -lon; }
-    return { lat: lat, lon: lon };
+    return { lat: lat, lon: lon, time: parseExifTimeStr(timeStr) };
   }
   return exifGpsXmp(v, xmpRanges);
 }
@@ -1331,12 +1400,26 @@ function buildResults(lat, lon, forceLv95) {
     };
     reader.readAsArrayBuffer(file);
   }
+  function bildHandleFiles(files) {
+    var list = Array.prototype.slice.call(files || []);
+    if (!list.length) { return; }
+    if (list.length === 1) { bildHandle(list[0]); return; }
+    bildKlick();
+    bildSnap();
+    bildMsgEl.textContent = t('noteBildStapel').replace('{a}', String(list.length));
+    bildMsgEl.classList.remove('hidden');
+    fotosHandle(list);
+    try {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      fotosMsgEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    } catch (e) {}
+  }
   bildDropEl.addEventListener('click', function () { bildFileEl.click(); });
   bildDropEl.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bildFileEl.click(); } });
-  bildFileEl.addEventListener('change', function () { if (bildFileEl.files[0]) { bildHandle(bildFileEl.files[0]); } bildFileEl.value = ''; });
+  bildFileEl.addEventListener('change', function () { bildHandleFiles(bildFileEl.files); bildFileEl.value = ''; });
   bildDropEl.addEventListener('dragover', function (e) { e.preventDefault(); bildDropEl.classList.add('drag'); });
   bildDropEl.addEventListener('dragleave', function () { bildDropEl.classList.remove('drag'); });
-  bildDropEl.addEventListener('drop', function (e) { e.preventDefault(); bildDropEl.classList.remove('drag'); if (e.dataTransfer.files[0]) { bildHandle(e.dataTransfer.files[0]); } });
+  bildDropEl.addEventListener('drop', function (e) { e.preventDefault(); bildDropEl.classList.remove('drag'); bildHandleFiles(e.dataTransfer.files); });
   window.addEventListener('dragover', function (e) { e.preventDefault(); });
   window.addEventListener('drop', function (e) { e.preventDefault(); });
   bildManuellBtnEl.addEventListener('click', function () {
@@ -1628,14 +1711,17 @@ function buildResults(lat, lon, forceLv95) {
       var q = lines[i].trim();
       if (q === '') { continue; }
       count++;
-      if (count > 1000) { break; }
+      if (count > 5000) { break; }
       var val = null;
       try { var ll = parseInput(q, 'auto', false); val = batchValue(ll.lat, ll.lon, target, forceLv95); batchLines.push(val); batchPoints.push({ lat: ll.lat, lon: ll.lon }); } catch (e) { val = null; }
-      html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
-        '<div class="val">' + (val === null ? '<span class="batcherr">' + t('fmtUnknown') + '</span>' : esc(val)) + '</div>' +
-        (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">' + t('copyBtn') + '</button>') + '</div>';
+      if (count <= 300) {
+        html += '<div class="resrow"><div class="lbl">' + esc(q) + '</div>' +
+          '<div class="val">' + (val === null ? '<span class="batcherr">' + t('fmtUnknown') + '</span>' : esc(val)) + '</div>' +
+          (val === null ? '' : '<button type="button" class="copy" data-v="' + esc(val) + '">' + t('copyBtn') + '</button>') + '</div>';
+      }
     }
-    if (count > 1000) { html += '<p class="help">' + t('cap1000') + '</p>'; }
+    if (count > 5000) { html += '<p class="help">' + t('cap1000') + '</p>'; }
+    if (count > 300) { html += '<p class="help">' + t('capShown').replace('{a}', '300').replace('{b}', String(count)) + '</p>'; }
     out.innerHTML = (html === '') ? '<p class="help">' + t('noLines') + '</p>' : html;
     var copies = out.querySelectorAll('.copy');
     for (var j = 0; j < copies.length; j++) {
@@ -1649,6 +1735,54 @@ function buildResults(lat, lon, forceLv95) {
     }
   }
   document.getElementById('batchGo').addEventListener('click', runBatch);
+  var batchFilesEl = document.getElementById('batchFiles');
+  var fotosMsgEl = document.getElementById('fotosMsg');
+  function fotosHandle(files) {
+    var list = Array.prototype.slice.call(files || []);
+    if (!list.length || !fotosMsgEl) { return; }
+    var pts = [], done = 0, withGps = 0;
+    fotosMsgEl.classList.remove('hidden');
+    fotosMsgEl.textContent = t('noteFotosStart').replace('{b}', String(list.length));
+    function step() {
+      if (done >= list.length) {
+        var sorted = sortPhotoPoints(pts);
+        var minDEl = document.getElementById('fotoMinDist');
+        var minSEl = document.getElementById('fotoMinSec');
+        var minD = minDEl ? (parseFloat(minDEl.value) || 0) : 0;
+        var minS = minSEl ? (parseFloat(minSEl.value) || 0) : 0;
+        var kept = filterMinDistTime(sorted, minD, minS);
+        if (batchInputEl && kept.length) {
+          var curVal = batchInputEl.value.replace(/\s+$/, '');
+          var addLines = kept.map(photoPointLine).join('\n');
+          batchInputEl.value = curVal === '' ? addLines : curVal + '\n' + addLines;
+          runBatch();
+        }
+        fotosMsgEl.textContent = t('noteFotosFertig').replace('{a}', String(withGps)).replace('{b}', String(list.length))
+          + (sorted.length - kept.length > 0 ? ' ' + t('noteFotosDup').replace('{c}', String(sorted.length - kept.length)).replace('{d}', String(minD)).replace('{e}', String(minS)) : '');
+        return;
+      }
+      var f = list[done];
+      done++;
+      var reader = new FileReader();
+      reader.onerror = function () { step(); };
+      reader.onload = function () {
+        try {
+          var g = exifGps(reader.result);
+          if (g && isFinite(g.lat) && isFinite(g.lon) && Math.abs(g.lat) <= 90 && Math.abs(g.lon) <= 180) {
+            withGps++;
+            pts.push({ lat: g.lat, lon: g.lon, time: (g.time != null && isFinite(g.time)) ? g.time : null, name: f.name });
+          }
+        } catch (e) {}
+        fotosMsgEl.textContent = t('noteFotosFortschritt').replace('{a}', String(done)).replace('{b}', String(list.length));
+        step();
+      };
+      reader.readAsArrayBuffer(f.slice(0, 262144));
+    }
+    step();
+  }
+  if (batchFilesEl) {
+    batchFilesEl.addEventListener('change', function () { fotosHandle(batchFilesEl.files); batchFilesEl.value = ''; });
+  }
   document.getElementById('batchCopy').addEventListener('click', function () {
     if (navigator.clipboard && batchLines.length) {
       navigator.clipboard.writeText(batchLines.join('\n')).then(function () { copyFeedback(this); }.bind(this));
@@ -1667,6 +1801,7 @@ function buildResults(lat, lon, forceLv95) {
     }
     var d = new Date();
     var fm = gpxDatumEl ? gpxDatumEl.value : 'de';
+    if (fm !== 'de' && fm !== 'en') { fm = 'de'; }
     var sep = (fm === 'de') ? '.' : '-';
     var day;
     if (fm === 'en') { day = ('0' + (d.getMonth() + 1)).slice(-2) + sep + ('0' + d.getDate()).slice(-2) + sep + d.getFullYear(); }

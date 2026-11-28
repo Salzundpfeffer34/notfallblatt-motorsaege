@@ -56,12 +56,13 @@
       <input type="text" id="ort" placeholder="z. B. San Andrés Teneriffa, Matterhorn, Lofoten …" autocomplete="off">
     </div>
     <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
-      <button type="button" id="ortBtn" class="secondary">Suchen</button>
+      <button type="button" id="ortBtn" class="glow">Suchen</button>
     </div>
     <div class="field" style="flex:0 0 auto"><label for="biasGeo">📍 lokal priorisieren</label>
       <input type="checkbox" id="biasGeo" checked style="accent-color:var(--accent);width:auto">
     </div>
   </div>
+  <p class="ort-hint" id="ortHint">💡 Suche starten: <kbd>Enter</kbd> im Feld drücken oder auf <strong>„Suchen“</strong> klicken – sie startet <em>nicht</em> automatisch beim Tippen.</p>
   <div id="ortResults"></div>
   <details class="hint"><summary>Tipp: Ort + Region/Land angeben (z. B. «San Andrés Teneriffa» oder «San Andrés Kanarische Inseln») – ausklappen</summary><div>Die Suche fragt Nominatim und Photon ab und filtert Duplikate. «📍 lokal priorisieren» biegt die Treffer um deinen Gerätestandort (Geolokalisierung); dabei ist «📍 Mein Gerätestandort» als erster Eintrag gesetzt. Zusätzlich wird immer auch weltweit ohne Bias gesucht – Treffer mit exakt passendem Namen (z. B. «Eiffelturm») stehen ganz oben vor rein lokalen Treffern. Ohne Geolokalisierung und ohne gesetzte Koordinate wird nur weltweit gesucht. Gross-/Kleinschreibung und Akzente sind egal («san andres» findet «San Andrés»); bei mehreren Wörtern wird notfalls das letzte (Region) abgeschnitten und erneut gesucht. USA: Bundesstaat anhängen (z. B. «Springfield MA» oder «Springfield, Illinois») – die Suche wird dann automatisch auf die USA eingeschränkt (countrycodes=us). Europa/Länder: Land ans Ende anhängen (z. B. «Zermatt Schweiz», «Zermatt CH», «Paris Frankreich», «Lissabon Portugal») – die Suche wird automatisch auf dieses Land eingeschränkt (countrycodes=ch/fr/pt …); Schweiz: Kanton anhängen (z. B. «Küsnacht ZH», «Lausanne VD», «Genf GE») → countrycodes=ch. 2-Buchstaben-Codes bitte gross schreiben, sonst Land/Kanton voll ausschreiben («Berlin Deutschland»). Offline (oder wenn Nominatim nicht antwortet) wird der Ortsname aus einer lokalen Ortsliste geschätzt – nächster Eintrag im Umkreis ≤ 60 km, als «≈ Name (ca. x km)» angezeigt (js/ort-db.js (bzw. auf eigenem PHP/MySQL-Server der Endpunkt ort-db.php), wird nur bei Bedarf geladen; rund 290 000 Orte: GeoNames weltweit ALLE Siedlungen ab 50 Einw. + kuratierte Kanaren/Schweiz/Kanada/Australien/Afrika/Amerika/Sehenswürdigkeiten). <a href="ort-db-editor.html">Ortsdatenbank selbst bearbeiten (Maske)</a></div></details>
   <div class="btnrow">
@@ -75,14 +76,17 @@
     <input type="text" id="tzMan" list="tzCityList" placeholder="z. B. UTC+2, Paris, New York, Tenerife …" autocomplete="off">
     <datalist id="tzCityList"></datalist>
   </div>
+  <div class="beispiele">
+  <p class="beispiele-titel">Beispiele – zum Ausprobieren anklicken:</p>
   <div class="chips" id="chips">
-    <button type="button" class="chip" data-lat="46.0207" data-lon="7.7491" data-name="Matterhorn">Matterhorn</button>
-    <button type="button" class="chip" data-lat="46.6938" data-lon="11.9447" data-name="Lago di Braies">Lago di Braies</button>
-    <button type="button" class="chip" data-lat="67.9300" data-lon="13.0900" data-name="Reine, Lofoten">Lofoten</button>
-    <button type="button" class="chip" data-lat="36.4618" data-lon="25.3762" data-name="Oia, Santorini">Santorini</button>
-    <button type="button" class="chip" data-lat="-24.7397" data-lon="15.3398" data-name="Sossusvlei">Sossusvlei</button>
-    <button type="button" class="chip" data-lat="47.3779" data-lon="8.5403" data-name="Zürich HB">Zürich</button>
-    <button type="button" class="chip" data-lat="48.8584" data-lon="2.2945" data-name="Eiffelturm">Eiffelturm</button>
+    <button type="button" class="chip" data-lat="46.0207" data-lon="7.7491" data-name="Matterhorn" title="46.0207, 7.7491">Matterhorn</button>
+    <button type="button" class="chip" data-lat="46.6938" data-lon="11.9447" data-name="Lago di Braies" title="46.6938, 11.9447">Lago di Braies</button>
+    <button type="button" class="chip" data-lat="67.9300" data-lon="13.0900" data-name="Reine, Lofoten" title="67.9300, 13.0900">Lofoten</button>
+    <button type="button" class="chip" data-lat="36.4618" data-lon="25.3762" data-name="Oia, Santorini" title="36.4618, 25.3762">Santorini</button>
+    <button type="button" class="chip" data-lat="-24.7397" data-lon="15.3398" data-name="Sossusvlei" title="-24.7397, 15.3398">Sossusvlei</button>
+    <button type="button" class="chip" data-lat="47.3779" data-lon="8.5403" data-name="Zürich HB" title="47.3779, 8.5403">Zürich</button>
+    <button type="button" class="chip" data-lat="48.8584" data-lon="2.2945" data-name="Eiffelturm" title="48.8584, 2.2945">Eiffelturm</button>
+  </div>
   </div>
   <div id="err" class="error hidden"></div>
 </div>
@@ -135,6 +139,10 @@
       <button type="button" id="dlReset" class="secondary" title="Von/Bis löschen – Diagramm und Tabelle ausblenden" aria-label="Von/Bis löschen und ausblenden" style="flex:0 0 auto;align-self:end">🗑</button>
     </div>
     <div id="dayLenRange" style="margin-top:8px"></div>
+  </details>
+  <details class="hint" id="yearLenDet" style="font-size:.9rem;margin-top:8px"><summary>📈 <strong>Tageslänge übers ganze Jahr</strong> – Grafik (ausklappen)</summary>
+    <div class="hint" style="margin-top:4px">Berechnet aus der Koordinate unter «Ort &amp; Tag» für das Jahr des gewählten Datums (Orts-Zeitzone). Nordhalbkugel: längster Tag ≈ 21.06., kürzester ≈ 21.12. (Südhalbkugel vertauscht.)</div>
+    <div id="yearLenChart" style="margin-top:8px"></div>
   </details>
 </div>
 
@@ -193,7 +201,7 @@
   <span>← <a href="koordinaten/index.html">Koordinaten-Konverter</a></span>
   <span><a href="gpx-reduce.html">GPX-Reduktion für Garmin</a></span>
   <span><a href="bokeh.html">🎯 Schärfentiefe &amp; Bokeh</a></span>
-  <span><a href="index.html">Notfallblatt Motorsäge</a></span>
+  <span><a href="index.html">⌂ Übersicht</a></span>
   <span><a href="koordinaten/datenschutz.html">Datenschutz</a></span>
   <span>Sonne nach NOAA-Formeln, Mond nach präziser Mondtheorie (Meeus/ELP2000-82, gekürzte Serie + Gezeiten-Term – über Jahrtausende brauchbar) – alles lokal im Browser. Nur mit Internet: Ortssuche (OpenStreetMap), Zeitabgleich (worldtimeapi.org, timeapi.io, Open-Meteo, Cloudflare) sowie Wetter/Zeitzone des Ortes (Open-Meteo) – offline läuft alles über die Systemuhr bzw. die Geräte-Zeitzone (manuell korrigierbar per UTC±x-Auswahl).</span>
   <span>Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr.</span>

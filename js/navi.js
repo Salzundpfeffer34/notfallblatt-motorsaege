@@ -1,7 +1,5 @@
 /* <navi navi></navi> – zentrale Top-Navigation auf allen Seiten. CSS siehe css/navi.css.
-   Ohne PHP rendert dieses Skript die Navi clientseitig in jedes <navi>-Element (Fallback).
-   Auf PHP-Hosting liefert body/kleine-navigation.php (per <?php include ?>) die Navi serverseitig
-   – dann wird sie hier nicht ueberschrieben, nur bei Sprachwechsel neu gerendert. */
+   Kein Custom Element (Namen ohne Bindestrich sind ungueltig) – alle <navi>-Elemente werden direkt befuellt. */
 (function () {
   'use strict';
 
@@ -63,21 +61,7 @@
     }
   }
 
-  /* Body-Einrueckung (z. B. padding 0 16px) ausgleichen + Marker-Klasse – immer, auch bei serverseitiger Navi */
-  function anpassen(el) {
-    if (window.getComputedStyle && document.body) {
-      var cs = getComputedStyle(document.body);
-      var pl = parseFloat(cs.paddingLeft) || 0;
-      var pr = parseFloat(cs.paddingRight) || 0;
-      if (pl) el.style.marginLeft = (-pl) + 'px';
-      if (pr) el.style.marginRight = (-pr) + 'px';
-    }
-    if (document.body) document.body.classList.add('hat-navi');
-  }
-
   function render(el) {
-    var vorhanden = el.querySelector('nav.navi-bar');
-    if (vorhanden && vorhanden.parentNode) vorhanden.parentNode.removeChild(vorhanden);
     if (!el._gerettet) {
       el._gerettet = true;
       /* Falls als <navi navi/> (selbstschliessend) geschrieben: folgende Geschwister wieder aus dem Element retten */
@@ -127,31 +111,35 @@
     inner.appendChild(ul);
     nav.appendChild(inner);
     el.appendChild(nav);
-    anpassen(el);
+    /* Body-Einrueckung (z. B. padding 0 16px) ausgleichen, damit die Leiste vollbreit ist */
+    if (window.getComputedStyle && document.body) {
+      var cs = getComputedStyle(document.body);
+      var pl = parseFloat(cs.paddingLeft) || 0;
+      var pr = parseFloat(cs.paddingRight) || 0;
+      if (pl) el.style.marginLeft = (-pl) + 'px';
+      if (pr) el.style.marginRight = (-pr) + 'px';
+    }
+    if (document.body) document.body.classList.add('hat-navi');
   }
 
-  function alleRendern(force) {
+  function alleRendern() {
     var els = document.querySelectorAll('navi');
-    for (var i = 0; i < els.length; i++) {
-      anpassen(els[i]);
-      if (!force && els[i].querySelector('nav.navi-bar')) continue; /* serverseitig via PHP schon gerendert */
-      render(els[i]);
-    }
+    for (var i = 0; i < els.length; i++) render(els[i]);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { alleRendern(false); });
+    document.addEventListener('DOMContentLoaded', alleRendern);
   } else {
-    alleRendern(false);
+    alleRendern();
   }
 
-  document.addEventListener('spracheGeaendert', function () { alleRendern(true); });
+  document.addEventListener('spracheGeaendert', alleRendern);
 
   if (window.NotfallI18n && typeof window.NotfallI18n.i18nAnwenden === 'function') {
     var orig = window.NotfallI18n.i18nAnwenden;
     window.NotfallI18n.i18nAnwenden = function () {
       orig.apply(this, arguments);
-      alleRendern(true);
+      alleRendern();
     };
   }
 })();

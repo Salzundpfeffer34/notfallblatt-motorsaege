@@ -31,7 +31,6 @@ jobs:
           php -v
       - name: PHP-Lint
         run: |
-          php -l body/kleine-navigation.php
           php -l counter.php
           php -l koordinaten/counter.php
           php -l koordinaten/index.php

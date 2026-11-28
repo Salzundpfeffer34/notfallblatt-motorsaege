@@ -57,13 +57,19 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
     return st.lens.name + ' · ' + st.sensor.name + ' (CoC ' + c.toFixed(3).replace('.', ',') + ' mm) → Hyperfokus ' + fmtM(Hm * 1000)
       + ' · scharf ' + fmtM(dn * 1000) + ' – ' + fmtM(df * 1000)
       + ' · Hintergrund (Versammlung, ' + fmtM(R_BG_FACTOR * st.s * 1000) + ') Unschärfekreis Ø ca. ' + Math.max(1, Math.round(bg)) + ' px'
+      + ' · Bildwinkel ca. ' + aovDeg().toFixed(0) + '° · Ausschnitt ' + Math.round(zoomF() * 100) + ' %'
       + ' → CSS-Blur ' + bgBlurCss().toFixed(1) + ' px';
   }
 
+  function aovDeg() { return 2 * Math.atan(st.sensor.w / (2 * st.lens.f)) * 180 / Math.PI; }
+  function zoomF() { return Math.max(0.45, st.lens.f / 50); }
+
   function render() {
+    var ph = $('scene').querySelector('.photo');
+    if (ph) { ph.style.transform = 'scale(' + zoomF().toFixed(3) + ')'; }
     $('apOut').textContent = 'f/' + st.n;
     $('distOut').textContent = fmtM(st.s * 1000);
-    $('lensInfo').textContent = st.lens.note ? st.lens.note : (st.lens.f + ' mm · Lichtstärke bis f/' + st.lens.n);
+    $('lensInfo').textContent = (st.lens.note ? st.lens.note + ' · ' : '') + st.lens.f + ' mm · Lichtstärke bis f/' + st.lens.n + ' · Bildwinkel ca. ' + aovDeg().toFixed(0) + '°';
     $('scene').innerHTML = photoHtml();
     $('dofbar').innerHTML = dofBarHtml();
     $('dofOut').textContent = outText();

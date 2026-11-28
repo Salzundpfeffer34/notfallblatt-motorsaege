@@ -8,7 +8,7 @@
     .chip { background:#262a33; }
     .chip[aria-pressed="true"] { background:var(--accent); color:#fff; }
   }
-  .photo { position:relative; }
+  .photo { position:relative; overflow:hidden; border-radius:10px; transform-origin:50% 42%; transition:transform .25s ease; background:linear-gradient(#bcd6ee 0 62%, #d9c49a 62% 100%); }
   .photo .ph { width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:10px; }
   .photo .phblur { position:absolute; inset:0; width:100%; height:100%;
     -webkit-mask-image: radial-gradient(ellipse 55% 62% at 42% 46%, transparent 58%, #000 86%);

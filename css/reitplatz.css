@@ -19,3 +19,4 @@
   .photo .l-fg {
     -webkit-mask-image: radial-gradient(ellipse 48% 55% at 38% 45%, #000 52%, transparent 78%);
     mask-image: radial-gradient(ellipse 48% 55% at 38% 45%, #000 52%, transparent 78%); }
+  .hicon { width:30px; height:30px; border-radius:8px; vertical-align:-6px; margin-right:6px; border:1px solid var(--line); }

@@ -1,0 +1,10 @@
+/* reitplatz.css – nur die seiten-spezifischen Regeln; Basis kommt aus css/sonne-mond.css, Steuerelemente aus css/bokeh.css */
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .chip { font:inherit; font-weight:600; padding:7px 14px; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--ink); cursor:pointer; }
+  .chip:hover { border-color:var(--accent); }
+  .chip[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .ticks { display:flex; justify-content:space-between; margin:3px 2px 0; padding:0 4px; font-size:.62rem; color:var(--muted); font-variant-numeric:tabular-nums; flex-wrap:wrap; gap:2px; }
+  @media (prefers-color-scheme: dark) {
+    .chip { background:#262a33; }
+    .chip[aria-pressed="true"] { background:var(--accent); color:#fff; }
+  }

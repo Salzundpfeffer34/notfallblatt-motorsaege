@@ -29,6 +29,7 @@ function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt
 
 if (typeof document !== 'undefined') {
   var $ = function (id) { return document.getElementById(id); };
+  if (document.getElementById('lens')) {
   var st = { lens: null, sensor: BOKEH_SENSORS[0], n: 1.8, s: 2 };
   var W = 800, H = 320, HOR = 225, GY = 268;
 
@@ -164,4 +165,5 @@ if (typeof document !== 'undefined') {
   }
 
   buildControls();
+  }
 }

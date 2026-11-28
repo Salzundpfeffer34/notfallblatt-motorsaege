@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+<script src="js/framebust.js"></script>
+<title>Reitplatz &amp; Blende &middot; Dressurplatz mit Sch&auml;rfentiefe-Regler</title>
+<link rel="icon" type="image/svg+xml" href="img/motorsaege.svg">
+<link rel="stylesheet" href="css/sonne-mond.css">
+<link rel="stylesheet" href="css/bokeh.css">
+<link rel="stylesheet" href="css/reitplatz.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>&#x1F434; Reitplatz &amp; Blende</h1>
+    <p class="sub">Dressurplatz interaktiv: Reiterin mit Helm &amp; Stiefeln scharf im Vordergrund, zweite Reiterin in der Versammlung im Hintergrund. Blende per Regler von f/1.4 bis f/16, Objektiv 20&ndash;85&nbsp;mm w&auml;hlbar &ndash; so verh&auml;lt sich die Unsch&auml;rfe. Alles lokal im Browser, auch offline.</p>
+  </div>
+  <a class="back" href="index.html">&#x2302; &Uuml;bersicht</a>
+</header>
+
+<div class="card">
+  <h2>Objektiv (Brennweite)</h2>
+  <div class="chips" id="chips" role="group" aria-label="Brennweite w&auml;hlen"></div>
+  <div class="row">
+    <div class="field"><label for="sensor">Sensor / Format</label><select id="sensor"></select></div>
+  </div>
+  <p id="lensInfo" class="hint"></p>
+</div>
+
+<div class="card">
+  <h2>Blende &amp; Abstand</h2>
+  <div class="ctl">
+    <label for="ap">Blende</label>
+    <input type="range" id="ap" min="0" max="13" step="1" value="0" aria-label="Blende">
+    <output id="apOut">f/1.4</output>
+  </div>
+  <div class="ticks" id="apTicks" aria-hidden="true"></div>
+  <div class="ctl">
+    <label for="dist">Motiv-Abstand</label>
+    <input type="range" id="dist" min="0" max="1000" step="1" value="500" aria-label="Motiv-Abstand in Metern (logarithmisch)">
+    <output id="distOut">3 m</output>
+  </div>
+  <p class="hint">Regler nach links = kleine Blendenzahl (z. B. f/1.4): wenig Sch&auml;rfentiefe, Hintergrund stark unscharf. Regler nach rechts bis f/16: gro&szlig;e Sch&auml;rfentiefe, Dressurplatz im Hintergrund wird scharf. Weitwinkel (20&nbsp;mm) zeichnet insgesamt mehr scharf als Tele (85&nbsp;mm).</p>
+</div>
+
+<div class="card">
+  <h2>Dressurplatz</h2>
+  <div id="scene"></div>
+  <div id="dofbar"></div>
+  <p id="dofOut" class="hint"></p>
+</div>
+
+<footer>
+  <span><a href="bokeh.html">Sch&auml;rfentiefe &amp; Bokeh (allgemein)</a></span>
+  <span><a href="sonne-mond.html">Sonne &amp; Mond f&uuml;r Fotografen</a></span>
+  <span><a href="index.html">&#x2302; &Uuml;bersicht</a></span>
+  <span><a href="koordinaten/datenschutz.html">Datenschutz</a></span>
+  <span>Reine lokale HTML-Seite &ndash; keine Server, keine Cookies, keine &Uuml;bertragung. Physik wie bokeh.html: N&auml;herung &uuml;ber Zerstreuungskreis (Sensor-Diagonale/1500).</span>
+  <span>Alle Angaben ohne Gew&auml;hr &ndash; Verwendung auf eigene Gefahr.</span>
+</footer>
+</div>
+
+<script src="js/bokeh-linsen.js"></script>
+<script src="js/bokeh.js"></script>
+<script src="js/reitplatz.js"></script>
+</body>
+</html>

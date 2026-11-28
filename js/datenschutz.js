@@ -244,13 +244,24 @@ function applyLang(l) {
   var sel = document.getElementById('sprache');
   var lang = 'de';
   try {
-    var saved = localStorage.getItem('konverter-sprache');
+    /* gemeinsamer Key mit allen Hauptseiten; alter Key nur als Fallback (Migration) */
+    var saved = localStorage.getItem('notfallblatt.sprache') || localStorage.getItem('konverter-sprache');
     if (saved && TEXTE[saved]) { lang = saved; }
   } catch (e) {}
   sel.value = lang;
   applyLang(lang);
   sel.addEventListener('change', function () {
     applyLang(sel.value);
-    try { localStorage.setItem('konverter-sprache', sel.value); } catch (e) {}
+    try { localStorage.setItem('notfallblatt.sprache', sel.value); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: sel.value } }));
+  });
+  /* Live-Sync zwischen offenen Tabs (storage feuert nur in den anderen Tabs) */
+  window.addEventListener('storage', function (e) {
+    if (e.key === 'notfallblatt.sprache' && e.newValue && TEXTE[e.newValue] && e.newValue !== lang) {
+      lang = e.newValue;
+      sel.value = lang;
+      applyLang(lang);
+      document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: lang } }));
+    }
   });
 })();

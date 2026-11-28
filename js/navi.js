@@ -166,8 +166,28 @@
       li.appendChild(details);
       ul.appendChild(li);
     }
+    var schrift = document.createElement('div');
+    schrift.className = 'navi-schrift';
+    schrift.setAttribute('role', 'group');
+    schrift.setAttribute('aria-label', 'Schriftgrösse');
+    var fontDefs = [
+      ['-1', 'Schrift verkleinern', 'A−'],
+      ['0', 'Schrift zurücksetzen', 'A'],
+      ['1', 'Schrift vergrössern', 'A+']
+    ];
+    for (var f = 0; f < fontDefs.length; f++) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-font', fontDefs[f][0]);
+      b.setAttribute('aria-label', fontDefs[f][1]);
+      b.setAttribute('title', fontDefs[f][1]);
+      b.textContent = fontDefs[f][2];
+      if (fontDefs[f][0] === '0') b.classList.add('aktiv');
+      schrift.appendChild(b);
+    }
     inner.appendChild(brand);
     inner.appendChild(ul);
+    inner.appendChild(schrift);
     nav.appendChild(inner);
     el.appendChild(nav);
   }
@@ -183,11 +203,62 @@
     if (!hatNavi(el)) aufbauen(el);
     uebersetzen(el);
     anpassen(el);
+    fontButtonsBinden(el);
   }
 
   function alleRendern() {
     var els = document.querySelectorAll('navi');
     for (var i = 0; i < els.length; i++) render(els[i]);
+  }
+
+  /* Schriftgroesse (A-/A/A+) – skaliert html{font-size}, alle em-basierten Groessen folgen.
+     Gemeinsamer localStorage-Key 'schrift' (uebernimmt alte 'konverter-schrift'-Einstellung). */
+  var FONT_SIZES = [90, 100, 115, 130, 150];
+  var FONT_KEY = 'schrift';
+  var fontIdx = 1;
+
+  function fontLaden() {
+    try {
+      var v = parseInt(localStorage.getItem(FONT_KEY), 10);
+      if (isNaN(v)) v = parseInt(localStorage.getItem('konverter-schrift'), 10);
+      if (!isNaN(v) && v >= 0 && v < FONT_SIZES.length) fontIdx = v;
+    } catch (e) { /* localStorage nicht verfuegbar */ }
+  }
+
+  function applyFont() {
+    if (document.documentElement) {
+      document.documentElement.style.fontSize = (16 * FONT_SIZES[fontIdx] / 100) + 'px';
+    }
+    try { localStorage.setItem(FONT_KEY, String(fontIdx)); } catch (e) { /* ignorieren */ }
+    fontButtonsAktualisieren();
+  }
+
+  function fontButtonsAktualisieren() {
+    var bs = document.querySelectorAll('navi [data-font="0"]');
+    for (var i = 0; i < bs.length; i++) {
+      if (fontIdx === 1) bs[i].classList.add('aktiv');
+      else bs[i].classList.remove('aktiv');
+    }
+  }
+
+  function fontButtonsBinden(el) {
+    if (!el.querySelectorAll) return;
+    var bs = el.querySelectorAll('[data-font]');
+    for (var i = 0; i < bs.length; i++) {
+      if (bs[i]._fontGebunden) continue;
+      bs[i]._fontGebunden = true;
+      bs[i].addEventListener('click', function () {
+        var d = parseInt(this.getAttribute('data-font'), 10);
+        if (d === 0) {
+          fontIdx = 1;
+        } else {
+          fontIdx += d;
+          if (fontIdx < 0) fontIdx = 0;
+          if (fontIdx > FONT_SIZES.length - 1) fontIdx = FONT_SIZES.length - 1;
+        }
+        applyFont();
+      });
+    }
   }
 
   /* Menues schliessen: nur eines offen, Klick ausserhalb / Esc / Link-Klick */
@@ -217,6 +288,9 @@
       if (e.key === 'Escape') menuesSchliessen(null);
     });
   }
+
+  fontLaden();
+  applyFont();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () { eventsInitten(); alleRendern(); });

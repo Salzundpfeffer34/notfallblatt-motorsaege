@@ -34,7 +34,7 @@
 }
 .hub-ic { display: flex; align-items: center; height: 40px; }
 .hub-ic img { width: 40px; height: 40px; }
-.hub-emoji { font-size: 30px; line-height: 40px; }
+.hub-emoji { font-size: 1.875em; line-height: 2.5em; }
 .hub-ct { font-weight: 700; font-size: 1.05rem; }
 .hub-cd { font-size: .88rem; color: var(--grau-dunkel); }
 

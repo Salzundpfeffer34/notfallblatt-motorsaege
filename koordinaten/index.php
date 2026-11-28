@@ -738,6 +738,7 @@ function renderPage(): void
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20200'%3E%3Ccircle%20cx='100'%20cy='100'%20r='93'%20fill='none'%20stroke='%234c504c'%20stroke-width='6'/%3E%3Ccircle%20cx='100'%20cy='100'%20r='72'%20fill='none'%20stroke='%236e726e'%20stroke-width='3'/%3E%3Cg%20fill='%234c504c'%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20fill='%23b7bab7'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(90%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(90%20100%20100)'%20fill='%23b7bab7'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(180%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(180%20100%20100)'%20fill='%23b7bab7'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(270%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(270%20100%20100)'%20fill='%23b7bab7'/%3E%3C/g%3E%3Cg%20fill='%236e726e'%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20fill='%23d4d6d4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(45%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(45%20100%20100)'%20fill='%23d4d6d4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(135%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(135%20100%20100)'%20fill='%23d4d6d4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(225%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(225%20100%20100)'%20fill='%23d4d6d4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(315%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(315%20100%20100)'%20fill='%23d4d6d4'/%3E%3C/g%3E%3Ccircle%20cx='100'%20cy='100'%20r='7'%20fill='%234c504c'/%3E%3C/svg%3E">
 <meta name="description" content="Koordinaten online umrechnen: WGS84 (Dezimalgrad), Grad/Minuten/Sekunden, Schweizer LV95/CH1903+, NAD83, UTM, MGRS und Web Mercator (EPSG:3857 / Google Maps).">
 <style>
+@import url("meer.css");
 :root { --bg:#f0f0ee; --card:#ffffff; --ink:#1c1c1c; --muted:#6b6b6b; --line:#d8d8d4; --accent:#d52b1e; --accent2:#a91e14; }
 * { box-sizing: border-box; }
 body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
@@ -747,11 +748,9 @@ body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans
 .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 48px; position: relative; z-index: 1; }
 header h1 { font-size: 1.6rem; margin: 8px 0 4px; }
 header p { color: var(--muted); margin: 0 0 20px; }
-.card { background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20200'%3E%3Ccircle%20cx='100'%20cy='100'%20r='93'%20fill='none'%20stroke='%23d6dad6'%20stroke-width='2'/%3E%3Ccircle%20cx='100'%20cy='100'%20r='72'%20fill='none'%20stroke='%23e1e4e1'%20stroke-width='1'/%3E%3Cg%20fill='%23d6dad6'%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20fill='%23eaecea'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(90%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(90%20100%20100)'%20fill='%23eaecea'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(180%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(180%20100%20100)'%20fill='%23eaecea'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(270%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(270%20100%20100)'%20fill='%23eaecea'/%3E%3C/g%3E%3Cg%20fill='%23e1e4e1'%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(45%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(45%20100%20100)'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(135%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(135%20100%20100)'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(225%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(225%20100%20100)'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(315%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(315%20100%20100)'%20fill='%23f4f5f4'/%3E%3C/g%3E%3Ccircle%20cx='100'%20cy='100'%20r='5'%20fill='%23d6dad6'/%3E%3C/svg%3E") no-repeat center / 230px auto, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20560%2070'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%2046%20Q35%2026%2070%2046%20T140%2046%20T210%2046%20T280%2046%20T350%2046%20T420%2046%20T490%2046%20T560%2046%20L560%2070%20L0%2070%20Z'%20fill='%236ba3c9'%20fill-opacity='0.16'/%3E%3C/svg%3E") repeat-x left bottom / 560px 70px, url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20420%2070'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%2038%20Q52.5%2014%20105%2038%20T210%2038%20T315%2038%20T420%2038%20L420%2070%20L0%2070%20Z'%20fill='%234a7fa5'%20fill-opacity='0.10'/%3E%3C/svg%3E") repeat-x left bottom / 420px 70px var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(16,24,40,.06); margin-bottom: 20px; }
-@keyframes welle { from { background-position: center, left 0 bottom, left 0 bottom; } to { background-position: center, left -560px bottom, left -420px bottom; } }
-.card { animation: welle 16s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .card { animation: none; } }
+.card { position:relative; z-index:0; background: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20200%20200'%3E%3Ccircle%20cx='100'%20cy='100'%20r='93'%20fill='none'%20stroke='%23d6dad6'%20stroke-width='2'/%3E%3Ccircle%20cx='100'%20cy='100'%20r='72'%20fill='none'%20stroke='%23e1e4e1'%20stroke-width='1'/%3E%3Cg%20fill='%23d6dad6'%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20fill='%23eaecea'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(90%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(90%20100%20100)'%20fill='%23eaecea'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(180%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(180%20100%20100)'%20fill='%23eaecea'/%3E%3Cpath%20d='M100%2012%20L107%20102%20L100%20114%20Z'%20transform='rotate(270%20100%20100)'/%3E%3Cpath%20d='M100%2012%20L93%20102%20L100%20114%20Z'%20transform='rotate(270%20100%20100)'%20fill='%23eaecea'/%3E%3C/g%3E%3Cg%20fill='%23e1e4e1'%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(45%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(45%20100%20100)'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(135%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(135%20100%20100)'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(225%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(225%20100%20100)'%20fill='%23f4f5f4'/%3E%3Cpath%20d='M100%2038%20L106%20102%20L100%20114%20Z'%20transform='rotate(315%20100%20100)'/%3E%3Cpath%20d='M100%2038%20L94%20102%20L100%20114%20Z'%20transform='rotate(315%20100%20100)'%20fill='%23f4f5f4'/%3E%3C/g%3E%3Ccircle%20cx='100'%20cy='100'%20r='5'%20fill='%23d6dad6'/%3E%3C/svg%3E") no-repeat center / 230px auto var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 20px 130px; box-shadow: 0 1px 3px rgba(16,24,40,.06); margin-bottom: 20px; }
 .card.help { background:#eef4f9; border-color:#c7d9e8; animation:none; }
+.card.help::before, .card.help::after { content:none; }
 label { display:block; font-weight:600; margin-bottom:6px; }
 .row { display:flex; gap:10px; flex-wrap:wrap; }
 .row > * { flex:1 1 220px; }
@@ -1069,6 +1068,33 @@ document.querySelectorAll('.copy').forEach(function (b) {
     if (navigator.sendBeacon) { var fd = new FormData(); for (var k in d) { fd.append(k, d[k]); } navigator.sendBeacon('counter.php', fd); }
     else { fetch('counter.php', { method: 'POST', keepalive: true, body: new URLSearchParams(d) }).catch(function () {}); }
   } catch (e) {}
+})();
+</script>
+<script>
+// Meeres-Animation (Wellen + Tiere auf den Karten): pro Box eine zufällige Phase,
+// damit bei jedem Seitenaufruf nicht alle Boxen synchron laufen.
+;
+// Meeres-Animation (Wellen + Tiere auf den Karten): pro Box eine zufällige Phase,
+// damit bei jedem Seitenaufruf nicht alle Boxen synchron laufen.
+(function () {
+  function zufallsPhase() {
+    try {
+      if (!document.querySelectorAll || !Element.prototype.getAnimations) { return; }
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
+      var cards = document.querySelectorAll('.card:not(.help)');
+      for (var i = 0; i < cards.length; i++) {
+        var anims = cards[i].getAnimations({ subtree: true });
+        for (var j = 0; j < anims.length; j++) {
+          var a = anims[j];
+          var t = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
+          var dur = t && t.duration;
+          if (dur && isFinite(dur) && dur > 0) { a.currentTime = Math.random() * dur; }
+        }
+      }
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', zufallsPhase); }
+  else { zufallsPhase(); }
 })();
 </script>
 </body>

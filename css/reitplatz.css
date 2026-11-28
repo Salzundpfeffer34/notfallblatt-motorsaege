@@ -8,7 +8,7 @@
     .chip { background:#262a33; }
     .chip[aria-pressed="true"] { background:var(--accent); color:#fff; }
   }
-  .photo { position:relative; }
+  .photo { position:relative; overflow:hidden; border-radius:10px; transform-origin:36% 44%; transition:transform .25s ease; }
   .photo .ph { width:100%; height:auto; display:block; border:1px solid var(--line); border-radius:10px; }
   .photo .ph.l-mid, .photo .ph.l-fg { position:absolute; inset:0; width:100%; height:100%; border:none; }
   /* Mittelebene: alles unterhalb des Horizonts (Bande, zweite Reiterin) */

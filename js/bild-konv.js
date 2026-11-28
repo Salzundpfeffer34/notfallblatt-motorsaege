@@ -8,7 +8,7 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
   (function () {
     var $ = function (id) { return document.getElementById(id); };
     var drop = $('bkDrop'), fileEl = $('bkFile'), errEl = $('bkErr'), infoEl = $('bkInfo');
-    var imgEl = $('bkImg'), metaEl = $('bkMeta'), gpsEl = $('bkGps'), gpsBtn = $('bkGpsBtn');
+    var imgEl = $('bkImg'), metaEl = $('bkMeta'), gpsEl = $('bkGps'), gpsBtn = $('bkGpsBtn'), gpsRow = $('bkGpsRow'), gpsValEl = $('bkGpsVal');
     var fmtEl = $('bkFormat'), qualRow = $('bkQualRow'), qualEl = $('bkQual'), qualVal = $('bkQualVal');
     var modeEl = $('bkMode'), wRow = $('bkWRow'), hRow = $('bkHRow'), wEl = $('bkW'), hEl = $('bkH');
     var hintEl = $('bkSizeHint'), goBtn = $('bkGo'), resetBtn = $('bkReset');
@@ -147,6 +147,8 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
         var g = cur.gps;
         gpsEl.textContent = '\ud83d\udccd GPS: ' + fmtNum6(Math.abs(g.lat)) + '\u00b0 ' + (g.lat >= 0 ? 'N' : 'S') + ', ' + fmtNum6(Math.abs(g.lon)) + '\u00b0 ' + (g.lon >= 0 ? 'O' : 'W') + (isFinite(g.time) ? ' \u00b7 aufgenommen ' + fmtUtc(g.time) : '');
         gpsEl.classList.remove('hidden');
+        gpsValEl.value = g.lat.toFixed(6) + ', ' + g.lon.toFixed(6);
+        gpsRow.classList.remove('hidden');
         var q = 'sonne-mond.html?lat=' + g.lat.toFixed(5) + '&lon=' + g.lon.toFixed(5);
         if (isFinite(g.time)) { q += '&datum=' + dateStrLocal(g.time); }
         gpsBtn.href = q;
@@ -154,6 +156,8 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       } else {
         gpsEl.textContent = 'Kein GPS in den EXIF-/XMP-Metadaten gefunden.';
         gpsEl.classList.remove('hidden');
+        gpsValEl.value = '';
+        gpsRow.classList.add('hidden');
         gpsBtn.classList.add('hidden');
       }
       wEl.value = String(cur.w);
@@ -237,6 +241,8 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       metaEl.textContent = '';
       gpsEl.textContent = '';
       gpsEl.classList.add('hidden');
+      gpsValEl.value = '';
+      gpsRow.classList.add('hidden');
       gpsBtn.classList.add('hidden');
       gpsBtn.setAttribute('href', 'sonne-mond.html');
       fmtEl.value = 'image/jpeg';

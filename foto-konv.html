@@ -74,6 +74,10 @@
         <label>Datei &amp; GPS</label>
         <div id="bkMeta" class="bkmeta"></div>
         <div id="bkGps" class="bkmeta hidden"></div>
+        <div id="bkGpsRow" class="hidden" style="margin-top:6px">
+          <label for="bkGpsVal" style="font-size:.8rem;color:var(--muted);font-weight:600;display:block;margin-bottom:4px">GPS (WGS84 Dezimal)</label>
+          <input type="text" id="bkGpsVal" readonly autocomplete="off" spellcheck="false" title="GPS-Koordinaten aus den EXIF-Daten des Fotos">
+        </div>
         <div class="btnrow" style="margin-top:8px">
           <a id="bkGpsBtn" class="btn secondary hidden" href="sonne-mond.html">📍 GPS auslesen</a>
         </div>

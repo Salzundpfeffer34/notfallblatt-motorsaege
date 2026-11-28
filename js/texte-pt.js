@@ -13,6 +13,7 @@ window.NOTFALL_TEXTE.pt = {
   naviReitplatz: "Picadeiro",
   naviOrtDb: "Locais",
   naviDatenschutz: "Privacidade",
+  suvaHinweis: "Esta folha n\u00e3o substitui nenhuma forma\u00e7\u00e3o nem instru\u00e7\u00e3o de seguran\u00e7a (Suva).",
   naviReitplatzD: "Foto do picadeiro com controlo interativo da abertura",
   btnUebersicht: "⌂ Visão geral",
   hubTitel: "Folha de emergência & ferramentas",

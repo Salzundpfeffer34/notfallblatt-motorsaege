@@ -8,6 +8,7 @@
   .bkmeta { font-size:.9rem; color:var(--muted); line-height:1.5; word-break:break-all; }
   .bkprev { flex:0 0 auto; }
   .bkprev img { max-width:220px; max-height:160px; border:1px solid var(--line); border-radius:8px; display:block; background:#fafaf8; }
+  a.btn.hidden { display:none; }
   @media (prefers-color-scheme: dark) {
     select, input[type=number], .bkdrop, .bkprev img { background:#262a33; color:var(--ink); border-color:var(--line); }
   }

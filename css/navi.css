@@ -45,7 +45,7 @@ navi:empty { display: none; }
   flex: 1 1 auto;
 }
 .navi-gruppe { position: relative; }
-.navi-gruppe > summary {
+.navi-gruppe details > summary {
   list-style: none;
   cursor: pointer;
   display: flex;
@@ -58,11 +58,11 @@ navi:empty { display: none; }
   color: var(--ink, var(--text, #1c1c1c));
   user-select: none;
 }
-.navi-gruppe > summary::-webkit-details-marker { display: none; }
-.navi-gruppe > summary::after { content: "▾"; font-size: 0.625em; opacity: .7; }
-.navi-gruppe > summary:hover,
-.navi-gruppe[open] > summary { background: var(--bg, var(--grau, #f4f4f2)); }
-.navi-gruppe > summary.aktiv { color: var(--accent, var(--rot, #d52b1e)); font-weight: 600; }
+.navi-gruppe details > summary::-webkit-details-marker { display: none; }
+.navi-gruppe details > summary::after { content: "▾"; font-size: 0.625em; opacity: .7; }
+.navi-gruppe details > summary:hover,
+.navi-gruppe details[open] > summary { background: var(--bg, var(--grau, #f4f4f2)); }
+.navi-gruppe details > summary.aktiv { color: var(--accent, var(--rot, #d52b1e)); font-weight: 600; }
 .navi-untermenu {
   display: none;
   position: absolute;
@@ -78,7 +78,7 @@ navi:empty { display: none; }
   box-shadow: 0 8px 22px rgba(0,0,0,.16);
   z-index: 1300;
 }
-.navi-gruppe[open] .navi-untermenu { display: block; }
+.navi-gruppe details[open] .navi-untermenu { display: block; }
 .navi-untermenu a {
   display: block;
   padding: 8px 10px;

@@ -80,11 +80,62 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       return out;
     }
 
+    function tiffJpegSegments(buf) {
+      var v = new DataView(buf);
+      if (v.byteLength < 12) { return []; }
+      if (v.getUint16(0) !== 0x4949 && v.getUint16(0) !== 0x4D4D) { return []; }
+      var le = v.getUint16(0) === 0x4949;
+      function u16(o) { return v.getUint16(o, le); }
+      function u32(o) { return v.getUint32(o, le); }
+      var magic = u16(2);
+      if (magic !== 42 && magic !== 0x0055 && magic !== 0x5555 && magic !== 0x4F52 && magic !== 0x5352) { return []; }
+      function saneIfd(off) { return off > 0 && off + 2 <= v.byteLength && u16(off) >= 1 && u16(off) <= 500; }
+      var ifd0 = u32(4);
+      if (!saneIfd(ifd0)) { if (saneIfd(8)) { ifd0 = 8; } else if (saneIfd(16)) { ifd0 = 16; } }
+      if (!saneIfd(ifd0)) { return []; }
+      var out = [];
+      function addSeg(p, len) {
+        if (len > 4 && p > 0 && p + 4 <= v.byteLength && v.getUint16(p) === 0xFFD8) {
+          out.push([p, Math.min(len, v.byteLength - p)]);
+        }
+      }
+      function scanIfd(off, depth) {
+        if (depth > 2 || !saneIfd(off)) { return; }
+        var n = u16(off), i, e;
+        for (i = 0; i < n; i++) {
+          e = off + 2 + i * 12;
+          if (e + 12 > v.byteLength) { break; }
+          var tag = u16(e), cnt = u32(e + 4), val = u32(e + 8);
+          if ((tag === 0x002E || tag === 0x0127) && cnt > 4) {
+            addSeg(val, cnt);
+          } else if (tag === 0x0201) {
+            for (var j = 0; j < n; j++) {
+              var e2 = off + 2 + j * 12;
+              if (u16(e2) === 0x0202) { addSeg(val, u32(e2 + 8)); break; }
+            }
+          } else if (tag === 0x8769 && depth === 0) {
+            scanIfd(val, depth + 1);
+          }
+        }
+      }
+      scanIfd(ifd0, 0);
+      return out;
+    }
+
     function loadBitmap(file, buf) {
       return createImageBitmap(file).then(function (bm) {
         return { bitmap: bm, previewUrl: URL.createObjectURL(file), srcLabel: '' };
       })['catch'](function () {
-        var cands = findEmbeddedJpegs(buf).sort(function (a, b) { return (b[1] - b[0]) - (a[1] - a[0]); }).slice(0, 10);
+        var segs = tiffJpegSegments(buf).concat(findEmbeddedJpegs(buf));
+        var seen = {}, cands = [], i;
+        for (i = 0; i < segs.length; i++) {
+          var key = segs[i][0] + ':' + segs[i][1];
+          if (seen[key]) { continue; }
+          seen[key] = 1;
+          cands.push(segs[i]);
+        }
+        cands.sort(function (a, b) { return (b[1] - b[0]) - (a[1] - a[0]); });
+        cands = cands.slice(0, 60);
         var best = null;
         function tryNext(i) {
           if (i >= cands.length) { return Promise.resolve(best); }

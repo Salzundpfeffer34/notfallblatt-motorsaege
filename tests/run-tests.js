@@ -810,7 +810,28 @@ ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy
       && G.parseExifTimeStr('2026:11:20 14:03:05') === Date.UTC(2026, 10, 20, 14, 3, 5)
       && G.parseExifTimeStr('kaputt') === null;
   })());
-  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum, Reset (#bkReset: resetAll, revoke, hidden, Default-Werte)', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'URL.revokeObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', 'function resetAll(', "$('bkReset')", "resetBtn.addEventListener('click', resetAll)", "addEventListener('drop'", "addEventListener('dragover'", 'function bereinigeName(', 'bereinigeName(cur.name'].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum, Reset (#bkReset: resetAll, revoke, hidden, Default-Werte)', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'URL.revokeObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', 'function resetAll(', "$('bkReset')", "resetBtn.addEventListener('click', resetAll)", "addEventListener('drop'", "addEventListener('dragover'", 'function bereinigeName(', 'bereinigeName(cur.name', 'function tiffJpegSegments(', 'tiffJpegSegments(buf).concat(findEmbeddedJpegs(buf))', 'cands.slice(0, 60)'].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/bild-konv.js: tiffJpegSegments findet eingebettetes JPEG in synthetischem RW2 (Tag 0x002E JpgFromRaw); generischer SOI/EOI-Scan ebenfalls', (function () {
+    const m1 = bkSrc.match(/function tiffJpegSegments[\s\S]*?\n    \}\n/);
+    const m2 = bkSrc.match(/function findEmbeddedJpegs[\s\S]*?\n    \}/);
+    if (!m1 || !m2) { return false; }
+    const F = new Function(m1[0] + '\n' + m2[0] + '\nreturn { tiffJpegSegments: tiffJpegSegments, findEmbeddedJpegs: findEmbeddedJpegs };')();
+    function fakeJpeg(n) { const b = Buffer.alloc(n, 0x11); b.writeUInt16BE(0xFFD8, 0); b.writeUInt16BE(0xFFE0, 2); b.writeUInt16BE(16, 4); b.writeUInt16BE(0xFFDA, 20); b.writeUInt16BE(8, 22); b.writeUInt16BE(0xFFD9, n - 2); return b; }
+    const jpg = fakeJpeg(5000);
+    const rw2 = Buffer.alloc(64 + jpg.length + 16, 0x22);
+    rw2.write('II', 0, 'ascii'); rw2.writeUInt8(0x55, 2); rw2.writeUInt8(0, 3); rw2.writeUInt32LE(8, 4);
+    rw2.writeUInt16LE(1, 8);
+    rw2.writeUInt16LE(0x002E, 10); rw2.writeUInt16LE(7, 12); rw2.writeUInt32LE(jpg.length, 14); rw2.writeUInt32LE(64, 18);
+    rw2.writeUInt32LE(0, 22);
+    jpg.copy(rw2, 64);
+    const ab = rw2.buffer.slice(rw2.byteOffset, rw2.byteOffset + rw2.byteLength);
+    const segs = F.tiffJpegSegments(ab);
+    const scan = F.findEmbeddedJpegs(ab);
+    const dv = new DataView(ab);
+    return segs.length === 1 && segs[0][0] === 64 && segs[0][1] === jpg.length
+      && dv.getUint16(64) === 0xFFD8
+      && scan.some(s => s[0] === 64 && s[1] === 64 + jpg.length);
+  })());
   ok('js/bild-konv.js: bereinigeName entfernt UUID/Hash-Suffixe (auch 8_be0a8c7d-…), kollabiert --- zu -, behaelt normale Namen', (function () {
     const m = bkSrc.match(/function bereinigeName[\s\S]*?\n    \}/);
     if (!m) { return false; }

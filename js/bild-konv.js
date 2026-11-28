@@ -11,7 +11,7 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
     var imgEl = $('bkImg'), metaEl = $('bkMeta'), gpsEl = $('bkGps'), gpsBtn = $('bkGpsBtn');
     var fmtEl = $('bkFormat'), qualRow = $('bkQualRow'), qualEl = $('bkQual'), qualVal = $('bkQualVal');
     var modeEl = $('bkMode'), wRow = $('bkWRow'), hRow = $('bkHRow'), wEl = $('bkW'), hEl = $('bkH');
-    var hintEl = $('bkSizeHint'), goBtn = $('bkGo');
+    var hintEl = $('bkSizeHint'), goBtn = $('bkGo'), resetBtn = $('bkReset');
     var outEl = $('bkOut'), imgOut = $('bkImgOut'), outMeta = $('bkOutMeta'), dl = $('bkDl');
     var RAW_EXT = /\.(dng|cr2|cr3|nef|nrw|arw|srf|sr2|orf|rw2|rwl|raf|pef|srw|tiff?|heic|heif)$/i;
     var cur = null;
@@ -176,7 +176,10 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
             err('Das Bild konnte nicht dekodiert werden \u2013 und es wurde kein eingebettetes JPEG-Vorschau-Bild in der Datei gefunden.');
             return;
           }
-          if (cur && cur.bitmap) { cur.bitmap.close(); }
+          if (cur) {
+            if (cur.bitmap) { cur.bitmap.close(); }
+            if (cur.previewUrl) { URL.revokeObjectURL(cur.previewUrl); }
+          }
           cur = { file: file, name: file.name || 'foto', size: file.size, w: res.bitmap.width, h: res.bitmap.height, bitmap: res.bitmap, previewUrl: res.previewUrl, srcLabel: res.srcLabel, gps: gps };
           showInfo();
         })['catch'](function () {
@@ -210,6 +213,35 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
     qualEl.addEventListener('input', function () { qualVal.textContent = qualEl.value + ' %'; });
     wEl.addEventListener('input', updateHint);
     hEl.addEventListener('input', updateHint);
+
+    function resetAll() {
+      if (cur) {
+        if (cur.bitmap) { cur.bitmap.close(); }
+        if (cur.previewUrl) { URL.revokeObjectURL(cur.previewUrl); }
+        cur = null;
+      }
+      if (outUrl) { URL.revokeObjectURL(outUrl); outUrl = null; }
+      err(null);
+      imgEl.removeAttribute('src');
+      imgOut.removeAttribute('src');
+      metaEl.textContent = '';
+      gpsEl.textContent = '';
+      gpsEl.classList.add('hidden');
+      gpsBtn.classList.add('hidden');
+      gpsBtn.setAttribute('href', 'sonne-mond.html');
+      fmtEl.value = 'image/jpeg';
+      qualEl.value = '90';
+      qualVal.textContent = '90 %';
+      modeEl.value = 'original';
+      wEl.value = '';
+      hEl.value = '';
+      hintEl.textContent = '';
+      updateModeRows();
+      outEl.classList.add('hidden');
+      infoEl.classList.add('hidden');
+      drop.focus();
+    }
+    resetBtn.addEventListener('click', resetAll);
 
     goBtn.addEventListener('click', function () {
       if (!cur) { return; }

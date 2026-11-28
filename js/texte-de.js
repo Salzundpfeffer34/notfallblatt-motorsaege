@@ -1,6 +1,16 @@
 window.NOTFALL_TEXTE = window.NOTFALL_TEXTE || {};
 window.NOTFALL_TEXTE.de = {
   texte: {
+  naviLabel: "Hauptnavigation",
+  naviMarke: "Notfallblatt & Werkzeuge",
+  naviNotfallblatt: "Notfallblatt",
+  naviKoordinaten: "Koordinaten",
+  naviGpx: "GPX reduzieren",
+  naviSonneMond: "Sonne & Mond",
+  naviBokeh: "Bokeh",
+  naviReitplatz: "Reitplatz",
+  naviOrtDb: "Ort-DB",
+  naviDatenschutz: "Datenschutz",
   btnUebersicht: "⌂ Übersicht",
   hubTitel: "Notfallblatt & Werkzeuge",
   hubUntertitel: "Alle Tools für Motorsägen-Einsätze & Fotografie – lokal im Browser, offline nutzbar",

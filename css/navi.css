@@ -1,0 +1,70 @@
+/* Zentrales Top-Navi (<navi navi></navi>, gerendert von js/navi.js) auf allen Seiten. */
+navi {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  background: var(--card, #fff);
+  border-bottom: 3px solid var(--accent, var(--rot, #d52b1e));
+  box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+navi:empty { display: none; }
+.navi-bar { height: 46px; }
+.navi-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.navi-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink, var(--text, #1c1c1c));
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 7px;
+}
+.navi-brand img { width: 26px; height: 26px; display: block; }
+.navi-brand:hover { background: var(--bg, var(--grau, #f4f4f2)); }
+.navi-brand.aktiv { background: var(--accent, var(--rot, #d52b1e)); color: #fff; }
+.navi-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+}
+.navi-links a {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink, var(--text, #1c1c1c));
+  text-decoration: none;
+  white-space: nowrap;
+}
+.navi-links a:hover { background: var(--bg, var(--grau, #f4f4f2)); }
+.navi-links a.aktiv {
+  background: var(--accent, var(--rot, #d52b1e));
+  color: #fff;
+  font-weight: 600;
+}
+body.hat-navi .app-header { top: 46px; }
+@media (max-width: 640px) {
+  .navi-brand span { display: none; }
+}
+@media print {
+  navi { display: none !important; }
+}

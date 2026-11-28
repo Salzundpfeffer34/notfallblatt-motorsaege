@@ -81,6 +81,14 @@ navi:empty { display: none; }
   z-index: 1300;
 }
 .navi-gruppe:last-child .navi-untermenu { left: auto; right: 0; }
+.navi-untermenu::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+}
 .navi-gruppe details[open] .navi-untermenu { display: block; }
 @media (min-width: 900px) {
   .navi-gruppe details[open] .navi-untermenu { display: grid; grid-template-columns: 1fr 1fr; width: 33rem; }

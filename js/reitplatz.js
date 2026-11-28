@@ -4,8 +4,13 @@
 var R_MAX_AP = 16;          // Blenden-Regler geht bis f/16
 var R_PHOTO_W = 3840;       // Breite des Fotos img/reiterin-dressurplatz-4k.jpg in px
 var R_PHOTOS = [
-  { full: 'img/reiterin-dressurplatz-4k.jpg',   thumb: 'img/reiterin-dressurplatz.jpg',   label: 'Bild 1 · Porträt' },
-  { full: 'img/reiterin-dressurplatz-2-4k.jpg', thumb: 'img/reiterin-dressurplatz-2.jpg', label: 'Bild 2 · sonniger Platz' }
+  { full: 'img/reiterin-dressurplatz-4k.jpg',   thumb: 'img/reiterin-dressurplatz.jpg',   label: 'Reiterin · Porträt' },
+  { full: 'img/reiterin-dressurplatz-2-4k.jpg', thumb: 'img/reiterin-dressurplatz-2.jpg', label: 'Dressur · sonniger Platz' },
+  { full: 'img/demo-1-wettkampf-4k.jpg',        thumb: 'img/demo-1-wettkampf.jpg',        label: 'Demo · Wettkampf' },
+  { full: 'img/demo-2-hufschmied-4k.jpg',       thumb: 'img/demo-2-hufschmied.jpg',       label: 'Demo · Hufschmiede' },
+  { full: 'img/demo-3-hund-wiese-4k.jpg',       thumb: 'img/demo-3-hund-wiese.jpg',       label: 'Demo · Hund auf Wiese' },
+  { full: 'img/demo-4-motorrad-wald-4k.jpg',    thumb: 'img/demo-4-motorrad-wald.jpg',    label: 'Demo · Motorrad am Wald' },
+  { full: 'img/demo-5-stall-4k.jpg',            thumb: 'img/demo-5-stall.jpg',            label: 'Demo · Porträt im Stall' }
 ];
 // Tiefen-Ebenen: d = Faktor auf den Motiv-Abstand s; Blur = Unschärfekreis/2 in CSS-px (skaliert auf Darstellungsbreite)
 var R_LAYERS = [

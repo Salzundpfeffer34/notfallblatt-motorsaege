@@ -14,6 +14,7 @@
     ]},
     { key: 'hubGrpFoto', items: [
       { href: 'sonne-mond.html', key: 'naviSonneMond', desc: 'hubC4d', icon: 'img/sonne-mond.svg' },
+      { href: 'foto-konv.html', key: 'naviFotoKonv', desc: 'naviFotoKonvD', icon: '📷' },
       { href: 'bokeh.html', key: 'naviBokeh', desc: 'hubC5d', icon: '🎯' },
       { href: 'reitplatz.html', key: 'naviReitplatz', desc: 'naviReitplatzD', icon: 'img/reithelm-icon.webp' }
     ]},
@@ -33,6 +34,7 @@
     naviKoordinaten: 'Koordinaten',
     naviGpx: 'GPX reduzieren',
     naviSonneMond: 'Sonne & Mond',
+    naviFotoKonv: 'Foto konvertieren',
     naviBokeh: 'Bokeh',
     naviReitplatz: 'Reitplatz',
     naviOrtDb: 'Ort-DB',
@@ -41,6 +43,7 @@
     hubC2d: 'Umrechnen (LV95, GPS, UTM, MGRS …) + Foto-Stapel → GPX-Route',
     hubC3d: 'Zu viele Punkte fürs Garmin? Douglas-Peucker, GPX-Type wählbar, mit Karte',
     hubC4d: 'Auf-/Untergang, Goldene & Blaue Stunde, Mondphase – lokal gerechnet',
+    naviFotoKonvD: 'Format & Grösse ändern (JPEG/PNG/WebP), RAW via Vorschau-JPEG – lokal im Browser',
     hubC5d: 'Blende & Abstand → Schärfezone, Unschärfe, Bokeh – 45+ Objektive',
     hubC6d: 'Offline-Ortsnamen (GeoNames) suchen, bearbeiten, exportieren',
     hubC7d: 'Was lokal gespeichert wird – und was nicht',

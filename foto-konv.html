@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()">
+<script src="js/framebust.js"></script>
+<title>Foto konvertieren &amp; Grösse ändern · lokal im Browser</title>
+<link rel="icon" type="image/svg+xml" href="img/motorsaege.svg">
+<meta name="description" content="Foto per Drag & Drop lokal konvertieren (JPEG/PNG/WebP) und die Grösse proportional oder frei ändern – inkl. EXIF-GPS; RAW (Sony/Canon/Nikon/Panasonic/Fuji) via eingebettetem JPEG. Alles im Browser, auch offline.">
+<link rel="stylesheet" href="css/sonne-mond.css">
+<link rel="stylesheet" href="css/foto-konv.css">
+<link rel="stylesheet" href="css/navi.css">
+<script src="js/navi.js" defer></script>
+</head>
+<body>
+<navi navi>
+<nav class="navi-bar" aria-label="Hauptnavigation">
+  <div class="navi-inner">
+    <a class="navi-brand" href="index.html"><img src="img/motorsaege.svg" alt="" width="26" height="26"><span data-navi="naviMarke">Notfallblatt &amp; Werkzeuge</span></a>
+    <ul class="navi-links">
+      <li class="navi-gruppe"><details><summary data-navi="hubGrpEinsatz">Einsatz &amp; Rettung</summary>
+        <ul class="navi-untermenu">
+          <li><a href="notfallblatt.html"><span class="navi-ic"><img src="img/motorsaege.svg" alt=""></span><span class="navi-tx"><span class="navi-t" data-navi="naviNotfallblatt">Notfallblatt</span><span class="navi-d" data-navi="naviNotfallblattD">Arbeitsauftrag &amp; Notfallkarte – drucken / PDF</span></span></a></li>
+          <li><a href="koordinaten/"><span class="navi-ic">📍</span><span class="navi-tx"><span class="navi-t" data-navi="naviKoordinaten">Koordinaten</span><span class="navi-d" data-navi="hubC2d">Umrechnen (LV95, GPS, UTM, MGRS …) + Foto-Stapel → GPX-Route</span></span></a></li>
+          <li><a href="gpx-reduce.html"><span class="navi-ic">🗺️</span><span class="navi-tx"><span class="navi-t" data-navi="naviGpx">GPX reduzieren</span><span class="navi-d" data-navi="hubC3d">Zu viele Punkte fürs Garmin? Douglas-Peucker, GPX-Type wählbar, mit Karte</span></span></a></li>
+        </ul>
+      </details></li>
+      <li class="navi-gruppe"><details><summary data-navi="hubGrpFoto" class="aktiv">Planung &amp; Fotografie</summary>
+        <ul class="navi-untermenu">
+          <li><a href="sonne-mond.html"><span class="navi-ic"><img src="img/sonne-mond.svg" alt=""></span><span class="navi-tx"><span class="navi-t" data-navi="naviSonneMond">Sonne &amp; Mond</span><span class="navi-d" data-navi="hubC4d">Auf-/Untergang, Goldene &amp; Blaue Stunde, Mondphase – lokal gerechnet</span></span></a></li>
+          <li><a href="bokeh.html"><span class="navi-ic">🎯</span><span class="navi-tx"><span class="navi-t" data-navi="naviBokeh">Bokeh</span><span class="navi-d" data-navi="hubC5d">Blende &amp; Abstand → Schärfezone, Unschärfe, Bokeh – 45+ Objektive</span></span></a></li>
+          <li><a href="reitplatz.html"><span class="navi-ic"><img src="img/reithelm-icon.webp" alt=""></span><span class="navi-tx"><span class="navi-t" data-navi="naviReitplatz">Reitplatz</span><span class="navi-d" data-navi="naviReitplatzD">Dressurplatz-Foto mit interaktivem Blenden-Regler f/1.4–f/16</span></span></a></li>
+        </ul>
+      </details></li>
+      <li class="navi-gruppe"><details><summary data-navi="hubGrpSonst">Werkzeuge &amp; Info</summary>
+        <ul class="navi-untermenu">
+          <li><a href="ort-db-editor.html"><span class="navi-ic">🗄️</span><span class="navi-tx"><span class="navi-t" data-navi="naviOrtDb">Ort-DB</span><span class="navi-d" data-navi="hubC6d">Offline-Ortsnamen (GeoNames) suchen, bearbeiten, exportieren</span></span></a></li>
+          <li><a href="koordinaten/datenschutz.html"><span class="navi-ic">🔒</span><span class="navi-tx"><span class="navi-t" data-navi="naviDatenschutz">Datenschutz</span><span class="navi-d" data-navi="hubC7d">Was lokal gespeichert wird – und was nicht</span></span></a></li>
+        </ul>
+      </details></li>
+    </ul>
+    <div class="navi-schrift" role="group" aria-label="Schriftgrösse">
+      <button type="button" data-font="-1" aria-label="Schrift verkleinern" title="Schrift verkleinern">A−</button>
+      <button type="button" data-font="0" class="aktiv" aria-label="Schrift zurücksetzen" title="Schrift zurücksetzen">A</button>
+      <button type="button" data-font="1" aria-label="Schrift vergrössern" title="Schrift vergrössern">A+</button>
+    </div>
+  </div>
+</nav>
+</navi>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>📷 Foto konvertieren &amp; Grösse ändern</h1>
+    <p class="sub">Foto hierher ziehen – lokal in JPEG/PNG/WebP konvertieren und die Grösse proportional oder frei ändern. EXIF-GPS + Aufnahmezeit werden ausgelesen und öffnen auf Wunsch <a href="sonne-mond.html">Sonne &amp; Mond</a> mit Ort &amp; Tag (<code>?lat&amp;lon&amp;datum</code>). Alles lokal im Browser, auch offline – die Datei verlässt das Gerät nicht.</p>
+  </div>
+  <a class="back" href="index.html">⌂ Übersicht</a>
+</header>
+
+<div class="card" id="bkCard">
+  <h2>Foto per Drag &amp; Drop laden</h2>
+  <div class="bkdrop" id="bkDrop" tabindex="0" role="button" aria-label="Foto hierher ziehen oder klicken zum Auswählen">
+    <input type="file" id="bkFile" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,.heic,.heif,.dng,.cr2,.cr3,.nef,.nrw,.arw,.srf,.sr2,.orf,.rw2,.rwl,.raf,.pef,.srw" class="hidden">
+    <span class="bklabel">📷 Foto hierher ziehen oder klicken – JPEG, PNG, TIFF und RAW (Sony ARW, Canon CR2/CR3, Nikon NEF, Panasonic RW2, Fujifilm RAF, Olympus ORF, DNG …)</span>
+  </div>
+  <div id="bkErr" class="error hidden"></div>
+  <div id="bkInfo" class="hidden">
+    <div class="row" style="margin-top:10px;align-items:start">
+      <div class="bkprev"><img id="bkImg" alt="Vorschau des Fotos"></div>
+      <div class="field" style="flex:2 1 260px">
+        <label>Datei &amp; GPS</label>
+        <div id="bkMeta" class="bkmeta"></div>
+        <div id="bkGps" class="bkmeta hidden"></div>
+        <div class="btnrow" style="margin-top:8px">
+          <a id="bkGpsBtn" class="btn secondary hidden" href="sonne-mond.html">📍 In «Sonne &amp; Mond» öffnen (Ort &amp; Tag aus dem Foto)</a>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field" style="flex:0 0 190px"><label for="bkFormat">Zielformat</label>
+        <select id="bkFormat">
+          <option value="image/jpeg" selected>JPEG (.jpg)</option>
+          <option value="image/png">PNG (.png)</option>
+          <option value="image/webp">WebP (.webp)</option>
+        </select>
+      </div>
+      <div class="field" id="bkQualRow" style="flex:1 1 180px"><label for="bkQual">Qualität (nur JPEG/WebP): <span id="bkQualVal">90 %</span></label>
+        <input type="range" id="bkQual" min="10" max="100" step="1" value="90" aria-label="Qualität in Prozent">
+      </div>
+      <div class="field" style="flex:0 0 230px"><label for="bkMode">Grösse</label>
+        <select id="bkMode">
+          <option value="original" selected>Originalgrösse</option>
+          <option value="prop">Proportional (Breite → Höhe automatisch)</option>
+          <option value="free">Frei (Breite × Höhe)</option>
+        </select>
+      </div>
+      <div class="field hidden" id="bkWRow" style="flex:0 0 130px"><label for="bkW">Breite (px)</label>
+        <input type="number" id="bkW" min="1" max="30000" step="1">
+      </div>
+      <div class="field hidden" id="bkHRow" style="flex:0 0 130px"><label for="bkH">Höhe (px)</label>
+        <input type="number" id="bkH" min="1" max="30000" step="1">
+      </div>
+      <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
+        <button type="button" id="bkGo">Konvertieren &amp; herunterladen</button>
+      </div>
+    </div>
+    <p class="hint" id="bkSizeHint" style="margin-top:8px"></p>
+    <div id="bkOut" class="hidden" style="margin-top:10px">
+      <div class="row" style="align-items:center">
+        <div class="bkprev"><img id="bkImgOut" alt="Vorschau des konvertierten Fotos"></div>
+        <div class="bkmeta" id="bkOutMeta" style="flex:1 1 220px"></div>
+        <a class="btn" id="bkDl" download>⬇ Herunterladen</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card help">
+  <h2 style="font-size:1rem;margin:0 0 6px;color:var(--ink)">Hinweise</h2>
+  <ul>
+    <li><strong>RAW-Dateien</strong> (ARW, CR2, CR3, NEF, RW2, RAF …) kann der Browser meist nicht direkt dekodieren – dann wird automatisch das <strong>grösste eingebettete JPEG-Vorschau-Bild</strong> aus der Datei verwendet.</li>
+    <li><strong>GPS &amp; Aufnahmezeit</strong> kommen aus den EXIF-/XMP-Metadaten (erste 256 KB der Datei), wie beim <a href="koordinaten/index.html">Koordinaten-Konverter</a>. Der Button oben öffnet <a href="sonne-mond.html">sonne-mond.html</a> mit <code>?lat=…&amp;lon=…&amp;datum=…</code> aus dem Foto.</li>
+    <li><strong>Datenschutz:</strong> Konvertierung und Grössenänderung laufen komplett lokal im Browser – die Fotodatei wird nirgends hochgeladen. Es gibt keinen Server-Aufruf auf dieser Seite.</li>
+  </ul>
+</div>
+<footer>
+  <span><a href="sonne-mond.html">☀️ Sonne &amp; Mond für Fotografen</a></span>
+  <span><a href="koordinaten/index.html">Koordinaten-Konverter + Foto-Stapel → GPX</a></span>
+  <span><a href="gpx-reduce.html">GPX-Reduktion für Garmin</a></span>
+  <span><a href="index.html">⌂ Übersicht</a></span>
+  <span><a href="koordinaten/datenschutz.html">Datenschutz</a></span>
+  <span>Reine lokale HTML-Seite – keine Übertragung, auch offline nutzbar.</span>
+  <span>Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr.</span>
+</footer>
+</div>
+
+<script src="js/exif-gps.js"></script>
+<script src="js/bild-konv.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
-/* Foto-Konverter fuer sonne-mond.html: Drag & Drop eines Fotos (JPEG/TIFF/RAW),
- * EXIF-GPS + Aufnahmezeit auslesen (js/exif-gps.js), in ein anderes Format
- * konvertieren und die Groesse aendern (proportional oder frei).
+/* Foto-Konverter fuer foto-konv.html: Drag & Drop eines Fotos (JPEG/TIFF/RAW),
+ * EXIF-GPS + Aufnahmezeit auslesen (js/exif-gps.js) und als Link auf
+ * sonne-mond.html?lat&lon&datum aufbereiten, in ein anderes Format konvertieren
+ * und die Groesse aendern (proportional oder frei).
  * Komplett lokal im Browser – die Datei verlaesst das Geraet nicht. */
 'use strict';
 if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
@@ -32,6 +33,10 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
     function fmtUtc(ms) {
       var d = new Date(ms);
       return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate()) + ' ' + pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds()) + ' UTC';
+    }
+    function dateStrLocal(ms) {
+      var d = new Date(ms);
+      return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
     }
     function accepted(file) {
       if (/^image\//i.test(file.type || '')) { return true; }
@@ -132,6 +137,9 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
         var g = cur.gps;
         gpsEl.textContent = '\ud83d\udccd GPS: ' + fmtNum6(Math.abs(g.lat)) + '\u00b0 ' + (g.lat >= 0 ? 'N' : 'S') + ', ' + fmtNum6(Math.abs(g.lon)) + '\u00b0 ' + (g.lon >= 0 ? 'O' : 'W') + (isFinite(g.time) ? ' \u00b7 aufgenommen ' + fmtUtc(g.time) : '');
         gpsEl.classList.remove('hidden');
+        var q = 'sonne-mond.html?lat=' + g.lat.toFixed(5) + '&lon=' + g.lon.toFixed(5);
+        if (isFinite(g.time)) { q += '&datum=' + dateStrLocal(g.time); }
+        gpsBtn.href = q;
         gpsBtn.classList.remove('hidden');
       } else {
         gpsEl.textContent = 'Kein GPS in den EXIF-/XMP-Metadaten gefunden.';
@@ -202,12 +210,6 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
     qualEl.addEventListener('input', function () { qualVal.textContent = qualEl.value + ' %'; });
     wEl.addEventListener('input', updateHint);
     hEl.addEventListener('input', updateHint);
-
-    gpsBtn.addEventListener('click', function () {
-      if (cur && cur.gps && typeof window.sonneMondFoto === 'function') {
-        window.sonneMondFoto(cur.gps.lat, cur.gps.lon, cur.gps.time);
-      }
-    });
 
     goBtn.addEventListener('click', function () {
       if (!cur) { return; }

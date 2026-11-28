@@ -580,6 +580,52 @@ function dayLengthChartSvg(days) {
   });
   return s + '</svg>';
 }
+var MONTHS_SHORT = ['Jan', 'Feb', 'M\u00e4r', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+function yearLenChartSvg(days, todayStr) {
+  var pts = days.filter(function (d) { return d.len != null; });
+  if (!pts.length) { return ''; }
+  var min = Infinity, max = -Infinity, minD = null, maxD = null;
+  pts.forEach(function (d) { if (d.len < min) { min = d.len; minD = d; } if (d.len > max) { max = d.len; maxD = d; } });
+  if (max - min < 3600000) { var mid = (min + max) / 2; min = mid - 1800000; max = mid + 1800000; }
+  var W = 720, H = 240, padL = 58, padR = 14, padT = 34, padB = 30, n = days.length;
+  function x(i) { return padL + (n === 1 ? (W - padL - padR) / 2 : i * (W - padL - padR) / (n - 1)); }
+  function y(v) { return padT + (1 - (v - min) / (max - min)) * (H - padT - padB); }
+  var year = n ? days[0].date.slice(0, 4) : '';
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:760px;height:auto;background:#fbfbf9;border:1px solid var(--line);border-radius:10px" role="img" aria-label="Jahresgrafik: Tagesl\u00e4nge pro Tag">';
+  s += '<text x="' + padL + '" y="15" font-size="11" font-weight="700" fill="var(--muted)">Tagesl\u00e4nge ' + escHtml(year) + '</text>';
+  if (maxD && minD) {
+    s += '<text x="' + (W - padR) + '" y="15" text-anchor="end" font-size="10.5" fill="var(--muted)">l\u00e4ngster <tspan font-weight="700">' + escHtml(fmtDateDE(maxD.date)) + '</tspan> (' + fmtDurHM(max) + ') \u00b7 k\u00fcrzester <tspan font-weight="700">' + escHtml(fmtDateDE(minD.date)) + '</tspan> (' + fmtDurHM(min) + ')</text>';
+  }
+  var STEPS = 4, g, v, gy;
+  for (g = 0; g <= STEPS; g++) {
+    v = min + (max - min) * g / STEPS; gy = y(v);
+    s += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="' + (g === 0 || g === STEPS ? '#c8c8c0' : 'var(--line)') + '"/>';
+    s += '<text x="' + (padL - 6) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + escHtml(fmtDurHM(v)) + '</text>';
+  }
+  var lastMo = '';
+  days.forEach(function (d, i) {
+    var mo = d.date.slice(5, 7);
+    if (mo !== lastMo) {
+      lastMo = mo;
+      s += '<line x1="' + x(i).toFixed(1) + '" y1="' + padT + '" x2="' + x(i).toFixed(1) + '" y2="' + (H - padB) + '" stroke="var(--line)"/>';
+      s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - padB + 15) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + escHtml(MONTHS_SHORT[(+mo) - 1] || mo) + '</text>';
+    }
+  });
+  var pl = [];
+  days.forEach(function (d, i) { if (d.len != null) { pl.push(x(i).toFixed(1) + ',' + y(d.len).toFixed(1)); } });
+  if (pl.length > 1) {
+    s += '<polygon points="' + padL + ',' + (H - padB) + ' ' + pl.join(' ') + ' ' + (W - padR) + ',' + (H - padB) + '" fill="rgba(233,138,60,0.12)"/>';
+    s += '<polyline points="' + pl.join(' ') + '" fill="none" stroke="#e98a3c" stroke-width="2.2"/>';
+  }
+  if (todayStr) {
+    days.forEach(function (d, i) {
+      if (d.date === todayStr && d.len != null) {
+        s += '<circle data-today="1" cx="' + x(i).toFixed(1) + '" cy="' + y(d.len).toFixed(1) + '" r="5" fill="#2f6db3" stroke="#fff" stroke-width="1.5"><title>Heute ' + escHtml(fmtDateDE(d.date)) + ': ' + escHtml(fmtDur(d.len)) + '</title></circle>';
+      }
+    });
+  }
+  return s + '</svg>';
+}
 function visibleDays(days, showAll, limit) {
   if (showAll || days.length <= limit) { return { list: days, hidden: 0 }; }
   if (limit <= 1) { return { list: days.slice(0, 1), hidden: days.length - 1 }; }
@@ -1575,6 +1621,8 @@ if (typeof document !== 'undefined') {
     updateUrl();
     var drd0 = $('dayLenRangeDet');
     if (drd0 && drd0.open) { renderDayLenRange(); }
+    var yd0 = $('yearLenDet');
+    if (yd0 && yd0.open) { renderYearLenChart(); }
   }
   function applyCoords(lat, lon, name) {
     checkLatLon(lat, lon);
@@ -1895,6 +1943,20 @@ if (typeof document !== 'undefined') {
   reverseGeocode();
   fetchOrtsZeitzone();
   var dlSort = { key: 'datum', dir: 1 };
+  function renderYearLenChart() {
+    var el = $('yearLenChart');
+    if (!el) { return; }
+    var year = String(state.datum || todayStr()).slice(0, 4);
+    var r = dayLengthSeries(state.lat, state.lon, year + '-01-01', year + '-12-31', 370);
+    if (r.error) { el.innerHTML = '<p class="help">' + escHtml(r.error) + '</p>'; return; }
+    var svg = yearLenChartSvg(r.days, state.datum);
+    el.innerHTML = svg || '<p class="help">Keine Daten (Polarnacht/-tag \u00fcber das ganze Jahr?).</p>';
+  }
+  (function initYearLen() {
+    var det = $('yearLenDet');
+    if (!det) { return; }
+    det.addEventListener('toggle', function () { if (det.open) { renderYearLenChart(); } });
+  })();
   function renderDayLenRange() {
     var el = $('dayLenRange');
     var fromEl = $('dayLenFrom'), toEl = $('dayLenTo');

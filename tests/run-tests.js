@@ -834,6 +834,7 @@ ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy
       && ['js/texte-de.js', 'js/texte-fr.js', 'js/texte-it.js', 'js/texte-es.js', 'js/texte-pt.js'].every(f => { const s = rd(f); return s.indexOf('naviFotoKonv:') >= 0 && s.indexOf('naviFotoKonvD:') >= 0; });
   })());
   ok('foto-konv.html: GPS-Button-Label gekuerzt auf "GPS auslesen" (alter Langtext entfernt)', fkHtml.indexOf('GPS auslesen</a>') >= 0 && fkHtml.indexOf('Ort &amp; Tag aus dem Foto') < 0 && fkHtml.indexOf('Button oben') < 0);
+  ok('GPS-Button nur bei Foto mit EXIF-GPS sichtbar: initial hidden im Markup, JS schaltet classList+display nur bei cur.gps, CSS-Regel a.btn.hidden schlaegt a.btn (Specificity)', fkHtml.indexOf('id="bkGpsBtn" class="btn secondary hidden"') >= 0 && fkCss.indexOf('a.btn.hidden { display:none; }') >= 0 && bkSrc.indexOf("gpsBtn.classList.remove('hidden');") >= 0 && bkSrc.indexOf("gpsBtn.style.display = '';") >= 0 && bkSrc.indexOf("gpsBtn.classList.add('hidden');") >= 0 && bkSrc.indexOf("gpsBtn.style.display = 'none';") >= 0 && bkSrc.indexOf('if (cur.gps) {') >= 0);
 }
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');
 process.exit(failures === 0 ? 0 : 1);

@@ -786,5 +786,32 @@ ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy
   ok('Hub: GPX-Karte data-kw deckt auch die Label-Begriffe der gpx-reduce-Seite ab (start ziel anfang ende benannte waypoints namen höhe ele zeit time rte exportieren navigation gaia toleranz 50 250)', (function () { const m = hub.match(/href="gpx-reduce\.html" data-kw="([^"]*)"/); return !!m && ['start','ziel','anfang','ende','benannte','waypoints','namen','höhe','ele','zeit','time','rte','exportieren','navigation','gaia','toleranz','50','250'].every(k => m[1].toLowerCase().indexOf(k) >= 0); })());
   ok('Notfallblatt notfallblatt.html intakt (einsatzSelect, Leaflet unpkg) + Zurueck-Link btnUebersicht auf index.html; alle Tool-Seiten verlinken den Hub', form.indexOf('id="einsatzSelect"') >= 0 && form.indexOf('unpkg.com/leaflet@1.9.4/dist/leaflet.js') >= 0 && form.indexOf('data-i18n="btnUebersicht"') >= 0 && form.indexOf('href="index.html"') >= 0 && rdH('sonne-mond.html').indexOf('href="index.html"') >= 0 && rdH('gpx-reduce.html').indexOf('href="index.html"') >= 0 && rdH('bokeh.html').indexOf('href="index.html"') >= 0 && rdH('koordinaten/index.html').indexOf('href="../index.html"') >= 0 && rdH('koordinaten/datenschutz.html').indexOf('href="../index.html"') >= 0 && rdH('ort-db-editor.html').indexOf('href="index.html"') >= 0);
 }
+// --- 11. sonne-mond.html: Foto-Konverter (Drag&Drop, EXIF-GPS, Format + Groesse) ---
+{
+  const rd = f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+  const smHtml = rd('sonne-mond.html');
+  const exifSrc = rd('js/exif-gps.js');
+  const bkSrc = rd('js/bild-konv.js');
+  const csp = (smHtml.match(/Content-Security-Policy" content="([^"]*)"/) || [])[1] || '';
+  ok('sonne-mond.html: Foto-Konverter-Karte + externe Skripte (js/exif-gps.js, js/bild-konv.js), CSP img-src mit blob:, kein Inline-Script/on*-Handler', ['id="bkCard"', 'id="bkDrop"', 'id="bkFile"', 'id="bkFormat"', 'id="bkMode"', 'id="bkW"', 'id="bkH"', 'id="bkGo"', 'id="bkGpsBtn"', 'id="bkDl"', 'src="js/exif-gps.js"', 'src="js/bild-konv.js"'].every(x => smHtml.indexOf(x) >= 0) && csp.indexOf("img-src 'self' data: blob:") >= 0 && !/script-src[^;]*unsafe-inline/.test(csp) && smHtml.indexOf('<script>\n') < 0 && !/\son[a-z]{2,15}=/i.test(smHtml));
+  ok('bkFile accept: image/* + RAW-Endungen (arw cr2 cr3 nef rw2 raf orf dng tif heic ...)', (function () { const m = smHtml.match(/id="bkFile" accept="([^"]*)"/); return !!m && m[1].indexOf('image/*') >= 0 && ['.arw', '.cr2', '.cr3', '.nef', '.rw2', '.raf', '.orf', '.dng', '.tif', '.heic'].every(e => m[1].indexOf(e) >= 0); })());
+  ok('bk Modi + Formate im Markup: original/prop/free, jpeg/png/webp, Proportional/Frei', ['value="original"', 'value="prop"', 'value="free"', 'value="image/jpeg"', 'value="image/png"', 'value="image/webp"', 'Proportional', 'Frei'].every(x => smHtml.indexOf(x) >= 0));
+  ok('js/exif-gps.js: standalone ladbar; exifGps RW2 + JPEG/EXIF + XMP; parseExifTimeStr', (function () {
+    const G = new Function(exifSrc + '\nreturn { exifGps: exifGps, exifGpsXmp: exifGpsXmp, xmpGps: xmpGps, parseExifTimeStr: parseExifTimeStr };')();
+    const r1 = G.exifGps(toAB(buildIfd(0x55, 0x00, 47, 22, 36.8, 'N', 8, 32, 30.1, 'E')));
+    const r2 = G.exifGps(toAB(jpegWrap(Buffer.concat([Buffer.from('Exif\0\0', 'binary'), buildIfd(0x2A, 0x00, 47, 22, 36.8, 'N', 8, 32, 30.1, 'E')]))));
+    const xmp = '<?xpacket begin=""?><x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description xmlns:exif="http://ns.adobe.com/exif/1.0/" exif:GPSLatitude="47.376895" exif:GPSLongitude="8.541694"/></rdf:RDF></x:xmpmeta>';
+    const r3 = G.exifGps(toAB(jpegWrap(Buffer.concat([Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'binary'), Buffer.from(xmp, 'utf8')]))));
+    return !!r1 && near(r1.lat, 47.3768889, 1e-4) && near(r1.lon, 8.5416944, 1e-4)
+      && !!r2 && near(r2.lat, 47.3768889, 1e-4) && near(r2.lon, 8.5416944, 1e-4)
+      && !!r3 && near(r3.lat, 47.376895, 1e-6) && near(r3.lon, 8.541694, 1e-6)
+      && G.parseExifTimeStr('2026:11:20 14:03:05') === Date.UTC(2026, 10, 20, 14, 3, 5)
+      && G.parseExifTimeStr('kaputt') === null;
+  })());
+  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI-Scan), canvas.toBlob Format+Qualitaet, prop/free, Download-Link, GPS-Hook', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'window.sonneMondFoto', "addEventListener('drop'", "addEventListener('dragover'"].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/sonne-mond.js: Hook window.sonneMondFoto (applyCoords + reverseGeocode + applyDatum aus Foto-Zeit)', rd('js/sonne-mond.js').indexOf('window.sonneMondFoto = function (lat, lon, timeMs)') >= 0 && rd('js/sonne-mond.js').indexOf('applyDatum(dateStrOf(timeMs))') >= 0);
+  ok('css/sonne-mond.css: bk-Styles (bkdrop/bkprev/bkmeta) + select/number + Dark-Mode-Eintrag', (function () { const c = rd('css/sonne-mond.css'); return c.indexOf('.bkdrop {') >= 0 && c.indexOf('.bkprev img') >= 0 && c.indexOf('select, input[type=number]') >= 0 && c.indexOf('prefers-color-scheme: dark') >= 0 && c.indexOf('.bkdrop, .bkprev img') >= 0; })());
+}
+
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');
 process.exit(failures === 0 ? 0 : 1);

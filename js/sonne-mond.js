@@ -1991,6 +1991,14 @@ if (typeof document !== 'undefined') {
       reverseGeocode();
     });
   });
+  window.sonneMondFoto = function (lat, lon, timeMs) {
+    try {
+      applyCoords(lat, lon, '');
+      reverseGeocode();
+      if (isFinite(timeMs)) { applyDatum(dateStrOf(timeMs)); }
+      err(null);
+    } catch (e) { err(e.message); }
+  };
   $('sky').addEventListener('click', function (e) {
     var svg = $('sky');
     var pt = svg.createSVGPoint();

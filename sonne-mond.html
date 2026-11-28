@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://photon.komoot.io https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://nominatim.openstreetmap.org https://photon.komoot.io https://worldtimeapi.org https://api.open-meteo.com https://www.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()">
 <script src="js/framebust.js"></script>
@@ -127,6 +127,65 @@
   <div id="err" class="error hidden"></div>
 </div>
 
+<div class="card" id="bkCard">
+  <h2>Foto konvertieren &amp; Grösse ändern (alles lokal im Browser)</h2>
+  <div class="bkdrop" id="bkDrop" tabindex="0" role="button" aria-label="Foto hierher ziehen oder klicken zum Auswählen">
+    <input type="file" id="bkFile" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.tif,.tiff,.heic,.heif,.dng,.cr2,.cr3,.nef,.nrw,.arw,.srf,.sr2,.orf,.rw2,.rwl,.raf,.pef,.srw" class="hidden">
+    <span class="bklabel">📷 Foto hierher ziehen oder klicken – JPEG, PNG, TIFF und RAW (Sony ARW, Canon CR2/CR3, Nikon NEF, Panasonic RW2, Fujifilm RAF, Olympus ORF, DNG …)</span>
+  </div>
+  <div id="bkErr" class="error hidden"></div>
+  <div id="bkInfo" class="hidden">
+    <div class="row" style="margin-top:10px;align-items:start">
+      <div class="bkprev"><img id="bkImg" alt="Vorschau des Fotos"></div>
+      <div class="field" style="flex:2 1 260px">
+        <label>Datei &amp; GPS</label>
+        <div id="bkMeta" class="bkmeta"></div>
+        <div id="bkGps" class="bkmeta hidden"></div>
+        <div class="btnrow" style="margin-top:8px">
+          <button type="button" id="bkGpsBtn" class="secondary hidden">📍 Ort &amp; Tag aus dem Foto übernehmen</button>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field" style="flex:0 0 190px"><label for="bkFormat">Zielformat</label>
+        <select id="bkFormat">
+          <option value="image/jpeg" selected>JPEG (.jpg)</option>
+          <option value="image/png">PNG (.png)</option>
+          <option value="image/webp">WebP (.webp)</option>
+        </select>
+      </div>
+      <div class="field" id="bkQualRow" style="flex:1 1 180px"><label for="bkQual">Qualität (nur JPEG/WebP): <span id="bkQualVal">90 %</span></label>
+        <input type="range" id="bkQual" min="10" max="100" step="1" value="90" aria-label="Qualität in Prozent">
+      </div>
+      <div class="field" style="flex:0 0 230px"><label for="bkMode">Grösse</label>
+        <select id="bkMode">
+          <option value="original" selected>Originalgrösse</option>
+          <option value="prop">Proportional (Breite → Höhe automatisch)</option>
+          <option value="free">Frei (Breite × Höhe)</option>
+        </select>
+      </div>
+      <div class="field hidden" id="bkWRow" style="flex:0 0 130px"><label for="bkW">Breite (px)</label>
+        <input type="number" id="bkW" min="1" max="30000" step="1">
+      </div>
+      <div class="field hidden" id="bkHRow" style="flex:0 0 130px"><label for="bkH">Höhe (px)</label>
+        <input type="number" id="bkH" min="1" max="30000" step="1">
+      </div>
+      <div class="field" style="flex:0 0 auto"><label>&nbsp;</label>
+        <button type="button" id="bkGo">Konvertieren &amp; herunterladen</button>
+      </div>
+    </div>
+    <p class="hint" id="bkSizeHint" style="margin-top:8px"></p>
+    <div id="bkOut" class="hidden" style="margin-top:10px">
+      <div class="row" style="align-items:center">
+        <div class="bkprev"><img id="bkImgOut" alt="Vorschau des konvertierten Fotos"></div>
+        <div class="bkmeta" id="bkOutMeta" style="flex:1 1 220px"></div>
+        <a class="btn" id="bkDl" download>⬇ Herunterladen</a>
+      </div>
+    </div>
+    <details class="hint" style="margin-top:8px"><summary>Hinweis zu RAW-Dateien und Datenschutz – ausklappen</summary><div>Browser können RAW (ARW, CR2, CR3, NEF, RW2, RAF …) meist nicht direkt dekodieren – dann wird automatisch das grösste eingebettete JPEG-Vorschau-Bild aus der Datei verwendet. GPS-Koordinaten und Aufnahmezeit kommen aus den EXIF-/XMP-Metadaten (erste 256 KB der Datei), wie beim <a href="koordinaten/index.html">Koordinaten-Konverter</a>. Mit «📍 Ort &amp; Tag aus dem Foto übernehmen» werden lat/lon (und das Aufnahmedatum) oben in «Ort &amp; Tag» eingetragen. Konvertierung und Grössenänderung laufen komplett lokal im Browser – die Datei verlässt das Gerät nicht.</div></details>
+  </div>
+</div>
+
 <div class="card" id="statusCard">
   <h2>Status zum gewählten Zeitpunkt</h2>
   <div class="stats">
@@ -246,5 +305,7 @@
 
 <script src="js/coords.js"></script>
 <script src="js/sonne-mond.js"></script>
+<script src="js/exif-gps.js"></script>
+<script src="js/bild-konv.js"></script>
 </body>
 </html>

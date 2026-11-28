@@ -61,13 +61,51 @@
     return new URL('./', location.href).href;
   }
 
+  /* Gemeinsamer Sprach-Key auf allen Seiten; Texte de/fr/it/es/pt */
+  var SPRACHE_KEY = 'notfallblatt.sprache';
+  var NAVI_LANGS = ['de', 'fr', 'it', 'es', 'pt'];
+
+  function gespeicherteSprache() {
+    try {
+      var v = localStorage.getItem(SPRACHE_KEY);
+      if (v && NAVI_LANGS.indexOf(v) !== -1) return v;
+    } catch (e) { /* localStorage nicht verfuegbar */ }
+    return 'de';
+  }
+
   function t(key) {
     if (window.NotfallI18n && typeof window.NotfallI18n.t === 'function') {
       var s = window.NotfallI18n.t(key);
       if (s && s !== key) return s;
     }
+    var lang = gespeicherteSprache();
+    var eintrag = window.NOTFALL_TEXTE && window.NOTFALL_TEXTE[lang];
+    if (eintrag && eintrag.texte && eintrag.texte[key] !== undefined) return eintrag.texte[key];
     return DE[key] || key;
   }
+
+  /* texte-<lang>.js lazy nachladen (auch auf Seiten ohne i18n.js) und dann neu rendern */
+  function texteLadenUndRendern() {
+    var lang = gespeicherteSprache();
+    var rendern = function () {
+      if (document.readyState !== 'loading') alleRendern();
+    };
+    if (lang === 'de') { rendern(); return; }
+    if (window.NOTFALL_TEXTE && window.NOTFALL_TEXTE[lang]) { rendern(); return; }
+    try {
+      var sc = document.createElement('script');
+      sc.src = new URL('js/texte-' + lang + '.js', basisUrl()).href;
+      sc.onload = function () {
+        if (window.NOTFALL_TEXTE && window.NOTFALL_TEXTE[lang]) rendern();
+      };
+      document.head.appendChild(sc);
+    } catch (e) { /* Fallback: Deutsch */ }
+  }
+
+  /* Live-Sync zwischen offenen Tabs: Sprache in einem Tab geaendert -> hier neu rendern */
+  window.addEventListener('storage', function (e) {
+    if (e.key === SPRACHE_KEY) texteLadenUndRendern();
+  });
 
   function normPfad(p) {
     return p.replace(/\/index\.html$/, '/');
@@ -324,13 +362,14 @@
   applyFont();
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { eventsInitten(); alleRendern(); });
+    document.addEventListener('DOMContentLoaded', function () { eventsInitten(); texteLadenUndRendern(); alleRendern(); });
   } else {
     eventsInitten();
+    texteLadenUndRendern();
     alleRendern();
   }
 
-  document.addEventListener('spracheGeaendert', alleRendern);
+  document.addEventListener('spracheGeaendert', function () { texteLadenUndRendern(); });
 
   if (window.NotfallI18n && typeof window.NotfallI18n.i18nAnwenden === 'function') {
     var orig = window.NotfallI18n.i18nAnwenden;

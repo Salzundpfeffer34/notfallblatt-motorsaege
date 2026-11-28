@@ -1293,7 +1293,8 @@ function buildResults(lat, lon, forceLv95) {
   var spracheEl = document.getElementById('sprache');
   var lang = 'de';
   try {
-    var savedLang = localStorage.getItem('konverter-sprache');
+    /* gemeinsamer Key mit allen Hauptseiten; alter Key nur als Fallback (Migration) */
+    var savedLang = localStorage.getItem('notfallblatt.sprache') || localStorage.getItem('konverter-sprache');
     if (savedLang && KONV_LANGS.indexOf(savedLang) >= 0) { lang = savedLang; }
   } catch (e) {}
   spracheEl.value = lang;
@@ -1302,8 +1303,18 @@ function buildResults(lat, lon, forceLv95) {
   spracheEl.addEventListener('change', function () {
     var neu = spracheEl.value;
     ladeKonvTexte(neu, function () { applyLang(neu); });
-    try { localStorage.setItem('konverter-sprache', neu); } catch (e) {}
+    try { localStorage.setItem('notfallblatt.sprache', neu); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: neu } }));
     if (el.value.trim() !== '') { run(); }
+  });
+  /* Live-Sync zwischen offenen Tabs (storage feuert nur in den anderen Tabs) */
+  window.addEventListener('storage', function (e) {
+    if (e.key === 'notfallblatt.sprache' && e.newValue && KONV_LANGS.indexOf(e.newValue) >= 0 && e.newValue !== lang) {
+      lang = e.newValue;
+      spracheEl.value = lang;
+      ladeKonvTexte(lang, function () { applyLang(lang); });
+      document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: lang } }));
+    }
   });
 
   var bildDropEl = document.getElementById('bildDrop');

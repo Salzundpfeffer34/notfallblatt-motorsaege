@@ -57,15 +57,26 @@
     } catch (e) { cb(false); }
   }
 
-  function setzeSprache(neu) {
+  function spracheAnwendenUndMelden(neu, speichern) {
     if (SPRACHEN.indexOf(neu) === -1 || neu === sprache) return;
     ladeTexte(neu, function () {
       sprache = neu;
-      try { localStorage.setItem(SPRACHE_KEY, sprache); } catch (e) { /* ignorieren */ }
+      if (speichern) { try { localStorage.setItem(SPRACHE_KEY, sprache); } catch (e) { /* ignorieren */ } }
+      const select = document.getElementById('spracheSelect');
+      if (select) select.value = sprache;
       i18nAnwenden();
       document.dispatchEvent(new CustomEvent('spracheGeaendert', { detail: { sprache: sprache } }));
     });
   }
+
+  function setzeSprache(neu) {
+    spracheAnwendenUndMelden(neu, true);
+  }
+
+  /* Live-Sync zwischen offenen Tabs: storage-Event feuert nur in den ANDEREN Tabs */
+  window.addEventListener('storage', function (e) {
+    if (e.key === SPRACHE_KEY && e.newValue) spracheAnwendenUndMelden(e.newValue, false);
+  });
 
   function i18nInit() {
     const select = document.getElementById('spracheSelect');

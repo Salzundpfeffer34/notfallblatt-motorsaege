@@ -30,7 +30,8 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
 
   function rStops() { return stopsFor(st.lens).filter(function (x) { return x <= R_MAX_AP; }); }
   function aovDeg() { return 2 * Math.atan(st.sensor.w / (2 * st.lens.f)) * 180 / Math.PI; }
-  function zoomF() { return Math.max(0.45, st.lens.f / 50); }
+  // 20 mm = volle Bildbreite (Referenz); laengere Brennweite croppt proportional: scale = f/20
+  function zoomF() { return st.lens.f / 20; }
   // Unschärfekreis-Durchmesser (Fotopixel) für eine Ebene in Abstand d*s; CSS-Blur-Radius = Hälfte
   function layerBlurPhotoPx(L) {
     return Math.min(60, effBlurMm(L.d * st.s * 1000, st.s * 1000, st.lens.f, st.n) * (R_PHOTO_W / st.sensor.w) / 2);
@@ -70,7 +71,7 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
     });
     return st.lens.name + ' · ' + st.sensor.name + ' (CoC ' + c.toFixed(3).replace('.', ',') + ' mm) → Hyperfokus ' + fmtM(Hm * 1000)
       + ' · scharf ' + fmtM(dn * 1000) + ' – ' + fmtM(df * 1000)
-      + ' · Bildwinkel ca. ' + aovDeg().toFixed(0) + '° · Ausschnitt ' + Math.round(zoomF() * 100) + ' %'
+      + ' · Bildwinkel ca. ' + aovDeg().toFixed(0) + '° · Ausschnitt: zeigt ' + Math.round(100 / zoomF()) + ' % der Bildbreite'
       + ' · Beugung (Airy, 550 nm) Ø ' + (airyMm(st.n) * 1000).toFixed(1).replace('.', ',') + ' µm'
       + ' · Ebenen: ' + parts.join(' | ');
   }

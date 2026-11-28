@@ -1,9 +1,15 @@
 // reitplatz.js – Reitplatz & Blende (reitplatz.html). Foto img/reiterin-dressurplatz-4k.jpg + Blenden-Regler.
-// Nutzt die Physik-Globals aus bokeh.js (BOKEH_STOPS, BOKEH_SENSORS, BOKEH_LINSEN, cocMm, hyperfocalMm,
-// dofNearMm, dofFarMm, blurMm, blurPx, fmtM, stopsFor, escHtml). Alles lokal, keine Netzwerkzugriffe.
+// Tiefenmodell: 3 Ebenen (Vordergrund scharf / Mitte Bande+Versammlung / Ferne Bäume+Himmel),
+// jede mit eigenem Unschärfekreis aus der Optik-Physik (bokeh.js-Globals). Alles lokal.
 var R_MAX_AP = 16;          // Blenden-Regler geht bis f/16
 var R_PHOTO_W = 3840;       // Breite des Fotos img/reiterin-dressurplatz-4k.jpg in px
-var R_BG_FACTOR = 2.6;      // Hintergrund (zweite Reiterin in der Versammlung) ca. 2,6x Motiv-Abstand
+var R_PHOTO = 'img/reiterin-dressurplatz-4k.jpg';
+// Tiefen-Ebenen: d = Faktor auf den Motiv-Abstand s; Blur = Unschärfekreis/2 in CSS-px (skaliert auf Darstellungsbreite)
+var R_LAYERS = [
+  { cls: 'l-far', d: 8,   label: 'Bäume/Himmel' },
+  { cls: 'l-mid', d: 2.2, label: 'Bande + Versammlung' },
+  { cls: 'l-fg',  d: 1.0, label: 'Reiterin + Pferd' }
+];
 var R_CHIPS = [
   { id: 'l2014', mm: 20 },
   { id: 'l24',   mm: 24 },
@@ -13,22 +19,28 @@ var R_CHIPS = [
   { id: 'l8514', mm: 85 }
 ];
 
+// Beugung (Airy-Scheibchen) am Sensor: d = 2,44 * lambda * N; lambda = 550 nm = 0,00055 mm
+function airyMm(n) { return 2.44 * 0.00055 * n; }
+// effektiver Unschärfekreis am Sensor: geometrischer Defokus + Beugung (Quadratur-Summe)
+function effBlurMm(uMm, sMm, f, n) { var b = blurMm(uMm, sMm, f, n); var d = airyMm(n); return Math.sqrt(b * b + d * d); }
+
 if (typeof document !== 'undefined' && document.getElementById('chips')) {
   var $ = function (id) { return document.getElementById(id); };
   var st = { lens: null, sensor: BOKEH_SENSORS[0], n: 1.4, s: 3 };
 
   function rStops() { return stopsFor(st.lens).filter(function (x) { return x <= R_MAX_AP; }); }
-  // CSS-blur-Radius (px) fuer den Hintergrund des Fotos; blurPx liefert Durchmesser -> ca. halber Radius
-  function bgBlurCss() {
-    var d = blurPx(R_BG_FACTOR * st.s * 1000, st.s * 1000, st.lens.f, st.n, st.sensor, R_PHOTO_W);
-    return Math.min(30, d / 2);
+  function aovDeg() { return 2 * Math.atan(st.sensor.w / (2 * st.lens.f)) * 180 / Math.PI; }
+  function zoomF() { return Math.max(0.45, st.lens.f / 50); }
+  // Unschärfekreis-Durchmesser (Fotopixel) für eine Ebene in Abstand d*s; CSS-Blur-Radius = Hälfte
+  function layerBlurPhotoPx(L) {
+    return Math.min(60, effBlurMm(L.d * st.s * 1000, st.s * 1000, st.lens.f, st.n) * (R_PHOTO_W / st.sensor.w) / 2);
   }
 
   function photoHtml() {
-    var b = bgBlurCss();
     return '<div class="photo">'
-      + '<img class="ph" src="img/reiterin-dressurplatz-4k.jpg" alt="Reiterin mit Reitkappe, Reithose und Reitstiefeln neben ihrem Pferd – im Hintergrund der Dressurplatz mit einer zweiten Reiterin in der Versammlung">'
-      + '<img class="ph phblur" src="img/reiterin-dressurplatz-4k.jpg" alt="" aria-hidden="true" style="filter:blur(' + b.toFixed(1) + 'px)">'
+      + '<img class="ph l-far" src="' + R_PHOTO + '" alt="" aria-hidden="true">'
+      + '<img class="ph l-mid" src="' + R_PHOTO + '" alt="" aria-hidden="true">'
+      + '<img class="ph l-fg" src="' + R_PHOTO + '" alt="Reiterin mit Samt-Showhelm, Reithose und Reitstiefeln am Pferd – im Hintergrund Dressurplatz mit Bande und zweiter Reiterin in der Versammlung">'
       + '</div>';
   }
 
@@ -53,18 +65,30 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
     var Hm = hyperfocalMm(st.lens.f, st.n, c) / 1000;
     var dn = dofNearMm(st.s * 1000, st.lens.f, st.n, c) / 1000;
     var df = dofFarMm(st.s * 1000, st.lens.f, st.n, c) / 1000;
-    var bg = blurPx(R_BG_FACTOR * st.s * 1000, st.s * 1000, st.lens.f, st.n, st.sensor, R_PHOTO_W);
+    var parts = R_LAYERS.map(function (L) {
+      return L.label + ' (' + fmtM(L.d * st.s * 1000) + '): Blur ' + layerBlurPhotoPx(L).toFixed(1) + ' px';
+    });
     return st.lens.name + ' · ' + st.sensor.name + ' (CoC ' + c.toFixed(3).replace('.', ',') + ' mm) → Hyperfokus ' + fmtM(Hm * 1000)
       + ' · scharf ' + fmtM(dn * 1000) + ' – ' + fmtM(df * 1000)
-      + ' · Hintergrund (Versammlung, ' + fmtM(R_BG_FACTOR * st.s * 1000) + ') Unschärfekreis Ø ca. ' + Math.max(1, Math.round(bg)) + ' px'
-      + ' → CSS-Blur ' + bgBlurCss().toFixed(1) + ' px';
+      + ' · Bildwinkel ca. ' + aovDeg().toFixed(0) + '° · Ausschnitt ' + Math.round(zoomF() * 100) + ' %'
+      + ' · Beugung (Airy, 550 nm) Ø ' + (airyMm(st.n) * 1000).toFixed(1).replace('.', ',') + ' µm'
+      + ' · Ebenen: ' + parts.join(' | ');
   }
 
   function render() {
     $('apOut').textContent = 'f/' + st.n;
     $('distOut').textContent = fmtM(st.s * 1000);
-    $('lensInfo').textContent = st.lens.note ? st.lens.note : (st.lens.f + ' mm · Lichtstärke bis f/' + st.lens.n);
+    $('lensInfo').textContent = (st.lens.note ? st.lens.note + ' · ' : '') + st.lens.f + ' mm · Lichtstärke bis f/' + st.lens.n + ' · Bildwinkel ca. ' + aovDeg().toFixed(0) + '°';
     $('scene').innerHTML = photoHtml();
+    var ph = $('scene').querySelector('.photo');
+    if (ph) {
+      ph.style.transform = 'scale(' + zoomF().toFixed(3) + ')';
+      var k = (ph.clientWidth || 800) / R_PHOTO_W; // Fotopixel -> CSS-px der aktuellen Darstellung
+      R_LAYERS.forEach(function (L) {
+        var el = ph.querySelector('.' + L.cls);
+        if (el) { el.style.filter = 'blur(' + (layerBlurPhotoPx(L) * k).toFixed(2) + 'px)'; }
+      });
+    }
     $('dofbar').innerHTML = dofBarHtml();
     $('dofOut').textContent = outText();
   }

@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <link rel="stylesheet" href="css/navi.css">
+<link rel="stylesheet" href="css/fuss.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
 <script src="js/coords.js" defer></script>
 <script src="js/texte-de.js" defer></script>
@@ -401,10 +402,13 @@
   </section>
 </div>
 
-<footer class="app-footer no-print">
-  <p data-i18n="footer">Daten bleiben ausschliesslich auf diesem Gerät (localStorage). Keine Übertragung an einen Server. Geocoding: Photon/Nominatim © OpenStreetMap-Mitwirkende · Wetter: Open-Meteo · Karten: Leaflet + OpenStreetMap. · Dieses Blatt ersetzt keine Ausbildung bzw. Sicherheitsunterweisung nach Suva-Vorgaben. Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr.</p>
-  <p><a href="koordinaten/datenschutz.html" data-i18n="datenschutzLink">Datenschutz</a></p>
+<fuss fuss>
+<footer class="seiten-fuss">
+  <p class="fuss-haftung" data-navi="hubFooter">Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr. Alle Tools laufen lokal im Browser und sind offline nutzbar.</p>
+  <p class="fuss-suva" data-navi="suvaHinweis">Dieses Blatt ersetzt keine Ausbildung bzw. Sicherheitsunterweisung nach Suva-Vorgaben.</p>
+  <p class="fuss-links"><a href="index.html" data-navi="btnUebersicht">⌂ Übersicht</a> · <a href="koordinaten/datenschutz.html" data-navi="datenschutzLink">Datenschutz</a> · <a href="https://github.com/Salzundpfeffer34/notfallblatt-motorsaege" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/Salzundpfeffer34/notfallblatt-motorsaege/archive/refs/heads/main.zip" target="_blank" rel="noopener">ZIP</a></p>
 </footer>
+</fuss>
 
 </body>
 </html>

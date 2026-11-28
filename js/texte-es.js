@@ -12,6 +12,7 @@ window.NOTFALL_TEXTE.es = {
   naviReitplatz: "Picadero",
   naviOrtDb: "Lugares",
   naviDatenschutz: "Privacidad",
+  suvaHinweis: "Esta hoja no sustituye ninguna formaci\u00f3n ni instrucci\u00f3n de seguridad (Suva).",
   naviReitplatzD: "Foto de picadero con control interactivo de la apertura",
   btnUebersicht: "⌂ Vista general",
   hubTitel: "Hoja de emergencia & herramientas",

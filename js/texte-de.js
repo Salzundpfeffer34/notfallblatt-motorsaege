@@ -12,6 +12,7 @@ window.NOTFALL_TEXTE.de = {
   naviReitplatz: "Reitplatz",
   naviOrtDb: "Ort-DB",
   naviDatenschutz: "Datenschutz",
+  suvaHinweis: "Dieses Blatt ersetzt keine Ausbildung bzw. Sicherheitsunterweisung nach Suva-Vorgaben.",
   naviReitplatzD: "Dressurplatz-Foto mit interaktivem Blenden-Regler f/1.4\u2013f/16",
   btnUebersicht: "⌂ Übersicht",
   hubTitel: "Notfallblatt & Werkzeuge",

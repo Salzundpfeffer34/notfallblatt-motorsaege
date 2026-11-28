@@ -12,6 +12,7 @@ window.NOTFALL_TEXTE.it = {
   naviReitplatz: "Maneggio",
   naviOrtDb: "Luoghi",
   naviDatenschutz: "Privacy",
+  suvaHinweis: "Questa scheda non sostituisce alcuna formazione o istruzione di sicurezza (Suva).",
   naviReitplatzD: "Foto del maneggio con diaframma interattivo",
   btnUebersicht: "⌂ Panoramica",
   hubTitel: "Foglio d’emergenza & strumenti",

@@ -55,6 +55,7 @@
   footer a:hover { text-decoration:underline; }
 </style>
 <link rel="stylesheet" href="css/navi.css">
+<link rel="stylesheet" href="css/fuss.css">
 <script src="js/navi.js" defer></script>
 </head>
 <body>
@@ -168,12 +169,12 @@
   <div id="map" role="img" aria-label="Karte mit GPX-Punkten (OpenStreetMap)" style="display:none;width:100%;height:360px;border:1px solid var(--line);border-radius:10px;margin-top:12px"></div>
 </div>
 
-<footer>
-  <span>← <a href="koordinaten/index.html">Koordinaten-Konverter</a></span>
-  <span><a href="index.html">⌂ Übersicht</a></span>
-  <span>Reine lokale HTML-Datei – keine Server, keine Cookies; die optionale Karte mit GPX-Punkten lädt erst beim Anhaken Leaflet + OpenStreetMap (extern).</span>
-  <span>Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr. · <a href="koordinaten/datenschutz.html">Datenschutz</a></span>
+<fuss fuss>
+<footer class="seiten-fuss">
+  <p class="fuss-haftung" data-navi="hubFooter">Alle Angaben ohne Gewähr – Verwendung auf eigene Gefahr. Alle Tools laufen lokal im Browser und sind offline nutzbar.</p>
+  <p class="fuss-links"><a href="index.html" data-navi="btnUebersicht">⌂ Übersicht</a> · <a href="koordinaten/datenschutz.html" data-navi="datenschutzLink">Datenschutz</a> · <a href="https://github.com/Salzundpfeffer34/notfallblatt-motorsaege" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/Salzundpfeffer34/notfallblatt-motorsaege/archive/refs/heads/main.zip" target="_blank" rel="noopener">ZIP</a></p>
 </footer>
+</fuss>
 </div>
 
 <script src="js/gpx-reduce.js"></script>

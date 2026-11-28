@@ -1,0 +1,13 @@
+/* Stylesheet fuer foto-konv.html (nur konverter-spezifische Styles; Basis: css/sonne-mond.css). */
+  select, input[type=number] { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:.98rem; background:#fff; font-family:inherit; color:var(--ink); }
+  select:focus, input[type=number]:focus { outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  input[type=range] { width:100%; accent-color:var(--accent); }
+  .bkdrop { margin-top:4px; border:2px dashed var(--line); border-radius:10px; padding:18px 16px; text-align:center; color:var(--muted); font-size:.92rem; cursor:pointer; background:#fafaf8; }
+  .bkdrop:hover, .bkdrop.drag { border-color:var(--accent); color:var(--accent); }
+  .bklabel { display:inline-flex; gap:8px; align-items:center; }
+  .bkmeta { font-size:.9rem; color:var(--muted); line-height:1.5; word-break:break-all; }
+  .bkprev { flex:0 0 auto; }
+  .bkprev img { max-width:220px; max-height:160px; border:1px solid var(--line); border-radius:8px; display:block; background:#fafaf8; }
+  @media (prefers-color-scheme: dark) {
+    select, input[type=number], .bkdrop, .bkprev img { background:#262a33; color:var(--ink); border-color:var(--line); }
+  }

@@ -153,12 +153,14 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
         if (isFinite(g.time)) { q += '&datum=' + dateStrLocal(g.time); }
         gpsBtn.href = q;
         gpsBtn.classList.remove('hidden');
+        gpsBtn.style.display = '';
       } else {
         gpsEl.textContent = 'Kein GPS in den EXIF-/XMP-Metadaten gefunden.';
         gpsEl.classList.remove('hidden');
         gpsValEl.value = '';
         gpsRow.classList.add('hidden');
         gpsBtn.classList.add('hidden');
+        gpsBtn.style.display = 'none';
       }
       wEl.value = String(cur.w);
       hEl.value = String(cur.h);
@@ -244,6 +246,7 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       gpsValEl.value = '';
       gpsRow.classList.add('hidden');
       gpsBtn.classList.add('hidden');
+      gpsBtn.style.display = 'none';
       gpsBtn.setAttribute('href', 'sonne-mond.html');
       fmtEl.value = 'image/jpeg';
       qualEl.value = '90';

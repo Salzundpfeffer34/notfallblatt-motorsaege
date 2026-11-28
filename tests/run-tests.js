@@ -812,6 +812,17 @@ ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy
   })());
   ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', "addEventListener('drop'", "addEventListener('dragover'"].every(x => bkSrc.indexOf(x) >= 0));
   ok('css/foto-konv.css: bk-Styles (bkdrop/bkprev/bkmeta) + select/number + Dark Mode', fkCss.indexOf('.bkdrop {') >= 0 && fkCss.indexOf('.bkprev img') >= 0 && fkCss.indexOf('select, input[type=number]') >= 0 && fkCss.indexOf('prefers-color-scheme: dark') >= 0);
+  ok('Navi: foto-konv.html in Gruppe "Planung & Fotografie" auf allen 10 Seiten mit <navi> (href ggf. ../), aktiv nur auf foto-konv.html', (function () {
+    const naviPages = ['index.html', 'notfallblatt.html', 'sonne-mond.html', 'gpx-reduce.html', 'bokeh.html', 'reitplatz.html', 'ort-db-editor.html', 'foto-konv.html', 'koordinaten/index.html', 'koordinaten/datenschutz.html'];
+    return naviPages.every(p => { const h = rd(p); return !!h.match(/<li><a href="(\.\.\/)?foto-konv\.html"[^>]*><span class="navi-ic">[^<]*<\/span><span class="navi-tx"><span class="navi-t" data-navi="naviFotoKonv">[^<]*<\/span><span class="navi-d" data-navi="naviFotoKonvD">/); })
+      && rd('foto-konv.html').indexOf('<a href="foto-konv.html" class="aktiv" aria-current="page"') >= 0
+      && naviPages.filter(p => p !== 'foto-konv.html').every(p => rd(p).indexOf('foto-konv.html" class="aktiv"') < 0);
+  })());
+  ok('navi.js + texte de/fr/it/es/pt: GRUPPEN-Eintrag foto-konv in hubGrpFoto + Keys naviFotoKonv/naviFotoKonvD ueberall', (function () {
+    const nv = rd('js/navi.js');
+    return nv.indexOf("{ href: 'foto-konv.html', key: 'naviFotoKonv', desc: 'naviFotoKonvD'") >= 0 && nv.indexOf('naviFotoKonv:') >= 0 && nv.indexOf('naviFotoKonvD:') >= 0
+      && ['js/texte-de.js', 'js/texte-fr.js', 'js/texte-it.js', 'js/texte-es.js', 'js/texte-pt.js'].every(f => { const s = rd(f); return s.indexOf('naviFotoKonv:') >= 0 && s.indexOf('naviFotoKonvD:') >= 0; });
+  })());
 }
 console.log(failures === 0 ? '\nALLE TESTS OK' : '\n' + failures + ' TEST(S) FEHLGESCHLAGEN');
 process.exit(failures === 0 ? 0 : 1);

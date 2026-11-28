@@ -1,8 +1,8 @@
-// reitplatz.js – Reitplatz & Blende (reitplatz.html). Foto img/reiterin-dressurplatz.jpg + Blenden-Regler.
+// reitplatz.js – Reitplatz & Blende (reitplatz.html). Foto img/reiterin-dressurplatz-4k.jpg + Blenden-Regler.
 // Nutzt die Physik-Globals aus bokeh.js (BOKEH_STOPS, BOKEH_SENSORS, BOKEH_LINSEN, cocMm, hyperfocalMm,
 // dofNearMm, dofFarMm, blurMm, blurPx, fmtM, stopsFor, escHtml). Alles lokal, keine Netzwerkzugriffe.
 var R_MAX_AP = 16;          // Blenden-Regler geht bis f/16
-var R_PHOTO_W = 1184;       // Breite des Fotos img/reiterin-dressurplatz.jpg in px
+var R_PHOTO_W = 3840;       // Breite des Fotos img/reiterin-dressurplatz-4k.jpg in px
 var R_BG_FACTOR = 2.6;      // Hintergrund (zweite Reiterin in der Versammlung) ca. 2,6x Motiv-Abstand
 var R_CHIPS = [
   { id: 'l2014', mm: 20 },
@@ -27,8 +27,8 @@ if (typeof document !== 'undefined' && document.getElementById('chips')) {
   function photoHtml() {
     var b = bgBlurCss();
     return '<div class="photo">'
-      + '<img class="ph" src="img/reiterin-dressurplatz.jpg" alt="Reiterin mit Reitkappe, Reithose und Reitstiefeln neben ihrem Pferd – im Hintergrund der Dressurplatz mit einer zweiten Reiterin in der Versammlung">'
-      + '<img class="ph phblur" src="img/reiterin-dressurplatz.jpg" alt="" aria-hidden="true" style="filter:blur(' + b.toFixed(1) + 'px)">'
+      + '<img class="ph" src="img/reiterin-dressurplatz-4k.jpg" alt="Reiterin mit Reitkappe, Reithose und Reitstiefeln neben ihrem Pferd – im Hintergrund der Dressurplatz mit einer zweiten Reiterin in der Versammlung">'
+      + '<img class="ph phblur" src="img/reiterin-dressurplatz-4k.jpg" alt="" aria-hidden="true" style="filter:blur(' + b.toFixed(1) + 'px)">'
       + '</div>';
   }
 

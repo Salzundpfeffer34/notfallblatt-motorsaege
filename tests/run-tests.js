@@ -810,7 +810,41 @@ ok('counter.php: Security-Header (nosniff, CSP default-src none, Referrer-Policy
       && G.parseExifTimeStr('2026:11:20 14:03:05') === Date.UTC(2026, 10, 20, 14, 3, 5)
       && G.parseExifTimeStr('kaputt') === null;
   })());
-  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum, Reset (#bkReset: resetAll, revoke, hidden, Default-Werte)', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'URL.revokeObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', 'function resetAll(', "$('bkReset')", "resetBtn.addEventListener('click', resetAll)", "addEventListener('drop'", "addEventListener('dragover'", 'function bereinigeName(', 'bereinigeName(cur.name', 'function tiffJpegSegments(', 'tiffJpegSegments(buf).concat(findEmbeddedJpegs(buf))', 'cands.slice(0, 60)'].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/bild-konv.js: DOM-Guard, Drop/Dragover/Change, exifGps erste 256 KB, createImageBitmap + eingebettetes JPEG (SOI/EOI), canvas.toBlob Format+Qualitaet, prop/free, Download, GPS-Link sonne-mond.html?lat&lon&datum, Reset (#bkReset: resetAll, revoke, hidden, Default-Werte)', ["getElementById('bkDrop')", "exifGps(buf.slice(0, 262144))", 'function findEmbeddedJpegs(', 'createImageBitmap', 'canvas.toBlob', 'function targetDims(', "'prop'", "'free'", 'URL.createObjectURL', 'URL.revokeObjectURL', "'sonne-mond.html?lat='", 'gpsBtn.href', 'function dateStrLocal(', 'function resetAll(', "$('bkReset')", "resetBtn.addEventListener('click', resetAll)", "addEventListener('drop'", "addEventListener('dragover'", 'function bereinigeName(', 'bereinigeName(cur.name', 'function tiffJpegSegments(', 'tiffJpegSegments(buf).concat(findEmbeddedJpegs(buf))', 'cands.slice(0, 60)', 'function exifDims(', 'function makePlaceholder(', 'placeholder: true', 'goBtn.disabled = !!cur.placeholder', 'best || makePlaceholder(file, buf)'].every(x => bkSrc.indexOf(x) >= 0));
+  ok('js/bild-konv.js: tiffJpegSegments findet JPEG-Segmente via Strips 0x0111/0x0117, SubIFD 0x8769 (0x0201/0x0202) und IFD1 (0x002E); exifDims liest 0x0100/0x0101', (function () {
+    const m1 = bkSrc.match(/function tiffJpegSegments[\s\S]*?\n    \}\n/);
+    const m2 = bkSrc.match(/function exifDims[\s\S]*?\n    \}\n/);
+    if (!m1 || !m2) { return false; }
+    const F = new Function(m1[0] + '\n' + m2[0] + '\nreturn { tiffJpegSegments: tiffJpegSegments, exifDims: exifDims };')();
+    function fakeJpeg(n) { const b = Buffer.alloc(n, 0x11); b.writeUInt16BE(0xFFD8, 0); b.writeUInt16BE(0xFFE0, 2); b.writeUInt16BE(16, 4); b.writeUInt16BE(0xFFDA, 20); b.writeUInt16BE(8, 22); b.writeUInt16BE(0xFFD9, n - 2); return b; }
+    const buf = Buffer.alloc(3700, 0x22);
+    buf.write('II', 0, 'ascii'); buf.writeUInt16LE(42, 2); buf.writeUInt32LE(8, 4);
+    buf.writeUInt16LE(5, 8);                                   // IFD0: 5 Eintraege
+    buf.writeUInt16LE(0x0100, 10); buf.writeUInt16LE(4, 12); buf.writeUInt32LE(1, 14); buf.writeUInt32LE(6000, 18);
+    buf.writeUInt16LE(0x0101, 22); buf.writeUInt16LE(4, 24); buf.writeUInt32LE(1, 26); buf.writeUInt32LE(4000, 30);
+    buf.writeUInt16LE(0x8769, 34); buf.writeUInt16LE(4, 36); buf.writeUInt32LE(1, 38); buf.writeUInt32LE(200, 42);
+    buf.writeUInt16LE(0x0111, 46); buf.writeUInt16LE(4, 48); buf.writeUInt32LE(1, 50); buf.writeUInt32LE(1000, 54);
+    buf.writeUInt16LE(0x0117, 58); buf.writeUInt16LE(4, 60); buf.writeUInt32LE(1, 62); buf.writeUInt32LE(1000, 66);
+    buf.writeUInt32LE(300, 70);                                 // next IFD -> 300
+    buf.writeUInt16LE(2, 200);                                  // SubIFD @200: 2 Eintraege
+    buf.writeUInt16LE(0x0201, 202); buf.writeUInt16LE(4, 204); buf.writeUInt32LE(1, 206); buf.writeUInt32LE(2000, 210);
+    buf.writeUInt16LE(0x0202, 214); buf.writeUInt16LE(4, 216); buf.writeUInt32LE(1, 218); buf.writeUInt32LE(800, 222);
+    buf.writeUInt32LE(0, 226);
+    buf.writeUInt16LE(1, 300);                                  // IFD1 @300: 1 Eintrag
+    buf.writeUInt16LE(0x002E, 302); buf.writeUInt16LE(7, 304); buf.writeUInt32LE(600, 306); buf.writeUInt32LE(3000, 310);
+    buf.writeUInt32LE(0, 314);
+    fakeJpeg(1000).copy(buf, 1000);
+    fakeJpeg(800).copy(buf, 2000);
+    fakeJpeg(600).copy(buf, 3000);
+    const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    const segs = F.tiffJpegSegments(ab);
+    const dims = F.exifDims(ab);
+    return segs.some(s => s[0] === 1000 && s[1] === 1000)
+      && segs.some(s => s[0] === 2000 && s[1] === 800)
+      && segs.some(s => s[0] === 3000 && s[1] === 600)
+      && segs.length === 3
+      && dims && dims.w === 6000 && dims.h === 4000;
+  })());
   ok('js/bild-konv.js: tiffJpegSegments findet eingebettetes JPEG in synthetischem RW2 (Tag 0x002E JpgFromRaw); generischer SOI/EOI-Scan ebenfalls', (function () {
     const m1 = bkSrc.match(/function tiffJpegSegments[\s\S]*?\n    \}\n/);
     const m2 = bkSrc.match(/function findEmbeddedJpegs[\s\S]*?\n    \}/);

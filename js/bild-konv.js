@@ -80,11 +80,138 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       return out;
     }
 
+    function tiffJpegSegments(buf) {
+      var v = new DataView(buf);
+      if (v.byteLength < 12) { return []; }
+      if (v.getUint16(0) !== 0x4949 && v.getUint16(0) !== 0x4D4D) { return []; }
+      var le = v.getUint16(0) === 0x4949;
+      function u16(o) { return v.getUint16(o, le); }
+      function u32(o) { return v.getUint32(o, le); }
+      var magic = u16(2);
+      if (magic !== 42 && magic !== 0x0055 && magic !== 0x5555 && magic !== 0x4F52 && magic !== 0x5352) { return []; }
+      function saneIfd(off) { return off > 0 && off + 2 <= v.byteLength && u16(off) >= 1 && u16(off) <= 500; }
+      var ifd0 = u32(4);
+      if (!saneIfd(ifd0)) { if (saneIfd(8)) { ifd0 = 8; } else if (saneIfd(16)) { ifd0 = 16; } }
+      if (!saneIfd(ifd0)) { return []; }
+      var out = [];
+      function addSeg(p, len) {
+        if (len > 4 && p > 0 && p + 4 <= v.byteLength && v.getUint16(p) === 0xFFD8) {
+          out.push([p, Math.min(len, v.byteLength - p)]);
+        }
+      }
+      function scanIfd(off, depth) {
+        if (depth > 2 || !saneIfd(off)) { return; }
+        var n = u16(off), i, e;
+        for (i = 0; i < n; i++) {
+          e = off + 2 + i * 12;
+          if (e + 12 > v.byteLength) { break; }
+          var tag = u16(e), cnt = u32(e + 4), val = u32(e + 8);
+          if ((tag === 0x002E || tag === 0x0127) && cnt > 4) {
+            addSeg(val, cnt);
+          } else if (tag === 0x0201) {
+            for (var j = 0; j < n; j++) {
+              var e2 = off + 2 + j * 12;
+              if (u16(e2) === 0x0202) { addSeg(val, u32(e2 + 8)); break; }
+            }
+          } else if (tag === 0x0111) {
+            for (var j3 = 0; j3 < n; j3++) {
+              var e4 = off + 2 + j3 * 12;
+              if (u16(e4) === 0x0117) { addSeg(val, u32(e4 + 8)); break; }
+            }
+          } else if (tag === 0x8769 && depth === 0) {
+            scanIfd(val, depth + 1);
+          } else if (tag === 0x014A) {
+            for (var k = 0; k < cnt && val + k * 4 + 4 <= v.byteLength; k++) { scanIfd(u32(val + k * 4), depth + 1); }
+          }
+        }
+        var nxt = u32(off + 2 + n * 12);
+        if (depth < 2 && saneIfd(nxt)) { scanIfd(nxt, depth + 1); }
+      }
+      scanIfd(ifd0, 0);
+      return out;
+    }
+
+    function exifDims(buf) {
+      var v = new DataView(buf);
+      if (v.byteLength < 12) { return null; }
+      if (v.getUint16(0) !== 0x4949 && v.getUint16(0) !== 0x4D4D) { return null; }
+      var le = v.getUint16(0) === 0x4949;
+      function u16(o) { return v.getUint16(o, le); }
+      function u32(o) { return v.getUint32(o, le); }
+      var magic = u16(2);
+      if (magic !== 42 && magic !== 0x0055 && magic !== 0x5555 && magic !== 0x4F52 && magic !== 0x5352) { return null; }
+      function saneIfd(off) { return off > 0 && off + 2 <= v.byteLength && u16(off) >= 1 && u16(off) <= 500; }
+      var ifd0 = u32(4);
+      if (!saneIfd(ifd0)) { if (saneIfd(8)) { ifd0 = 8; } else if (saneIfd(16)) { ifd0 = 16; } }
+      if (!saneIfd(ifd0)) { return null; }
+      var w = 0, h = 0;
+      function scanIfd(off, depth) {
+        if (depth > 2 || !saneIfd(off) || (w && h)) { return; }
+        var n = u16(off), i, e;
+        for (i = 0; i < n; i++) {
+          e = off + 2 + i * 12;
+          if (e + 12 > v.byteLength) { break; }
+          var tag = u16(e), typ = u16(e + 2), cnt = u32(e + 4);
+          var val = (typ === 3 && cnt === 1) ? u16(e + 8) : u32(e + 8);
+          if (tag === 0x0100 && !w) { w = val; }
+          else if (tag === 0x0101 && !h) { h = val; }
+          else if (tag === 0x8769 && depth === 0) { scanIfd(u32(e + 8), depth + 1); }
+          else if (tag === 0x014A) { for (var k = 0; k < cnt && u32(e + 8) + k * 4 + 4 <= v.byteLength; k++) { scanIfd(u32(u32(e + 8) + k * 4), depth + 1); } }
+        }
+        var nxt = u32(off + 2 + n * 12);
+        if (depth < 2 && saneIfd(nxt)) { scanIfd(nxt, depth + 1); }
+      }
+      scanIfd(ifd0, 0);
+      return (w > 0 && h > 0 && w < 100000 && h < 100000) ? { w: w, h: h } : null;
+    }
+
+    function makePlaceholder(file, buf) {
+      var dims = exifDims(buf) || { w: 1200, h: 800 };
+      var scale = Math.min(1, 1200 / dims.w, 800 / dims.h);
+      var w = Math.max(1, Math.round(dims.w * scale)), h = Math.max(1, Math.round(dims.h * scale));
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      var g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, '#2c3a63');
+      g.addColorStop(1, '#161d36');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,.92)';
+      ctx.font = '600 ' + Math.round(h * 0.1) + 'px system-ui, sans-serif';
+      ctx.fillText('\ud83d\udcf7', w / 2, h * 0.4);
+      ctx.font = '600 ' + Math.round(h * 0.045) + 'px system-ui, sans-serif';
+      ctx.fillText(String(file.name || 'RAW').slice(0, 60), w / 2, h * 0.6);
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.font = Math.round(h * 0.03) + 'px system-ui, sans-serif';
+      ctx.fillText(dims.w + ' \u00d7 ' + dims.h + ' px \u00b7 RAW ohne eingebettetes JPEG', w / 2, h * 0.72);
+      ctx.fillText('selbst erzeugte Platzhalter-Vorschau \u2013 Pixel nicht dekodierbar', w / 2, h * 0.8);
+      return new Promise(function (resolve) {
+        canvas.toBlob(function (blob) {
+          if (!blob) { resolve(null); return; }
+          createImageBitmap(blob).then(function (bm) {
+            resolve({ bitmap: bm, previewUrl: URL.createObjectURL(blob), srcLabel: 'selbst erzeugte Platzhalter-Vorschau (kein eingebettetes JPEG in der Datei)', placeholder: true });
+          })['catch'](function () { resolve(null); });
+        }, 'image/png');
+      });
+    }
+
     function loadBitmap(file, buf) {
       return createImageBitmap(file).then(function (bm) {
         return { bitmap: bm, previewUrl: URL.createObjectURL(file), srcLabel: '' };
       })['catch'](function () {
-        var cands = findEmbeddedJpegs(buf).sort(function (a, b) { return (b[1] - b[0]) - (a[1] - a[0]); }).slice(0, 10);
+        var segs = tiffJpegSegments(buf).concat(findEmbeddedJpegs(buf));
+        var seen = {}, cands = [], i;
+        for (i = 0; i < segs.length; i++) {
+          var key = segs[i][0] + ':' + segs[i][1];
+          if (seen[key]) { continue; }
+          seen[key] = 1;
+          cands.push(segs[i]);
+        }
+        cands.sort(function (a, b) { return (b[1] - b[0]) - (a[1] - a[0]); });
+        cands = cands.slice(0, 60);
         var best = null;
         function tryNext(i) {
           if (i >= cands.length) { return Promise.resolve(best); }
@@ -100,7 +227,9 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
             return tryNext(i + 1);
           })['catch'](function () { return tryNext(i + 1); });
         }
-        return tryNext(0);
+        return tryNext(0).then(function (best) {
+          return best || makePlaceholder(file, buf);
+        });
       });
     }
 
@@ -140,8 +269,14 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       metaEl.appendChild(d1);
       if (cur.srcLabel) {
         var d0 = document.createElement('div');
-        d0.textContent = 'Quelle: ' + cur.srcLabel + ' (RAW direkt dekodieren kann der Browser meist nicht)';
+        d0.textContent = 'Quelle: ' + cur.srcLabel + (cur.placeholder ? '' : ' (RAW direkt dekodieren kann der Browser meist nicht)');
         metaEl.appendChild(d0);
+      }
+      goBtn.disabled = !!cur.placeholder;
+      if (cur.placeholder) {
+        var d2 = document.createElement('div');
+        d2.textContent = 'Hinweis: Kein eingebettetes JPEG in der Datei gefunden – die Vorschau wurde lokal als Platzhalter erzeugt. Konvertieren ist nicht möglich (keine Pixel-Daten), GPS/EXIF funktionieren aber.';
+        metaEl.appendChild(d2);
       }
       if (cur.gps) {
         var g = cur.gps;
@@ -196,7 +331,7 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
             if (cur.bitmap) { cur.bitmap.close(); }
             if (cur.previewUrl) { URL.revokeObjectURL(cur.previewUrl); }
           }
-          cur = { file: file, name: file.name || 'foto', size: file.size, w: res.bitmap.width, h: res.bitmap.height, bitmap: res.bitmap, previewUrl: res.previewUrl, srcLabel: res.srcLabel, gps: gps };
+          cur = { file: file, name: file.name || 'foto', size: file.size, w: res.bitmap.width, h: res.bitmap.height, bitmap: res.bitmap, previewUrl: res.previewUrl, srcLabel: res.srcLabel, gps: gps, placeholder: !!res.placeholder };
           showInfo();
         })['catch'](function () {
           infoEl.classList.add('hidden');
@@ -252,6 +387,7 @@ if (typeof document !== 'undefined' && document.getElementById('bkDrop')) {
       qualEl.value = '90';
       qualVal.textContent = '90 %';
       modeEl.value = 'original';
+      goBtn.disabled = false;
       wEl.value = '';
       hEl.value = '';
       hintEl.textContent = '';

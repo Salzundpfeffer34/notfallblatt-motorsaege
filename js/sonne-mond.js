@@ -138,6 +138,37 @@ function loadOrtDb(cb) {
   }
 }
 
+/* ETOPO1-Hoehenmodell: js/etopo1.js und das bin-Gitter werden erst bei Bedarf geladen (Hoehenanzeige). */
+var _etopo1Loading = null;
+var _etopo1Grid = null;
+var _horizon = null;
+function etopo1Loaded() { return typeof etopo1Elev === 'function'; }
+function etopo1GridReady() { return _etopo1Grid !== null; }
+function loadEtopo1(cb) {
+  if (etopo1GridReady()) { cb(true); return; }
+  if (_etopo1Loading) { _etopo1Loading.push(cb); return; }
+  _etopo1Loading = [cb];
+  var done = function (ok) {
+    var cbs = _etopo1Loading; _etopo1Loading = null;
+    for (var i = 0; i < cbs.length; i++) { cbs[i](ok); }
+  };
+  try {
+    var go = function () {
+      if (!etopo1Loaded()) { done(false); return; }
+      etopo1Load('etopo1_ice_g_i2.bin', function (buf) { _etopo1Grid = buf; done(true); }, function () { done(false); });
+    };
+    if (etopo1Loaded()) { go(); return; }
+    var sc = document.createElement('script');
+    sc.src = 'js/etopo1.js';
+    sc.onload = go;
+    sc.onerror = function () { done(false); };
+    document.head.appendChild(sc);
+  } catch (e) {
+    _etopo1Loading = null;
+    cb(false);
+  }
+}
+
 /* Ortssuche-Daten liegen in js/ort-suche-data.js und werden erst bei Bedarf geladen. */
 var _ortDataLoading = null;
 function ortDataLoaded() { return typeof EU_COUNTRIES !== 'undefined' && typeof CH_CANTONS !== 'undefined'; }
@@ -1545,7 +1576,9 @@ if (typeof document !== 'undefined') {
     var tzHtml = '';
     if (state.tzMin != null) { tzHtml = ' &nbsp;·&nbsp; <b>' + fmtUtcOffset(state.tzMin * 60000) + ' (manuell)</b>'; }
     else if (tz) { tzHtml = ' &nbsp;·&nbsp; <b>' + escHtml(tz) + '</b> (' + fmtUtcOffset(tzOffsetMs(nowMs(), tz)) + (state.tzAuto ? '' : ' manuell') + ')'; }
-    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>' + tzHtml;
+    var hzHtml = '';
+    if (_horizon) { hzHtml = ' &nbsp;·&nbsp; Horizont: max ' + (Math.round(_horizon.maxAngle * 10) / 10) + '° (' + _horizon.maxDir + '), frei ≤ 0,5° in ' + _horizon.freeDirs + '/' + _horizon.total + ' Richtungen'; }
+    $('coordInfo').innerHTML = 'Ort: <b>' + (state.name ? escHtml(state.name) : '–') + '</b> &nbsp;·&nbsp; <b>' + fmtCoord(state.lat, state.lon) + '</b> &nbsp;·&nbsp; Tag: <b>' + fmtDateDE(state.datum) + '</b>' + tzHtml + hzHtml;
     var tw = $('tzManWrap');
     if (tw) {
       var showTz = !state.tzAuto;
@@ -1654,7 +1687,50 @@ if (typeof document !== 'undefined') {
     if (hit) {
       state.name = '≈ ' + hit.name + (hit.distKm < 1 ? '' : ' (ca. ' + Math.round(hit.distKm) + ' km)');
       renderCoordInfo(); save();
+      if (typeof hit.dem === 'number') { applyDem(hit.dem); } else { applyElevation(); }
+      horizonProfile();
     }
+  }
+  function applyDem(m) {
+    state.name = String(state.name || '').replace(/ · -?\d+ m ü\. M\.$/, '') + ' · ' + m + ' m ü. M.';
+    renderCoordInfo(); save();
+  }
+  function applyElevation() {
+    if (!state.locKnown) { return; }
+    loadEtopo1(function (ok) {
+      if (!ok) { return; }
+      var m = etopo1Elev(state.lat, state.lon, _etopo1Grid);
+      if (typeof m !== 'number') { return; }
+      applyDem(m);
+    });
+  }
+  function horizonProfile() {
+    if (!state.locKnown) { return; }
+    loadEtopo1(function (ok) {
+      if (!ok) { return; }
+      var m0 = etopo1Elev(state.lat, state.lon, _etopo1Grid);
+      if (typeof m0 !== 'number') { return; }
+      var dirs = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+      var dists = [0.3, 0.6, 1, 2, 4, 8, 15, 30];
+      var maxA = -90, maxD = '', free = 0;
+      for (var d = 0; d < dirs.length; d++) {
+        var rad = d * 45 * Math.PI / 180;
+        var best = -90;
+        for (var k = 0; k < dists.length; k++) {
+          var la = state.lat + dists[k] * Math.cos(rad) / 111.0;
+          var lo = state.lon + dists[k] * Math.sin(rad) / (111.0 * Math.max(0.01, Math.cos(state.lat * Math.PI / 180)));
+          var m = etopo1Elev(la, lo, _etopo1Grid);
+          if (typeof m === 'number') {
+            var ang = Math.atan2(m - m0, dists[k] * 1000) * 180 / Math.PI;
+            if (ang > best) { best = ang; }
+          }
+        }
+        if (best <= 0.5) { free++; }
+        if (best > maxA) { maxA = best; maxD = dirs[d]; }
+      }
+      _horizon = { maxAngle: maxA, maxDir: maxD, freeDirs: free, total: dirs.length };
+      renderCoordInfo();
+    });
   }
   function ortDbLocal() {
     if (!ortDbLoaded()) { loadOrtDb(function (ok) { if (ok) { ortDbLocal(); } }); return; }
@@ -1670,7 +1746,7 @@ if (typeof document !== 'undefined') {
           if (t) { clearTimeout(t); }
           return r.ok ? r.json() : null;
         }).then(function (j) {
-          if (j && j.name && isFinite(j.distKm)) { ortDbApply({ name: j.name, distKm: j.distKm }); }
+          if (j && j.name && isFinite(j.distKm)) { ortDbApply({ name: j.name, distKm: j.distKm, dem: (typeof j.dem === 'number' ? j.dem : null) }); }
           else { ortDbLocal(); }
         })['catch'](function () { if (t) { clearTimeout(t); } ortDbLocal(); });
         return;

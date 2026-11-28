@@ -1,24 +1,25 @@
 /* <navi navi> … </navi> – zentrale Top-Navigation auf allen Seiten. CSS siehe css/navi.css.
-   Das Navi-Markup steht statisch im HTML innerhalb von <navi>; dieses Skript ergaenzt nur:
-   i18n (data-navi-Attribute), Menue-Verhalten der <details>, volle Breite (Body-Padding),
-   Leistenhoehe (--navi-hoehe) fuer den sticky Header. Fallback: ein leeres <navi> wird komplett aufgebaut. */
+   Das Navi-Markup (Mega-Menues mit Icon + Titel + Beschreibung) steht statisch im HTML
+   innerhalb von <navi>; dieses Skript ergaenzt nur: i18n (data-navi-Attribute an den
+   Text-Elementen), Menue-Verhalten der <details>, Schriftgroesse (A-/A/A+), volle Breite
+   (Body-Padding), Leistenhoehe (--navi-hoehe). Fallback: ein leeres <navi> wird komplett aufgebaut. */
 (function () {
   'use strict';
 
   var GRUPPEN = [
     { key: 'hubGrpEinsatz', items: [
-      { href: 'notfallblatt.html', key: 'naviNotfallblatt' },
-      { href: 'koordinaten/', key: 'naviKoordinaten' },
-      { href: 'gpx-reduce.html', key: 'naviGpx' }
+      { href: 'notfallblatt.html', key: 'naviNotfallblatt', desc: 'naviNotfallblattD', icon: 'img/motorsaege.svg' },
+      { href: 'koordinaten/', key: 'naviKoordinaten', desc: 'hubC2d', icon: '📍' },
+      { href: 'gpx-reduce.html', key: 'naviGpx', desc: 'hubC3d', icon: '🗺️' }
     ]},
     { key: 'hubGrpFoto', items: [
-      { href: 'sonne-mond.html', key: 'naviSonneMond' },
-      { href: 'bokeh.html', key: 'naviBokeh' },
-      { href: 'reitplatz.html', key: 'naviReitplatz' }
+      { href: 'sonne-mond.html', key: 'naviSonneMond', desc: 'hubC4d', icon: 'img/sonne-mond.svg' },
+      { href: 'bokeh.html', key: 'naviBokeh', desc: 'hubC5d', icon: '🎯' },
+      { href: 'reitplatz.html', key: 'naviReitplatz', desc: 'naviReitplatzD', icon: 'img/reithelm-icon.webp' }
     ]},
     { key: 'hubGrpSonst', items: [
-      { href: 'ort-db-editor.html', key: 'naviOrtDb' },
-      { href: 'koordinaten/datenschutz.html', key: 'naviDatenschutz' }
+      { href: 'ort-db-editor.html', key: 'naviOrtDb', desc: 'hubC6d', icon: '🗄️' },
+      { href: 'koordinaten/datenschutz.html', key: 'naviDatenschutz', desc: 'hubC7d', icon: '🔒' }
     ]}
   ];
 
@@ -35,7 +36,15 @@
     naviBokeh: 'Bokeh',
     naviReitplatz: 'Reitplatz',
     naviOrtDb: 'Ort-DB',
-    naviDatenschutz: 'Datenschutz'
+    naviDatenschutz: 'Datenschutz',
+    naviNotfallblattD: 'Arbeitsauftrag & Notfallkarte – drucken / PDF',
+    hubC2d: 'Umrechnen (LV95, GPS, UTM, MGRS …) + Foto-Stapel → GPX-Route',
+    hubC3d: 'Zu viele Punkte fürs Garmin? Douglas-Peucker, GPX-Type wählbar, mit Karte',
+    hubC4d: 'Auf-/Untergang, Goldene & Blaue Stunde, Mondphase – lokal gerechnet',
+    hubC5d: 'Blende & Abstand → Schärfezone, Unschärfe, Bokeh – 45+ Objektive',
+    hubC6d: 'Offline-Ortsnamen (GeoNames) suchen, bearbeiten, exportieren',
+    hubC7d: 'Was lokal gespeichert wird – und was nicht',
+    naviReitplatzD: 'Dressurplatz-Foto mit interaktivem Blenden-Regler f/1.4–f/16'
   };
 
   /* Basis-URL des Repo-Roots aus der eigenen Script-URL (nur fuer den Fallback-Aufbau) */
@@ -106,7 +115,7 @@
     hoeheSetzen();
   }
 
-  /* Fallback: leeres <navi> komplett aufbauen (Gruppen mit <details>-Untermenues) */
+  /* Fallback: leeres <navi> komplett aufbauen (Mega-Menues mit Icon + Titel + Beschreibung) */
   function aufbauen(el) {
     var base = basisUrl();
     el.textContent = '';
@@ -150,13 +159,35 @@
         var li2 = document.createElement('li');
         var a = document.createElement('a');
         a.href = new URL(e.href, base).href;
-        a.setAttribute('data-navi', e.key);
-        a.textContent = t(e.key);
         if (istAktiv(base, e.href)) {
           a.classList.add('aktiv');
           a.setAttribute('aria-current', 'page');
           gruppeAktiv = true;
         }
+        var ic = document.createElement('span');
+        ic.className = 'navi-ic';
+        if (e.icon.indexOf('img/') === 0) {
+          var im = document.createElement('img');
+          im.src = new URL(e.icon, base).href;
+          im.alt = '';
+          ic.appendChild(im);
+        } else {
+          ic.textContent = e.icon;
+        }
+        var tx = document.createElement('span');
+        tx.className = 'navi-tx';
+        var tEl = document.createElement('span');
+        tEl.className = 'navi-t';
+        tEl.setAttribute('data-navi', e.key);
+        tEl.textContent = t(e.key);
+        var dEl = document.createElement('span');
+        dEl.className = 'navi-d';
+        dEl.setAttribute('data-navi', e.desc);
+        dEl.textContent = t(e.desc);
+        tx.appendChild(tEl);
+        tx.appendChild(dEl);
+        a.appendChild(ic);
+        a.appendChild(tx);
         li2.appendChild(a);
         um.appendChild(li2);
       }
